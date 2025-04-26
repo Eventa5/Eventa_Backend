@@ -1,9 +1,10 @@
 {
-	"name": "ts_practice",
+	"name": "Eventa_Backend",
 	"version": "1.0.0",
 	"description": "",
 	"main": "server.js",
 	"scripts": {
+		"prepare": "husky",
 		"dev": "ts-node-dev --respawn --transpile-only src/server.ts",
 		"build": "tsc",
 		"start": "node dist/server.js",
