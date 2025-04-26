@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/.prisma/client" // 維持預設產出位置
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  memberId     String         @unique
+  email        String         @unique
+  password     String?
+  name         String?
+  avatar       String?
+  displayName  String?
+  birthday     DateTime?
+  gender       String?
+  phoneNumber  String?
+  countryCode  String?
+  region       String?
+  address      String?
+  identity     String?
+  userIdentity UserIdentity[]
+  organizer    Organizer[]
+  createdAt    DateTime       @default(now())
+  updateAt     DateTime       @updatedAt
+  ActivityLike ActivityLike[]
+
+  @@map("users") // 指定存入db的table name
+}
+
+model UserIdentity {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  provider   String
+  providerId String
+  createdAt  DateTime @default(now())
+
+  @@map("user_identities")
+}
+
+model Organizer {
+  id              Int        @id @default(autoincrement())
+  userId          Int
+  email           String     @unique
+  name            String?
+  avatar          String?
+  cover           String?
+  introduction    String?
+  phoneNumber     String?
+  countryCode     String?
+  ext             String?
+  officialSiteUrl String?
+  localeId        Int?
+  currencyId      Int?
+  createdAt       DateTime   @default(now())
+  updateAt        DateTime   @updatedAt
+  deletedAt       DateTime?
+  user            User       @relation(fields: [userId], references: [id])
+  locale          Locale?    @relation(fields: [localeId], references: [id])
+  currency        Currency?  @relation(fields: [currencyId], references: [id])
+  Activity        Activity[]
+
+  @@map("organizers")
+}
+
+model Locale {
+  id        Int         @id @default(autoincrement())
+  name      String
+  code      String
+  Organizer Organizer[]
+
+  @@map("locales")
+}
+
+model Currency {
+  id        Int         @id @default(autoincrement())
+  name      String
+  code      String
+  Organizer Organizer[]
+
+  @@map("currencies")
+}
+
+enum ActivityStatus {
+  draft
+  published
+  ended
+  canceled
+}
+
+model Activity {
+  id               Int                @id @default(autoincrement())
+  organizerId      Int
+  cover            String?
+  title            String
+  location         String?
+  startTime        DateTime
+  endTime          DateTime
+  isOnline         Boolean
+  tags             String?
+  status           ActivityStatus     @default(draft)
+  descriptionMd    String?
+  viewCount        Int                @default(0)
+  createdAt        DateTime           @default(now())
+  updateAt         DateTime           @updatedAt
+  summary          String?
+  notes            String?
+  livestreamUrl    String?
+  organizer        Organizer          @relation(fields: [organizerId], references: [id])
+  ActivityCategory ActivityCategory[]
+  ActivityLike     ActivityLike[]
+
+  @@map("activities")
+}
+
+model Category {
+  id         Int                @id @default(autoincrement())
+  name       String
+  image      String?
+  icon       String?
+  activities ActivityCategory[] // 多對多關聯表
+
+  @@map("categories")
+}
+
+model ActivityCategory {
+  activityId Int
+  categoryId Int
+
+  activity Activity @relation(fields: [activityId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@id([activityId, categoryId]) // Composite Primary Key
+  @@map("activity_categories")
+}
+
+model ActivityLike {
+  activityId Int
+  userId     Int
+  createdAt  DateTime @default(now())
+  activity   Activity @relation(fields: [activityId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@id([activityId, userId])
+  @@map("activity_likes")
+}
