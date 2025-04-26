@@ -61,9 +61,6 @@ const router = express.Router();
  *             schema:
  *              $ref: '#/components/schemas/Currency'
  */
-router
-	.route("/")
-	.get(currencyController.getCurrencies)
-	.post(currencyController.createCurrency);
+router.route("/").get(currencyController.getCurrencies).post(currencyController.createCurrency);
 
 export default router;
