@@ -1,0 +1,38 @@
+# Git 相關
+.git
+.gitignore
+
+# Node.js 相關
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# 編譯後的檔案
+dist
+build
+
+# 開發環境相關
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# 編輯器配置
+.vscode
+.idea
+*.swp
+*.swo
+
+# 系統檔案
+.DS_Store
+Thumbs.db
+
+# 其他
+README.md
+.github
+.husky
+coverage
+*.md
+!README.md
