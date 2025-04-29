@@ -10,6 +10,7 @@
     "start": "node dist/server.js",
     "migrate": "npx prisma migrate dev --schema=src/prisma/schema.prisma",
     "generate": "prisma generate --schema=src/prisma/schema.prisma",
+    "deploy": "npx prisma migrate deploy --schema=src/prisma/schema.prisma",
     "studio": "prisma studio --schema=src/prisma/schema.prisma",
     "reset": "npx prisma migrate reset --force --schema=src/prisma/schema.prisma",
     "seed": "npx prisma db seed --schema=src/prisma/schema.prisma",

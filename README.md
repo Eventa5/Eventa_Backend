@@ -59,7 +59,7 @@ DATABASE_URL=postgresql://username:password@localhost:5432/database_name
 
 ### 4. Run database migrations
 ```
-npm run migrate
+npm run deploy
 ```
 
 ### 5. Start the development server
@@ -77,6 +77,7 @@ The server will start on http://localhost:3000 by default.
 | `npm run start` | Run the compiled server (`dist/server.js`) |
 | `npm run migrate` | Run Prisma database migrations |
 | `npm run generate` | Generate Prisma client |
+| `npm run deploy` | Apply database migrations and regenerate Prisma client |
 | `npm run studio` | Open Prisma Studio (GUI for the database) |
 | `npm run reset` | Reset the database with Prisma |
 | `npm run seed` | Seed the database |
