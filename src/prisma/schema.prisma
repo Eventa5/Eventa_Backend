@@ -1,11 +1,35 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../../node_modules/.prisma/client" // 維持預設產出位置
+  output   = "../generated/prisma" // 維持預設產出位置
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum ActivityStatus {
+  draft
+  published
+  ended
+  canceled
+}
+
+enum OrderStatus {
+  PAID     @map("paid")
+  PENDING  @map("pending")
+  EXPIRED  @map("expired")
+  CANCELED @map("canceled")
+}
+
+enum InvoiceType {
+  B2C @map("b2c")
+  B2B @map("b2b")
+}
+
+enum TicketStatus {
+	USED @map("used")
+
 }
 
 model User {
@@ -28,6 +52,8 @@ model User {
   createdAt    DateTime       @default(now())
   updateAt     DateTime       @updatedAt
   ActivityLike ActivityLike[]
+  orders       Order[]
+	tickets      Ticket[]
 
   @@map("users") // 指定存入db的table name
 }
@@ -86,13 +112,6 @@ model Currency {
   @@map("currencies")
 }
 
-enum ActivityStatus {
-  draft
-  published
-  ended
-  canceled
-}
-
 model Activity {
   id               Int                @id @default(autoincrement())
   organizerId      Int
@@ -114,6 +133,9 @@ model Activity {
   organizer        Organizer          @relation(fields: [organizerId], references: [id])
   ActivityCategory ActivityCategory[]
   ActivityLike     ActivityLike[]
+  orders           Order[]
+	tickets          Ticket[]
+  ticketType       TicketType[]
 
   @@map("activities")
 }
@@ -146,6 +168,73 @@ model ActivityLike {
   activity   Activity @relation(fields: [activityId], references: [id])
   user       User     @relation(fields: [userId], references: [id])
 
-  @@id([activityId, userId])
+  @@id(name: "activityLikeId", [activityId, userId])
   @@map("activity_likes")
+}
+
+model Order {
+  id                         String      @id
+  userId                     Int
+  user                       User        @relation(fields: [userId], references: [id])
+  paidExpiredAt              DateTime    @default(dbgenerated("now() + interval '10 minutes'"))
+  paidAt                     DateTime?
+  status                     OrderStatus @default(PENDING)
+  createdAt                  DateTime    @default(now())
+  updatedAt                  DateTime?   @updatedAt
+  activityId                 Int
+  activity                   Activity    @relation(fields: [activityId], references: [id])
+  invoiceAddress             String?
+  invoiceTitle               String?
+  invoiceTaxId               String?
+  invoiceReceiverName        String?
+  invoiceReceiverPhoneNumber String?
+  invoiceReceiverEmail       String?
+  invoiceCarrier             String?
+  invoiceType                InvoiceType @default(B2C)
+	tickets 									Ticket[]
+
+  @@map("orders")
+}
+
+model Ticket {
+	id String @id
+	ticketTypeId Int
+	ticketType TicketType @relation(fields: [ticketTypeId], references: [id])
+	activityId Int
+	activity Activity @relation(fields: [activityId], references: [id])
+	orderId String
+	order Order @relation(fields: [orderId], references: [id])
+	qrCodeToken String @unique
+	checkInAt DateTime?
+	status String @default("unused")
+	assignedUserId Int?
+	assignedUser User? @relation(fields: [assignedUserId], references: [id])
+	assignedEmail String @unique
+	assignedName String
+	refundDeadline DateTime
+	createdAt DateTime @default(now())
+	updateAt DateTime? @updatedAt
+
+	@@map("tickets")
+}
+
+model TicketType {
+	id Int @id @default(autoincrement())
+	activityId Int
+	activity Activity @relation(fields: [activityId], references: [id])
+	name String
+	price Int
+	totalQuantity Int
+	remainingQuantity Int
+	description String?
+	startTime DateTime
+	endTime DateTime
+	saleStartAt DateTime?
+	saleEndAt DateTime?
+	isActive Boolean @default(true)
+	createdAt DateTime @default(now())
+	updateAt DateTime? @updatedAt
+	tickets Ticket[]
+
+	@@map("ticket_types")
 }

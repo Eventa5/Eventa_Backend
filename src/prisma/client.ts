@@ -1,5 +1,10 @@
+import { PrismaPg } from "@prisma/adapter-pg";
 // create global prisma client instance
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../generated/prisma/client";
+
+const connectionString = `${process.env.DATABASE_URL}`;
+
+const adapter = new PrismaPg({ connectionString });
 
 // add prisma to global type
 const globalForPrisma = globalThis as {
@@ -7,7 +12,7 @@ const globalForPrisma = globalThis as {
 };
 
 // avoid multiple instances
-const prisma = globalForPrisma.prisma ?? new PrismaClient();
+const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
