@@ -24,6 +24,7 @@ Eventa_Backend/
 │   ├── prisma/               # Prisma 專屬資料夾
 │   │   └── schema.prisma     # Prisma 連線資訊、Table schema
 │   ├── utils/                # 共用工具函式
+│   ├── validators/                # 定義 Zod 驗證 schema
 │   └── types/                # 自訂型別定義
 ├── dist/                     # 編譯後的 JS 檔案（由 TS 編譯而來）
 ├── tsconfig.json
