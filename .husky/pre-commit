@@ -5,4 +5,4 @@ echo "🛠  Biome fixing..." # if any formatting errors, this step will fail
 npm run lint-fix
 
 echo "📦 Git add fixed files..."
-git add .
+git update-index --again
