@@ -14,7 +14,7 @@
     "studio": "prisma studio --schema=src/prisma/schema.prisma",
     "reset": "npx prisma migrate reset --force --schema=src/prisma/schema.prisma",
     "seed": "npx prisma db seed --schema=src/prisma/schema.prisma",
-    "lint": "biome check --changed",
+    "lint": "biome check --changed --no-errors-on-unmatched",
     "lint-fix": "biome check --fix --unsafe --staged --no-errors-on-unmatched",
     "format": "biome check --write --staged --no-errors-on-unmatched",
     "prisma-format": "npx prisma format"
