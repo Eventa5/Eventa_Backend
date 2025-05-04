@@ -28,8 +28,11 @@ enum InvoiceType {
 }
 
 enum TicketStatus {
-	USED @map("used")
-
+  USED       @map("used")
+  ASSIGNED   @map("assigned")
+  UNASSIGNED @map("unassigned")
+  CANCELED   @map("canceled")
+  OVERDUE    @map("overdue")
 }
 
 model User {
@@ -51,9 +54,10 @@ model User {
   organizer    Organizer[]
   createdAt    DateTime       @default(now())
   updateAt     DateTime       @updatedAt
-  ActivityLike ActivityLike[]
+  activityLike ActivityLike[]
   orders       Order[]
-	tickets      Ticket[]
+  tickets      Ticket[]
+  invoices     UserInvoice[]
 
   @@map("users") // 指定存入db的table name
 }
@@ -98,7 +102,7 @@ model Locale {
   id        Int         @id @default(autoincrement())
   name      String
   code      String
-  Organizer Organizer[]
+  organizer Organizer[]
 
   @@map("locales")
 }
@@ -107,7 +111,7 @@ model Currency {
   id        Int         @id @default(autoincrement())
   name      String
   code      String
-  Organizer Organizer[]
+  organizer Organizer[]
 
   @@map("currencies")
 }
@@ -131,11 +135,11 @@ model Activity {
   notes            String?
   livestreamUrl    String?
   organizer        Organizer          @relation(fields: [organizerId], references: [id])
-  ActivityCategory ActivityCategory[]
-  ActivityLike     ActivityLike[]
+  activityCategory ActivityCategory[]
+  activityLike     ActivityLike[]
   orders           Order[]
-	tickets          Ticket[]
-  ticketType       TicketType[]
+  tickets          Ticket[]
+  ticketTypes      TicketType[]
 
   @@map("activities")
 }
@@ -174,15 +178,15 @@ model ActivityLike {
 
 model Order {
   id                         String      @id
-  userId                     Int
   user                       User        @relation(fields: [userId], references: [id])
+  userId                     Int
   paidExpiredAt              DateTime    @default(dbgenerated("now() + interval '10 minutes'"))
   paidAt                     DateTime?
   status                     OrderStatus @default(PENDING)
   createdAt                  DateTime    @default(now())
   updatedAt                  DateTime?   @updatedAt
-  activityId                 Int
   activity                   Activity    @relation(fields: [activityId], references: [id])
+  activityId                 Int         @unique
   invoiceAddress             String?
   invoiceTitle               String?
   invoiceTaxId               String?
@@ -191,50 +195,122 @@ model Order {
   invoiceReceiverEmail       String?
   invoiceCarrier             String?
   invoiceType                InvoiceType @default(B2C)
-	tickets 									Ticket[]
+  tickets                    Ticket[]
+  payments                   Payment[]
+  refunds                    Refund[]
+  orderItems                 OrderItem[]
 
   @@map("orders")
 }
 
 model Ticket {
-	id String @id
-	ticketTypeId Int
-	ticketType TicketType @relation(fields: [ticketTypeId], references: [id])
-	activityId Int
-	activity Activity @relation(fields: [activityId], references: [id])
-	orderId String
-	order Order @relation(fields: [orderId], references: [id])
-	qrCodeToken String @unique
-	checkInAt DateTime?
-	status String @default("unused")
-	assignedUserId Int?
-	assignedUser User? @relation(fields: [assignedUserId], references: [id])
-	assignedEmail String @unique
-	assignedName String
-	refundDeadline DateTime
-	createdAt DateTime @default(now())
-	updateAt DateTime? @updatedAt
+  id             String       @id
+  ticketType     TicketType   @relation(fields: [ticketTypeId], references: [id])
+  ticketTypeId   Int
+  activity       Activity     @relation(fields: [activityId], references: [id])
+  activityId     Int
+  order          Order        @relation(fields: [orderId], references: [id])
+  orderId        String
+  qrCodeToken    String       @unique
+  checkInAt      DateTime?
+  status         TicketStatus @default(UNASSIGNED)
+  assignedUser   User?        @relation(fields: [assignedUserId], references: [id])
+  assignedUserId Int?
+  assignedEmail  String
+  assignedName   String
+  refundDeadline DateTime
+  createdAt      DateTime     @default(now())
+  updateAt       DateTime?    @updatedAt
 
-	@@map("tickets")
+  @@map("tickets")
 }
 
 model TicketType {
-	id Int @id @default(autoincrement())
-	activityId Int
-	activity Activity @relation(fields: [activityId], references: [id])
-	name String
-	price Int
-	totalQuantity Int
-	remainingQuantity Int
-	description String?
-	startTime DateTime
-	endTime DateTime
-	saleStartAt DateTime?
-	saleEndAt DateTime?
-	isActive Boolean @default(true)
-	createdAt DateTime @default(now())
-	updateAt DateTime? @updatedAt
-	tickets Ticket[]
+  id                Int         @id @default(autoincrement())
+  activity          Activity    @relation(fields: [activityId], references: [id])
+  activityId        Int
+  name              String
+  price             Int
+  totalQuantity     Int
+  remainingQuantity Int
+  description       String?
+  startTime         DateTime
+  endTime           DateTime
+  saleStartAt       DateTime?
+  saleEndAt         DateTime?
+  isActive          Boolean     @default(true)
+  createdAt         DateTime    @default(now())
+  updateAt          DateTime?   @updatedAt
+  tickets           Ticket[]
+  refunds           Refund[]
+  orderItems        OrderItem[]
 
-	@@map("ticket_types")
+  @@map("ticket_types")
+}
+
+model OrderItem {
+  id           Int        @id @default(autoincrement())
+  ticketType   TicketType @relation(fields: [ticketTypeId], references: [id])
+  ticketTypeId Int
+  order        Order      @relation(fields: [orderId], references: [id])
+  orderId      String
+  quantity     Int
+  createdAt    DateTime   @default(now())
+
+  @@map("order_items")
+}
+
+model Payment {
+  id         Int       @id @default(autoincrement())
+  order      Order     @relation(fields: [orderId], references: [id])
+  orderId    String
+  method     String?
+  tradeId    String?
+  rawData    Json?
+  paidAmount Int
+  paidAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime? @updatedAt
+  refund     Refund?
+
+  @@map("payments")
+}
+
+model Refund {
+  id           Int        @id @default(autoincrement())
+  order        Order      @relation(fields: [orderId], references: [id])
+  orderId      String
+  payment      Payment    @relation(fields: [paymentId], references: [id])
+  paymentId    Int        @unique
+  ticketType   TicketType @relation(fields: [ticketTypeId], references: [id])
+  ticketTypeId Int
+  amount       Int
+  reason       String?
+  status       String?
+  requestedAt  DateTime   @default(now())
+  processedAt  DateTime?
+  responseData Json?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime?  @updatedAt
+
+  @@map("refunds")
+}
+
+model UserInvoice {
+  id                         Int         @id @default(autoincrement())
+  user                       User        @relation(fields: [userId], references: [id])
+  userId                     Int
+  invoiceName                String
+  invoiceAddress             String?
+  invoiceReceiverName        String?
+  invoiceReceiverPhoneNumber String?
+  invoiceTaxId               String?
+  invoiceTitle               String?
+  invoiceCarrier             String?
+  invoiceType                InvoiceType @default(B2C)
+  createdAt                  DateTime    @default(now())
+  updatedAt                  DateTime?   @updatedAt
+  deletedAt                  DateTime?
+
+  @@map("user_invoices")
 }

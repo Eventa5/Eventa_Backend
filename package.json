@@ -14,10 +14,10 @@
     "studio": "prisma studio --schema=src/prisma/schema.prisma",
     "reset": "npx prisma migrate reset --force --schema=src/prisma/schema.prisma",
     "seed": "npx prisma db seed --schema=src/prisma/schema.prisma",
-    "lint": "biome check .",
-    "lint-fix": "biome check --fix --unsafe .",
-    "format": "biome  check --write .",
-    "format-prisma": "npx prisma format"
+    "lint": "biome check --changed",
+    "lint-fix": "biome check --fix --unsafe --staged --no-errors-on-unmatched",
+    "format": "biome check --write --staged --no-errors-on-unmatched",
+    "prisma-format": "npx prisma format"
   },
   "keywords": [],
   "author": "",
