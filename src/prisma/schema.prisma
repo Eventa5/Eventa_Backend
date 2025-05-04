@@ -16,23 +16,23 @@ enum ActivityStatus {
 }
 
 enum OrderStatus {
-  PAID     @map("paid")
-  PENDING  @map("pending")
-  EXPIRED  @map("expired")
-  CANCELED @map("canceled")
+  paid
+  pending
+  expired
+  canceled
 }
 
 enum InvoiceType {
-  B2C @map("b2c")
-  B2B @map("b2b")
+  b2c
+  b2b
 }
 
 enum TicketStatus {
-  USED       @map("used")
-  ASSIGNED   @map("assigned")
-  UNASSIGNED @map("unassigned")
-  CANCELED   @map("canceled")
-  OVERDUE    @map("overdue")
+  used
+  assigned
+  unassigned
+  canceled
+  overdue
 }
 
 model User {
@@ -171,7 +171,7 @@ model Order {
   userId                     Int
   paidExpiredAt              DateTime    @default(dbgenerated("now() + interval '10 minutes'"))
   paidAt                     DateTime?
-  status                     OrderStatus @default(PENDING)
+  status                     OrderStatus @default(pending)
   createdAt                  DateTime    @default(now())
   updatedAt                  DateTime?   @updatedAt
   activity                   Activity    @relation(fields: [activityId], references: [id])
@@ -183,7 +183,7 @@ model Order {
   invoiceReceiverPhoneNumber String?
   invoiceReceiverEmail       String?
   invoiceCarrier             String?
-  invoiceType                InvoiceType @default(B2C)
+  invoiceType                InvoiceType @default(b2c)
   tickets                    Ticket[]
   payments                   Payment[]
   refunds                    Refund[]
@@ -202,7 +202,7 @@ model Ticket {
   orderId        String
   qrCodeToken    String       @unique
   checkInAt      DateTime?
-  status         TicketStatus @default(UNASSIGNED)
+  status         TicketStatus @default(unassigned)
   assignedUser   User?        @relation(fields: [assignedUserId], references: [id])
   assignedUserId Int?
   assignedEmail  String
@@ -296,7 +296,7 @@ model UserInvoice {
   invoiceTaxId               String?
   invoiceTitle               String?
   invoiceCarrier             String?
-  invoiceType                InvoiceType @default(B2C)
+  invoiceType                InvoiceType @default(b2c)
   createdAt                  DateTime    @default(now())
   updatedAt                  DateTime?   @updatedAt
   deletedAt                  DateTime?
