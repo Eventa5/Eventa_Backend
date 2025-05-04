@@ -1,9 +1,6 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 echo "🔧 Biome formatting..."
 npm run format || true  # ignore formatting errors, enter next step
- 
+
 echo "🛠  Biome fixing..." # if any formatting errors, this step will fail
 npm run lint-fix
 
