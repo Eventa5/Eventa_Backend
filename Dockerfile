@@ -34,7 +34,7 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 # 複製 Prisma schema 以便能正確連接資料庫
 COPY --from=builder /app/src/prisma/schema.prisma ./src/prisma/
-COPY --from=builder /app/src/prisma/generated ./src/prisma/generated
+COPY --from=builder /app/src/generated ./src/prisma/generated
 
 # 設定容器對外端口
 EXPOSE ${PORT}

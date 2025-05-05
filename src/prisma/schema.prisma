@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "./generated/prisma" // 維持預設產出位置
+  output   = "../generated/prisma" // 維持預設產出位置
 }
 
 datasource db {

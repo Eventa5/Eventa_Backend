@@ -1,5 +1,5 @@
 /node_modules
 /dist
-/src/prisma/generated
+/src/generated
 
 *.env
