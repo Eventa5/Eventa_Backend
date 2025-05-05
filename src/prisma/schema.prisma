@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma" // 維持預設產出位置
+  output   = "./generated/prisma" // 維持預設產出位置
 }
 
 datasource db {
@@ -117,35 +117,35 @@ model Currency {
 }
 
 model Activity {
-  id               Int                @id @default(autoincrement())
-  organizerId      Int
-  cover            String?
-  title            String
-  location         String?
-  startTime        DateTime
-  endTime          DateTime
-  isOnline         Boolean
-  tags             String?
-  status           ActivityStatus     @default(draft)
-  descriptionMd    String?
-  viewCount        Int                @default(0)
-  createdAt        DateTime           @default(now())
-  updateAt         DateTime           @updatedAt
-  summary          String?
-  notes            String?
-  livestreamUrl    String?
-  organizer        Organizer          @relation(fields: [organizerId], references: [id])
-  categories       Category[]
-  activityLike     ActivityLike[]
-  orders           Order[]
-  tickets          Ticket[]
-  ticketTypes      TicketType[]
+  id            Int            @id @default(autoincrement())
+  organizerId   Int
+  cover         String?
+  title         String
+  location      String?
+  startTime     DateTime
+  endTime       DateTime
+  isOnline      Boolean
+  tags          String?
+  status        ActivityStatus @default(draft)
+  descriptionMd String?
+  viewCount     Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updateAt      DateTime       @updatedAt
+  summary       String?
+  notes         String?
+  livestreamUrl String?
+  organizer     Organizer      @relation(fields: [organizerId], references: [id])
+  categories    Category[]
+  activityLike  ActivityLike[]
+  orders        Order[]
+  tickets       Ticket[]
+  ticketTypes   TicketType[]
 
   @@map("activities")
 }
 
 model Category {
-  id         Int                @id @default(autoincrement())
+  id         Int        @id @default(autoincrement())
   name       String
   image      String?
   icon       String?
