@@ -205,8 +205,8 @@ model Ticket {
   status         TicketStatus @default(unassigned)
   assignedUser   User?        @relation(fields: [assignedUserId], references: [id])
   assignedUserId Int?
-  assignedEmail  String
-  assignedName   String
+  assignedEmail  String?
+  assignedName   String?
   refundDeadline DateTime
   createdAt      DateTime     @default(now())
   updateAt       DateTime?    @updatedAt
