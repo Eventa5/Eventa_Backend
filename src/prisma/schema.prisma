@@ -1,11 +1,38 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../../node_modules/.prisma/client" // 維持預設產出位置
+  output   = "../generated/prisma" // 維持預設產出位置
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum ActivityStatus {
+  draft
+  published
+  ended
+  canceled
+}
+
+enum OrderStatus {
+  paid
+  pending
+  expired
+  canceled
+}
+
+enum InvoiceType {
+  b2c
+  b2b
+}
+
+enum TicketStatus {
+  used
+  assigned
+  unassigned
+  canceled
+  overdue
 }
 
 model User {
@@ -27,7 +54,10 @@ model User {
   organizer    Organizer[]
   createdAt    DateTime       @default(now())
   updateAt     DateTime       @updatedAt
-  ActivityLike ActivityLike[]
+  activityLike ActivityLike[]
+  orders       Order[]
+  tickets      Ticket[]
+  invoices     UserInvoice[]
 
   @@map("users") // 指定存入db的table name
 }
@@ -72,7 +102,7 @@ model Locale {
   id        Int         @id @default(autoincrement())
   name      String
   code      String
-  Organizer Organizer[]
+  organizer Organizer[]
 
   @@map("locales")
 }
@@ -81,16 +111,9 @@ model Currency {
   id        Int         @id @default(autoincrement())
   name      String
   code      String
-  Organizer Organizer[]
+  organizer Organizer[]
 
   @@map("currencies")
-}
-
-enum ActivityStatus {
-  draft
-  published
-  ended
-  canceled
 }
 
 model Activity {
@@ -112,8 +135,11 @@ model Activity {
   notes            String?
   livestreamUrl    String?
   organizer        Organizer          @relation(fields: [organizerId], references: [id])
-  ActivityCategory ActivityCategory[]
-  ActivityLike     ActivityLike[]
+  categories       Category[]
+  activityLike     ActivityLike[]
+  orders           Order[]
+  tickets          Ticket[]
+  ticketTypes      TicketType[]
 
   @@map("activities")
 }
@@ -123,20 +149,9 @@ model Category {
   name       String
   image      String?
   icon       String?
-  activities ActivityCategory[] // 多對多關聯表
+  activities Activity[]
 
   @@map("categories")
-}
-
-model ActivityCategory {
-  activityId Int
-  categoryId Int
-
-  activity Activity @relation(fields: [activityId], references: [id])
-  category Category @relation(fields: [categoryId], references: [id])
-
-  @@id([activityId, categoryId]) // Composite Primary Key
-  @@map("activity_categories")
 }
 
 model ActivityLike {
@@ -146,6 +161,145 @@ model ActivityLike {
   activity   Activity @relation(fields: [activityId], references: [id])
   user       User     @relation(fields: [userId], references: [id])
 
-  @@id([activityId, userId])
+  @@id(name: "activityLikeId", [activityId, userId])
   @@map("activity_likes")
+}
+
+model Order {
+  id                         String      @id
+  user                       User        @relation(fields: [userId], references: [id])
+  userId                     Int
+  paidExpiredAt              DateTime    @default(dbgenerated("now() + interval '10 minutes'"))
+  paidAt                     DateTime?
+  status                     OrderStatus @default(pending)
+  createdAt                  DateTime    @default(now())
+  updatedAt                  DateTime?   @updatedAt
+  activity                   Activity    @relation(fields: [activityId], references: [id])
+  activityId                 Int
+  invoiceAddress             String?
+  invoiceTitle               String?
+  invoiceTaxId               String?
+  invoiceReceiverName        String?
+  invoiceReceiverPhoneNumber String?
+  invoiceReceiverEmail       String?
+  invoiceCarrier             String?
+  invoiceType                InvoiceType @default(b2c)
+  tickets                    Ticket[]
+  payments                   Payment[]
+  refunds                    Refund[]
+  orderItems                 OrderItem[]
+
+  @@map("orders")
+}
+
+model Ticket {
+  id             String       @id
+  ticketType     TicketType   @relation(fields: [ticketTypeId], references: [id])
+  ticketTypeId   Int
+  activity       Activity     @relation(fields: [activityId], references: [id])
+  activityId     Int
+  order          Order        @relation(fields: [orderId], references: [id])
+  orderId        String
+  qrCodeToken    String       @unique
+  checkInAt      DateTime?
+  status         TicketStatus @default(unassigned)
+  assignedUser   User?        @relation(fields: [assignedUserId], references: [id])
+  assignedUserId Int?
+  assignedEmail  String?
+  assignedName   String?
+  refundDeadline DateTime
+  createdAt      DateTime     @default(now())
+  updateAt       DateTime?    @updatedAt
+
+  @@map("tickets")
+}
+
+model TicketType {
+  id                Int         @id @default(autoincrement())
+  activity          Activity    @relation(fields: [activityId], references: [id])
+  activityId        Int
+  name              String
+  price             Int
+  totalQuantity     Int
+  remainingQuantity Int
+  description       String?
+  startTime         DateTime
+  endTime           DateTime
+  saleStartAt       DateTime?
+  saleEndAt         DateTime?
+  isActive          Boolean     @default(true)
+  createdAt         DateTime    @default(now())
+  updateAt          DateTime?   @updatedAt
+  tickets           Ticket[]
+  refunds           Refund[]
+  orderItems        OrderItem[]
+
+  @@map("ticket_types")
+}
+
+model OrderItem {
+  id           Int        @id @default(autoincrement())
+  ticketType   TicketType @relation(fields: [ticketTypeId], references: [id])
+  ticketTypeId Int
+  order        Order      @relation(fields: [orderId], references: [id])
+  orderId      String
+  quantity     Int
+  createdAt    DateTime   @default(now())
+
+  @@map("order_items")
+}
+
+model Payment {
+  id         Int       @id @default(autoincrement())
+  order      Order     @relation(fields: [orderId], references: [id])
+  orderId    String
+  method     String?
+  tradeId    String?
+  rawData    Json?
+  paidAmount Int
+  paidAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime? @updatedAt
+  refund     Refund?
+
+  @@map("payments")
+}
+
+model Refund {
+  id           Int        @id @default(autoincrement())
+  order        Order      @relation(fields: [orderId], references: [id])
+  orderId      String
+  payment      Payment    @relation(fields: [paymentId], references: [id])
+  paymentId    Int        @unique
+  ticketType   TicketType @relation(fields: [ticketTypeId], references: [id])
+  ticketTypeId Int
+  amount       Int
+  reason       String?
+  status       String?
+  requestedAt  DateTime   @default(now())
+  processedAt  DateTime?
+  responseData Json?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime?  @updatedAt
+
+  @@map("refunds")
+}
+
+model UserInvoice {
+  id                         Int         @id @default(autoincrement())
+  user                       User        @relation(fields: [userId], references: [id])
+  userId                     Int
+  invoiceName                String
+  invoiceAddress             String?
+  invoiceReceiverName        String?
+  invoiceReceiverPhoneNumber String?
+  invoiceTaxId               String?
+  invoiceTitle               String?
+  invoiceCarrier             String?
+  invoiceType                InvoiceType @default(b2c)
+  createdAt                  DateTime    @default(now())
+  updatedAt                  DateTime?   @updatedAt
+  deletedAt                  DateTime?
+
+  @@map("user_invoices")
 }

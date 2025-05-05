@@ -8,25 +8,27 @@ jobs:
   lint-test-build:
     name: 代碼檢查、測試與構建
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: 檢出代碼
         uses: actions/checkout@v4
-      
+          with:
+            fetch-depth: 0
+
       - name: 設置 Node.js 環境
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
-      
+
       - name: 安裝依賴項
         run: npm ci
-      
+
       - name: 執行代碼檢查
-        run: npm run lint
-      
+        run: npm run lint -- --since=origin/${{ github.event.pull_request.base.ref }}
+
       - name: 生成 Prisma 客戶端
         run: npm run generate
-      
+
       - name: 構建應用程序
         run: npm run build

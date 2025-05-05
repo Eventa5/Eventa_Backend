@@ -63,10 +63,16 @@ DATABASE_URL=postgresql://username:password@localhost:5432/database_name
 npm run deploy
 ```
 
-### 5. Start the development server
+### 5. Run Prisma Generate
+```
+npm run generate
+```
+
+### 6. Start the development server
 ```
 npm run dev
 ```
+
 The server will start on http://localhost:3000 by default.
 
 ## Available Scripts
