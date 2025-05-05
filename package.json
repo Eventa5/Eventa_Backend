@@ -11,9 +11,9 @@
     "migrate": "npx prisma migrate dev",
     "generate": "prisma generate",
     "deploy": "npx prisma migrate deploy",
-    "studio": "prisma studio --schema=src/prisma/schema.prisma",
-    "reset": "npx prisma migrate reset --force --schema=src/prisma/schema.prisma",
-    "seed": "npx prisma db seed --schema=src/prisma/schema.prisma",
+    "studio": "prisma studio",
+    "reset": "npx prisma migrate reset --force",
+    "seed": "npx prisma db seed",
     "lint": "biome check --changed --no-errors-on-unmatched",
     "lint-fix": "biome check --fix --unsafe --staged --no-errors-on-unmatched",
     "format": "biome check --write --staged --no-errors-on-unmatched",
@@ -23,6 +23,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@faker-js/faker": "^9.7.0",
     "@prisma/client": "^6.6.0",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
@@ -53,6 +54,7 @@
     "typescript": "^5.8.3"
   },
   "prisma": {
-    "schema": "src/prisma/schema.prisma"
+    "schema": "src/prisma/schema.prisma",
+    "seed": "ts-node src/prisma/seed.ts"
   }
 }
