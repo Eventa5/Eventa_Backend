@@ -1,28 +1,3 @@
-/**
- * @swagger
- * components:
- *   schemas:
- *     Currency:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *         code:
- *           type: string
- *         name:
- *           type: string
- *     CurrencyInput:
- *       type: object
- *       required:
- *         - code
- *         - name
- *       properties:
- *         code:
- *           type: string
- *         name:
- *           type: string
-
- */
 import express from "express";
 import * as currencyController from "../../controllers/currencyController";
 
@@ -42,7 +17,7 @@ const router = express.Router();
  *             schema:
  *               type: array
  *               items:
- *                $ref: '#/components/schemas/Currency'
+ *                $ref: '#/components/schemas/CurrencyResponse'
  *
  *   post:
  *     summary: Create a new currency
@@ -52,14 +27,20 @@ const router = express.Router();
  *       content:
  *         application/json:
  *           schema:
- *            $ref: '#/components/schemas/CurrencyInput'
+ *            $ref: '#/components/schemas/CreateCurrencyRequest'
  *     responses:
  *       201:
  *         description: The created currency
  *         content:
  *           application/json:
  *             schema:
- *              $ref: '#/components/schemas/Currency'
+ *              $ref: '#/components/schemas/CurrencyResponse'
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.route("/").get(currencyController.getCurrencies).post(currencyController.createCurrency);
 
