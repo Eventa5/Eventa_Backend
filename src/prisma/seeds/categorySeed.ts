@@ -42,5 +42,5 @@ export const seedCategories = async () => {
     data: categories,
   });
 
-  console.log("Categories seeded successfully.");
+  console.log("🌱 Categories seeded successfully.");
 };
