@@ -1,5 +1,5 @@
 // create global prisma client instance
-import { PrismaClient } from "../generated/prisma";
+import { PrismaClient } from "@prisma/client";
 
 // add prisma to global type
 const globalForPrisma = globalThis as {
