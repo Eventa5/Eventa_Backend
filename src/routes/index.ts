@@ -19,6 +19,11 @@ router.use("/v1/ticketTypes", ticketTypeRoutes);
 router.use("/v1/orders", orderRoutes);
 router.use("/v1/oranziers", oranzierRoutes);
 router.use("/v1/currencies", currencyRouter);
+
+router.get("/docs/swagger.json", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(specs);
+});
 router.use("/docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 export default router;
