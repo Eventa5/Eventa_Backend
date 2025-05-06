@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
+import { loginSchema, signupSchema, updateProfileSchema } from "../schemas/zod/user.schema";
 import * as userService from "../services/userService";
 import { validateInput } from "../utils/validateInput";
-import { loginSchema, signupSchema, updateProfileSchema } from "../validators/userValidation";
 
 // 回應輔助函數
 const sendResponse = (
