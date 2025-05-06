@@ -1,30 +1,30 @@
 import { faker } from "@faker-js/faker";
-import { type Prisma, PrismaClient } from "../../generated/prisma";
+import { type Prisma, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 const presetCategories: Array<{ name: string; icon: string }> = [
-  { name: "戶外體驗", icon: "🏞️" },
-  { name: "學習", icon: "📚" },
-  { name: "親子", icon: "👨‍👩‍👧‍👦" },
-  { name: "寵物", icon: "🐾" },
-  { name: "科技", icon: "💻" },
-  { name: "商業", icon: "💼" },
-  { name: "創業", icon: "🚀" },
-  { name: "投資", icon: "📈" },
-  { name: "設計", icon: "🎨" },
-  { name: "藝文", icon: "🖼️" },
-  { name: "手作", icon: "🧶" },
-  { name: "美食", icon: "🍽️" },
-  { name: "攝影", icon: "📷" },
-  { name: "遊戲", icon: "🎮" },
-  { name: "運動", icon: "🏃" },
-  { name: "健康", icon: "🧘" },
-  { name: "音樂", icon: "🎵" },
-  { name: "電影", icon: "🎬" },
-  { name: "娛樂", icon: "🎭" },
-  { name: "區塊鏈", icon: "🔗" },
-  { name: "時尚", icon: "👗" },
-  { name: "公益", icon: "🤝" },
+  { name: "戶外體驗", icon: "tent-tree" },
+  { name: "學習", icon: "book-open-text" },
+  { name: "親子", icon: "baby" },
+  { name: "寵物", icon: "paw-print" },
+  { name: "科技", icon: "cpu" },
+  { name: "商業", icon: "briefcase-business" },
+  { name: "創業", icon: "rocket" },
+  { name: "投資", icon: "chart-no-axes-combined" },
+  { name: "設計", icon: "palette" },
+  { name: "藝文", icon: "drama" },
+  { name: "手作", icon: "scissors" },
+  { name: "美食", icon: "hamburger" },
+  { name: "攝影", icon: "camera" },
+  { name: "遊戲", icon: "gamepad-2" },
+  { name: "運動", icon: "dumbbell" },
+  { name: "健康", icon: "heart-pulse" },
+  { name: "音樂", icon: "music" },
+  { name: "電影", icon: "clapperboard" },
+  { name: "娛樂", icon: "party-popper" },
+  { name: "區塊鏈", icon: "boxes" },
+  { name: "時尚", icon: "shopping-bag" },
+  { name: "公益", icon: "hand-heart" },
 ];
 
 export const seedCategories = async () => {
