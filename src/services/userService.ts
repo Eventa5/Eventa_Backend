@@ -111,7 +111,7 @@ export const updateUserProfile = async (
     email: string;
     avatar: string | null;
     displayName: string | null;
-    birthday: string | null;
+    birthday: Date | null;
     gender: string | null;
     phoneNumber: string | null;
     countryCode: string | null;
