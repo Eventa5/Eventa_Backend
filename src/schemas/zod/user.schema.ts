@@ -18,6 +18,26 @@ export const loginSchema = z.object({
   password: z.string().min(1, "請提供密碼"),
 });
 
+export const birthdaySchema = z
+  .preprocess((val: unknown): Date | null => {
+    if (val === null || val === "") return null;
+
+    if (typeof val !== "string") throw new Error("生日格式錯誤，請使用 YYYY/MM/DD");
+
+    const match = val.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+    if (!match) throw new Error("生日格式錯誤，請使用 YYYY/MM/DD");
+
+    const [, y, m, d] = match;
+    const date = new Date(Date.UTC(+y, +m - 1, +d));
+
+    if (date.getUTCFullYear() !== +y || date.getUTCMonth() !== +m - 1 || date.getUTCDate() !== +d) {
+      throw new Error("生日日期不正確");
+    }
+
+    return date;
+  }, z.date())
+  .nullable();
+
 // 用戶資料更新驗證結構
 export const updateProfileSchema = z.object({
   name: z.string().max(255, "姓名不能超過255個字符").nullable(),
@@ -29,10 +49,7 @@ export const updateProfileSchema = z.object({
       message: "頭像必須是有效的 URL、空字串或 null",
     }),
   displayName: z.string().max(255, "顯示名稱不能超過255個字符").nullable(),
-  birthday: z
-    .string()
-    .regex(/^\d{4}\/\d{2}\/\d{2}$/, "生日格式必須為 YYYY/MM/DD")
-    .nullable(),
+  birthday: birthdaySchema,
   gender: z.string().nullable(),
   phoneNumber: z.string().nullable(),
   countryCode: z.string().nullable(),
