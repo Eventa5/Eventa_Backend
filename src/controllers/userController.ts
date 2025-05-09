@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { loginSchema, signupSchema, updateProfileSchema } from "../schemas/zod/user.schema";
 import * as userService from "../services/userService";
+import { uploadToImgur } from "../utils/imgurClient";
 import { validateInput } from "../utils/validateInput";
 
 // 回應輔助函數
@@ -111,6 +112,45 @@ export const updateProfile = async (
       const validatedData = validateInput(updateProfileSchema, req.body);
 
       await userService.updateUserProfile(userId, validatedData);
+
+      sendResponse(res, 200, "更新成功", true);
+    } catch (error) {
+      if (error instanceof Error) {
+        sendResponse(res, 400, error.message, false);
+      } else {
+        next(error);
+      }
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const uploadAvatar = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const avatar = req.file;
+    if (!userId) {
+      sendResponse(res, 401, "未授權", false);
+      return;
+    }
+    if (!avatar) {
+      sendResponse(res, 400, "未上傳檔案", false);
+      return;
+    }
+
+    try {
+      const imageUrl = await uploadToImgur(avatar.buffer, avatar.originalname);
+
+      if (!imageUrl) {
+        sendResponse(res, 400, "圖片上傳失敗", false);
+        return;
+      }
+      await userService.uploadUserAvatar(userId, imageUrl);
 
       sendResponse(res, 200, "更新成功", true);
     } catch (error) {

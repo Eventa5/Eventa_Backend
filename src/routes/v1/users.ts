@@ -1,6 +1,13 @@
 import express from "express";
-import { getProfile, login, signup, updateProfile } from "../../controllers/userController";
+import {
+  getProfile,
+  login,
+  signup,
+  updateProfile,
+  uploadAvatar,
+} from "../../controllers/userController";
 import { auth } from "../../middlewares/auth";
+import { upload } from "../../utils/multer";
 
 const router = express.Router();
 
@@ -147,5 +154,7 @@ router.get("/profile", auth, getProfile);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put("/profile", auth, updateProfile);
+
+router.post("/profile/avatar", auth, upload.single("avatar"), uploadAvatar);
 
 export default router;
