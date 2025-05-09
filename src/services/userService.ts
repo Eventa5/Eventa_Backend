@@ -35,14 +35,14 @@ export const createUser = async ({
 
 // 使用者登入服務
 export const authenticateUser = async ({
-  account,
+  email,
   password,
 }: {
-  account: string;
+  email: string;
   password: string;
 }) => {
   // 尋找用戶
-  const user = await prisma.user.findUnique({ where: { email: account } });
+  const user = await prisma.user.findUnique({ where: { email: email } });
   if (!user || !user.password) {
     throw new Error("帳號或密碼錯誤");
   }

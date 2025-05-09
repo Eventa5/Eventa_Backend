@@ -67,10 +67,10 @@
  *     LoginRequest:
  *       type: object
  *       required:
- *         - account
+ *         - email
  *         - password
  *       properties:
- *         account:
+ *         email:
  *           type: string
  *           description: 使用者電子郵件地址
  *         password:

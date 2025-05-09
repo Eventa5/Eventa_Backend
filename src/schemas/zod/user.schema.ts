@@ -14,7 +14,7 @@ export const signupSchema = z
 
 // 用戶登入驗證結構
 export const loginSchema = z.object({
-  account: z.string().email("請提供有效的電子郵件地址"),
+  email: z.string().email("請提供有效的電子郵件地址"),
   password: z.string().min(1, "請提供密碼"),
 });
 
