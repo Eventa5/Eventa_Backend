@@ -131,30 +131,32 @@ export const uploadAvatar = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
+  const userId = req.user?.id;
+  const avatar = req.file;
+  if (!userId) {
+    sendResponse(res, 401, "未授權", false);
+    return;
+  }
+  if (!avatar) {
+    sendResponse(res, 400, "未上傳檔案", false);
+    return;
+  }
+
   try {
-    const userId = req.user?.id;
-    const avatar = req.file;
-    if (!userId) {
-      sendResponse(res, 401, "未授權", false);
-      return;
-    }
-    if (!avatar) {
-      sendResponse(res, 400, "未上傳檔案", false);
-      return;
+    const imageUrl = await uploadToImgur(avatar.buffer, avatar.originalname);
+    await userService.uploadUserAvatar(userId, imageUrl);
+
+    // 清除buffer
+    if (req.file) {
+      (req.file.buffer as unknown as Buffer | null) = null;
     }
 
-    try {
-      const imageUrl = await uploadToImgur(avatar.buffer, avatar.originalname);
-      await userService.uploadUserAvatar(userId, imageUrl);
-      sendResponse(res, 200, "上傳成功", true);
-    } catch (error) {
-      if (error instanceof Error) {
-        sendResponse(res, 400, error.message, false);
-      } else {
-        next(error);
-      }
-    }
+    sendResponse(res, 200, "上傳成功", true);
   } catch (error) {
-    next(error);
+    if (error instanceof Error) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
   }
 };
