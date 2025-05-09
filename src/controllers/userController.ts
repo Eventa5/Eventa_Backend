@@ -145,14 +145,8 @@ export const uploadAvatar = async (
 
     try {
       const imageUrl = await uploadToImgur(avatar.buffer, avatar.originalname);
-
-      if (!imageUrl) {
-        sendResponse(res, 400, "圖片上傳失敗", false);
-        return;
-      }
       await userService.uploadUserAvatar(userId, imageUrl);
-
-      sendResponse(res, 200, "更新成功", true);
+      sendResponse(res, 200, "上傳成功", true);
     } catch (error) {
       if (error instanceof Error) {
         sendResponse(res, 400, error.message, false);
