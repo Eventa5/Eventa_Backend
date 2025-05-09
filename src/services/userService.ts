@@ -156,6 +156,20 @@ export const updateUserProfile = async (
   });
 };
 
+// 編輯使用者大頭貼
+export const uploadUserAvatar = async (userId: number, avatar: string) => {
+  // 檢查用戶是否存在
+  const existingUser = await prisma.user.findUnique({ where: { id: userId } });
+  if (!existingUser) {
+    throw new Error("使用者不存在");
+  }
+
+  return await prisma.user.update({
+    where: { id: userId },
+    data: { avatar },
+  });
+};
+
 // 獲取所有使用者
 export const getAllUsers = async () => {
   return await prisma.user.findMany({

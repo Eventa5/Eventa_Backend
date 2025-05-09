@@ -173,4 +173,22 @@
  *         status:
  *           type: boolean
  *           example: true
+ *
+ *   # 更新使用者大頭貼結構
+ *     # -----------------------------------------------
+ *     UploadAvataRequest:
+ *       type: object
+ *       properties:
+ *         avatar:
+ *           type: string
+ *           format: binary
+ *           description: 使用者上傳的圖片檔案，僅接受 image/*
+ *
+ *     UploadAvataResponse:
+ *      type: object
+ *      properties:
+ *        status:
+ *          type: boolean
+ *        message:
+ *          type: string
  */
