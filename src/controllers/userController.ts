@@ -48,7 +48,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       const validatedData = validateInput(loginSchema, req.body);
 
       const { token } = await userService.authenticateUser({
-        account: validatedData.account,
+        email: validatedData.email,
         password: validatedData.password,
       });
       sendResponse(res, 200, "登入成功", true, token);
