@@ -1,6 +1,13 @@
 import express from "express";
-import { getProfile, login, signup, updateProfile } from "../../controllers/userController";
+import {
+  getProfile,
+  login,
+  signup,
+  updateProfile,
+  uploadAvatar,
+} from "../../controllers/userController";
 import { auth } from "../../middlewares/auth";
+import { uploadUserAvatar } from "../../middlewares/multer";
 
 const router = express.Router();
 
@@ -147,5 +154,43 @@ router.get("/profile", auth, getProfile);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put("/profile", auth, updateProfile);
+
+/**
+ * @swagger
+ * /api/v1/users/profile/avatar:
+ *   post:
+ *     tags:
+ *       - Users
+ *     summary: 上傳用戶頭像
+ *     description: 上傳一張圖片作為當前登入用戶的大頭貼，圖片將會上傳至 Imgur 並儲存其 URL 至 DB
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             $ref: '#/components/schemas/UploadAvatarRequest'
+ *     responses:
+ *       200:
+ *         description: 上傳成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UploadAvatarResponse'
+ *       400:
+ *         description: 錯誤的請求，例如沒有圖片、圖片上傳失敗等
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未授權
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post("/profile/avatar", auth, uploadUserAvatar.single("avatar"), uploadAvatar);
 
 export default router;

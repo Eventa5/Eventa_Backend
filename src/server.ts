@@ -1,7 +1,7 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express, { type Express, type Request, type Response } from "express";
-import { errorHandler } from "./middlewares/errorHandler";
+import { errorHandler, multerErrorHandler } from "./middlewares/errorHandler";
 import routes from "./routes";
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
@@ -28,6 +28,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api", routes);
 
 // error handler
+app.use(multerErrorHandler);
 app.use(errorHandler);
 
 app.listen(PORT, () => {

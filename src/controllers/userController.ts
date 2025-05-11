@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { loginSchema, signupSchema, updateProfileSchema } from "../schemas/zod/user.schema";
 import * as userService from "../services/userService";
+import { uploadToImgur } from "../utils/imgurClient";
 import { validateInput } from "../utils/validateInput";
 
 // 回應輔助函數
@@ -122,5 +123,40 @@ export const updateProfile = async (
     }
   } catch (error) {
     next(error);
+  }
+};
+
+export const uploadAvatar = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  const userId = req.user?.id;
+  const avatar = req.file;
+  if (!userId) {
+    sendResponse(res, 401, "未授權", false);
+    return;
+  }
+  if (!avatar) {
+    sendResponse(res, 400, "未上傳檔案", false);
+    return;
+  }
+
+  try {
+    const imageUrl = await uploadToImgur(avatar.buffer, avatar.originalname);
+    await userService.uploadUserAvatar(userId, imageUrl);
+
+    // 清除buffer
+    if (req.file) {
+      (req.file.buffer as unknown as Buffer | null) = null;
+    }
+
+    sendResponse(res, 200, "上傳成功", true, imageUrl);
+  } catch (error) {
+    if (error instanceof Error) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
   }
 };
