@@ -170,14 +170,14 @@ router.put("/profile", auth, updateProfile);
  *       content:
  *         multipart/form-data:
  *           schema:
- *             $ref: '#/components/schemas/UploadAvataRequest'
+ *             $ref: '#/components/schemas/UploadAvatarRequest'
  *     responses:
  *       200:
  *         description: 上傳成功
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UploadAvataResponse'
+ *               $ref: '#/components/schemas/UploadAvatarResponse'
  *       400:
  *         description: 錯誤的請求，例如沒有圖片、圖片上傳失敗等
  *         content:

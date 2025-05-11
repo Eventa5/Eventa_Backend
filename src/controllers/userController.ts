@@ -151,7 +151,7 @@ export const uploadAvatar = async (
       (req.file.buffer as unknown as Buffer | null) = null;
     }
 
-    sendResponse(res, 200, "上傳成功", true);
+    sendResponse(res, 200, "上傳成功", true, imageUrl);
   } catch (error) {
     if (error instanceof Error) {
       sendResponse(res, 400, error.message, false);

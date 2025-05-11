@@ -1,7 +1,6 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express, { type Express, type Request, type Response } from "express";
-import multer from "multer";
 import { errorHandler, multerErrorHandler } from "./middlewares/errorHandler";
 import routes from "./routes";
 if (process.env.NODE_ENV !== "production") {
