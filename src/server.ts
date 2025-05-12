@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import express, { type Express, type Request, type Response } from "express";
 import { errorHandler, multerErrorHandler } from "./middlewares/errorHandler";
 import routes from "./routes";
+import { setupTokenCleanupTask } from "./utils/scheduler";
+
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
@@ -30,6 +32,9 @@ app.use("/api", routes);
 // error handler
 app.use(multerErrorHandler);
 app.use(errorHandler);
+
+// 設置定時任務
+setupTokenCleanupTask();
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://127.0.0.1:${PORT}`);
