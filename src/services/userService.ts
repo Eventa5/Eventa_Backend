@@ -1,7 +1,9 @@
+import crypto from "node:crypto";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import prisma from "../prisma/client";
+import { sendPasswordResetEmail } from "../utils/emailClient";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -170,6 +172,70 @@ export const uploadUserAvatar = async (userId: number, avatar: string) => {
   });
 };
 
+// 發送重設密碼郵件
+export const requestPasswordReset = async (email: string) => {
+  // 檢查郵箱是否存在
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    throw new Error("未找到符合該電子郵件的使用者");
+  }
+
+  // 產生隨機令牌
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  // 設定五分鐘過期
+  const resetTokenExpiry = new Date(Date.now() + 5 * 60 * 1000);
+
+  // 保存令牌到用戶資料中
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      resetToken,
+      resetTokenExpiry,
+    },
+  });
+
+  // 發送重設密碼郵件
+  const emailSent = await sendPasswordResetEmail(email, resetToken, 5);
+  if (!emailSent) {
+    throw new Error("發送重設密碼郵件失敗");
+  }
+
+  return true;
+};
+
+// 重設密碼
+export const resetPassword = async (resetToken: string, newPassword: string) => {
+  // 找到對應令牌的用戶
+  const user = await prisma.user.findFirst({
+    where: {
+      resetToken,
+      resetTokenExpiry: {
+        gt: new Date(),
+      },
+    },
+  });
+
+  if (!user) {
+    throw new Error("無效或過期的重設令牌");
+  }
+
+  // 雜湊新密碼
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  // 更新密碼並清除令牌
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      password: hashedPassword,
+      resetToken: null,
+      resetTokenExpiry: null,
+    },
+  });
+
+  return true;
+};
+
 // 獲取所有使用者
 export const getAllUsers = async () => {
   return await prisma.user.findMany({
@@ -210,4 +276,27 @@ export const deleteUser = async (id: number) => {
   }
 
   return await prisma.user.delete({ where: { id } });
+};
+
+// 清理過期的重設密碼令牌
+export const cleanExpiredResetTokens = async () => {
+  const now = new Date();
+
+  // 更新所有過期的令牌為 null
+  await prisma.user.updateMany({
+    where: {
+      resetTokenExpiry: {
+        lt: now,
+      },
+      resetToken: {
+        not: null,
+      },
+    },
+    data: {
+      resetToken: null,
+      resetTokenExpiry: null,
+    },
+  });
+
+  return true;
 };

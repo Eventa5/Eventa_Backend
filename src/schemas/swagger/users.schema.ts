@@ -92,6 +92,67 @@
  *           description: JWT Token
  *           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *
+ *     # 密碼重設相關結構
+ *     # -----------------------------------------------
+ *     ForgetRequestSchema:
+ *       type: object
+ *       required:
+ *         - email
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: 用戶電子郵件地址
+ *           example: "example@gmail.com"
+ *
+ *     ResetPasswordRequestSchema:
+ *       type: object
+ *       required:
+ *         - newPassword
+ *         - confirmNewPassword
+ *         - resetToken
+ *       properties:
+ *         newPassword:
+ *           type: string
+ *           format: password
+ *           description: 新的密碼
+ *           example: "newPassword123"
+ *         confirmNewPassword:
+ *           type: string
+ *           format: password
+ *           description: 確認新密碼
+ *           example: "newPassword123"
+ *         resetToken:
+ *           type: string
+ *           description: 重設密碼令牌
+ *           example: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+ *
+ *     ResetPasswordResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: 發送成功
+ *         status:
+ *           type: boolean
+ *           example: true
+ *
+ *     # Google OAuth 登入相關結構
+ *     # -----------------------------------------------
+ *     GoogleOAuthResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: 登入成功
+ *         status:
+ *           type: boolean
+ *           example: true
+ *         data:
+ *           type: string
+ *           description: JWT Token
+ *           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *
  *     # 註冊相關結構
  *     # -----------------------------------------------
  *     SignupRequest:
@@ -191,4 +252,17 @@
  *          type: boolean
  *        message:
  *          type: string
+ *
+ *     # 錯誤響應
+ *     # -----------------------------------------------
+ *     ErrorResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           description: 錯誤訊息
+ *           example: "請求錯誤"
+ *         status:
+ *           type: boolean
+ *           example: false
  */
