@@ -8,7 +8,7 @@ export interface PaginationInfo {
   hasPrevPage: boolean;
 }
 
-export const getPagination = (page, limit, totalItems: number): PaginationInfo => {
+export const getPagination = (totalItems: number, page = 1, limit = 10): PaginationInfo => {
   const totalPages = Math.ceil(totalItems / limit);
   const currentPage = Math.min(Math.max(page, 1), totalPages || 1);
 
