@@ -2,19 +2,18 @@ import type { NextFunction, Request, Response } from "express";
 import multer from "multer";
 
 interface AppError extends Error {
-  status?: number;
+  statusCode?: number;
   code?: string;
 }
 
 export function errorHandler(err: AppError, req: Request, res: Response, next: NextFunction) {
   console.error(`[Error] ${req.method} ${req.path} - ${err.message}`);
 
-  const statusCode = err.status || 500;
+  const statusCode = err.statusCode || 500;
 
   res.status(statusCode).json({
+    message: err.message || "伺服器錯誤，請稍後再試",
     status: false,
-    message: err.message || "Internal Server Error",
-    // code: err.code || "INTERNAL_ERROR",
   });
 }
 
