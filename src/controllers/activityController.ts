@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import { activityIdSchema } from "../schemas/zod/activity.schema";
 import { getActivity } from "../services/activityService";
 import { getTicketTypesByActivityId } from "../services/ticketTypeService";
 
@@ -10,13 +11,15 @@ export const getActivityTicketTypes = async (req: Request, res: Response, next: 
     });
   }
 
-  const activityId = Number(req.params.activityId);
-  if (!activityId || Number.isNaN(activityId)) {
+  const { success, data, error } = activityIdSchema.safeParse(req.params);
+  if (!success) {
     return next({
-      message: "活動 id 格式錯誤",
+      message: error.issues[0].message,
       statusCode: 404,
     });
   }
+
+  const { activityId } = data;
 
   try {
     const activity = await getActivity(activityId);
