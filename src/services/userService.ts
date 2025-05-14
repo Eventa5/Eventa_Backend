@@ -300,3 +300,71 @@ export const cleanExpiredResetTokens = async () => {
 
   return true;
 };
+
+// Google 使用者認證和處理
+export const handleGoogleUser = async (googleUserData: {
+  sub: string;
+  email: string;
+  name: string;
+  picture?: string;
+}) => {
+  // 檢查是否已有此 Google 帳號的用戶
+  let user = await prisma.user.findFirst({
+    where: {
+      userIdentity: {
+        some: {
+          provider: "google",
+          providerId: googleUserData.sub,
+        },
+      },
+    },
+  });
+
+  let isNewUser = false;
+
+  if (!user) {
+    // 檢查是否有相同 email 的用戶
+    user = await prisma.user.findUnique({
+      where: { email: googleUserData.email },
+    });
+
+    if (user) {
+      // 將 Google 身份連結到現有用戶
+      await prisma.userIdentity.create({
+        data: {
+          userId: user.id,
+          provider: "google",
+          providerId: googleUserData.sub,
+          email: googleUserData.email,
+        },
+      });
+    } else {
+      // 創建新用戶
+      isNewUser = true;
+      const hashedPassword = await bcrypt.hash(uuidv4(), 10);
+      user = await prisma.user.create({
+        data: {
+          email: googleUserData.email,
+          password: hashedPassword,
+          name: googleUserData.name,
+          avatar: googleUserData.picture,
+          memberId: uuidv4(),
+          userIdentity: {
+            create: {
+              provider: "google",
+              providerId: googleUserData.sub,
+              email: googleUserData.email,
+            },
+          },
+        },
+      });
+    }
+  }
+
+  // 創建 JWT
+  const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+    expiresIn: "7d",
+  });
+
+  return { user, token, isNewUser };
+};

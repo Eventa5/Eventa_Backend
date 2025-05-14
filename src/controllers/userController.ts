@@ -1,9 +1,5 @@
-import bcrypt from "bcrypt";
 import type { NextFunction, Request, Response } from "express";
 import { OAuth2Client } from "google-auth-library";
-import jwt from "jsonwebtoken";
-import { v4 as uuidv4 } from "uuid";
-import prisma from "../prisma/client";
 import {
   forgetSchema,
   loginSchema,
@@ -242,72 +238,22 @@ export const googleCallback = async (
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
 
-    // 使用 access token 獲取用戶資訊
-    const oauth2 = new OAuth2Client();
-    oauth2.setCredentials({ access_token: tokens.access_token });
-
     const response = await fetch(
       `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${tokens.access_token}`,
     );
     const data = (await response.json()) as GoogleUserInfo;
 
-    // 檢查是否已有此 Google 帳號的用戶
-    let user = await prisma.user.findFirst({
-      where: {
-        userIdentity: {
-          some: {
-            provider: "google",
-            providerId: data.sub,
-          },
-        },
-      },
+    const { token, isNewUser } = await userService.handleGoogleUser({
+      sub: data.sub,
+      email: data.email,
+      name: data.name,
+      picture: data.picture,
     });
 
-    if (!user) {
-      // 檢查是否有相同 email 的用戶
-      user = await prisma.user.findUnique({
-        where: { email: data.email },
-      });
-
-      if (user) {
-        // 將 Google 身份連結到現有用戶
-        await prisma.userIdentity.create({
-          data: {
-            userId: user.id,
-            provider: "google",
-            providerId: data.sub,
-            email: data.email,
-          },
-        });
-      } else {
-        // 創建新用戶
-        const hashedPassword = await bcrypt.hash(uuidv4(), 10);
-        user = await prisma.user.create({
-          data: {
-            email: data.email,
-            password: hashedPassword,
-            name: data.name,
-            avatar: data.picture,
-            memberId: uuidv4(),
-            userIdentity: {
-              create: {
-                provider: "google",
-                providerId: data.sub,
-                email: data.email,
-              },
-            },
-          },
-        });
-
-        // 發送歡迎郵件
-        await sendGoogleLoginEmail(data.email, data.name);
-      }
+    // 如果是新使用者，發送歡迎郵件
+    if (isNewUser) {
+      await sendGoogleLoginEmail(data.email, data.name);
     }
-
-    // 創建 JWT
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
-      expiresIn: "7d",
-    });
 
     res.redirect(`${process.env.FRONT_REDIRECT_URL}?token=${token}`);
   } catch (error) {
