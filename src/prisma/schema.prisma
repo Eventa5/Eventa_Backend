@@ -4,8 +4,9 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
+
 // directUrl = env("DIRECT_URL") 直接連接DB的url Supabase DB 需要
 
 enum ActivityStatus {
@@ -36,30 +37,30 @@ enum TicketStatus {
 }
 
 model User {
-  id           Int            @id @default(autoincrement())
-  memberId     String         @unique
-  email        String         @unique
-  password     String?
-  resetToken         String?         @unique
-  resetTokenExpiry         DateTime?
-  name         String?
-  avatar       String?
-  displayName  String?
-  birthday     DateTime?
-  gender       String?
-  phoneNumber  String?
-  countryCode  String?
-  region       String?
-  address      String?
-  identity     String?
-  userIdentity UserIdentity[]
-  organizer    Organizer[]
-  createdAt    DateTime       @default(now())
-  updateAt     DateTime       @updatedAt
-  activityLike ActivityLike[]
-  orders       Order[]
-  tickets      Ticket[]
-  invoices     UserInvoice[]
+  id               Int            @id @default(autoincrement())
+  memberId         String         @unique
+  email            String         @unique
+  password         String?
+  resetToken       String?        @unique
+  resetTokenExpiry DateTime?
+  name             String?
+  avatar           String?
+  displayName      String?
+  birthday         DateTime?
+  gender           String?
+  phoneNumber      String?
+  countryCode      String?
+  region           String?
+  address          String?
+  identity         String?
+  userIdentity     UserIdentity[]
+  organizer        Organizer[]
+  createdAt        DateTime       @default(now())
+  updateAt         DateTime       @updatedAt
+  activityLike     ActivityLike[]
+  orders           Order[]
+  tickets          Ticket[]
+  invoices         UserInvoice[]
 
   @@map("users") // 指定存入db的table name
 }
@@ -248,7 +249,7 @@ model OrderItem {
   orderId      String
   quantity     Int
   createdAt    DateTime   @default(now())
-  updatedAt    DateTime? @updatedAt
+  updatedAt    DateTime?  @updatedAt
 
   @@map("order_items")
 }
