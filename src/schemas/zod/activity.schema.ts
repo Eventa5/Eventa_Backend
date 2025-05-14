@@ -13,3 +13,15 @@ import { z } from "zod";
 // router.patch("/:activityId/cancel", () => {}); // 取消活動
 
 // router.delete("/:activityId/favorite", () => {}); // 取消收藏
+
+// 取得活動資料Query
+export const activityQuerySchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().default(8),
+  categoryId: z.coerce.number().optional(),
+  location: z.string().optional(),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional(),
+  keyword: z.string().optional(),
+  organizerId: z.coerce.number().optional(),
+});
