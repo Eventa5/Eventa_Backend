@@ -1,3 +1,4 @@
+import { faker } from "@faker-js/faker";
 import { type Prisma, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -7,6 +8,8 @@ const organizer: Prisma.OrganizerCreateInput = {
   },
   email: "evneta@eventa.com",
   name: "EVENTA官方",
+  cover: faker.image.urlPicsumPhotos({ width: 1200, height: 400 }),
+  avatar: faker.image.avatar(),
 };
 
 export const seedOrganizers = async () => {

@@ -1,27 +1,26 @@
 import { z } from "zod";
 
-// router.get("/popular", () => {}); // 取得熱門活動
-// router.get("/", () => {}); // 取得活動資料
-// router.get("/:activityId/participants", () => {}); // 取得活動參加名單
-// router.get("/:activityId", () => {}); // 取得特定活動資料
-
-// router.post("/", () => {}); // 創建活動
-// router.post("/:activityId/favorite", () => {}); // 收藏活動
-
-// router.put("/:activityId", () => {}); // 編輯活動
-
-// router.patch("/:activityId/cancel", () => {}); // 取消活動
-
-// router.delete("/:activityId/favorite", () => {}); // 取消收藏
-
 // 取得活動資料Query
 export const activityQuerySchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().default(8),
-  categoryId: z.coerce.number().optional(),
+  categoryId: z.coerce
+    .number()
+    .refine((val) => !Number.isNaN(val), {
+      message: "無效的類別 ID，請輸入Number",
+    })
+    .optional(),
   location: z.string().optional(),
   startTime: z.coerce.date().optional(),
   endTime: z.coerce.date().optional(),
   keyword: z.string().optional(),
-  organizerId: z.coerce.number().optional(),
+  organizerId: z.coerce
+    .number()
+    .refine((val) => !Number.isNaN(val), {
+      message: "無效的類別 ID，請輸入Number",
+    })
+    .optional(),
 });
+
+// 匯出型別
+export type ActivityQueryParams = z.infer<typeof activityQuerySchema>;
