@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+
 import { activityIdSchema } from "../schemas/zod/activity.schema";
 import { getActivity } from "../services/activityService";
 import { getTicketTypesByActivityId } from "../services/ticketTypeService";
@@ -39,7 +40,7 @@ export const getActivityTicketTypes = async (req: Request, res: Response, next: 
     }
 
     res.status(200).json({
-      message: "test",
+      message: "成功",
       status: true,
       data: ticketTypes,
     });
