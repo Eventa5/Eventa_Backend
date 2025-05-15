@@ -252,17 +252,4 @@
  *          type: boolean
  *        message:
  *          type: string
- *
- *     # 錯誤響應
- *     # -----------------------------------------------
- *     ErrorResponse:
- *       type: object
- *       properties:
- *         message:
- *           type: string
- *           description: 錯誤訊息
- *           example: "請求錯誤"
- *         status:
- *           type: boolean
- *           example: false
  */
