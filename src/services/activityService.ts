@@ -3,6 +3,15 @@ import prisma from "../prisma/client";
 import type { ActivityQueryParams } from "../schemas/zod/activity.schema";
 import * as paginator from "../utils/paginator";
 
+//
+export const getActivityById = async (activityId: number) => {
+  return prisma.activity.findUnique({
+    where: {
+      id: activityId,
+    },
+  });
+};
+
 // 取得活動資料
 export const getActivities = async (params: ActivityQueryParams) => {
   const { page, limit, categoryId, location, startTime, endTime, keyword, organizerId } = params;
@@ -47,7 +56,7 @@ export const getActivities = async (params: ActivityQueryParams) => {
 };
 
 // 取得單一活動資料
-export const getActivity = async (activityId: number, userId: number) => {
+export const getActivityDetails = async (activityId: number, userId: number) => {
   const activityRaw = await prisma.activity.findFirst({
     where: {
       id: activityId,
