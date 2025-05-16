@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { OAuth2Client } from "google-auth-library";
+import { InputValidationError } from "../errors/InputValidationError";
 import {
   forgetSchema,
   loginSchema,
@@ -13,7 +14,6 @@ import { uploadToImgur } from "../utils/imgurClient";
 import { sendResponse } from "../utils/sendResponse";
 import { validateInput } from "../utils/validateInput";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
 const GOOGLE_REDIRECT_URL = process.env.GOOGLE_REDIRECT_URL || "";
@@ -43,7 +43,7 @@ export const signup = async (req: Request, res: Response, next: NextFunction): P
       });
       sendResponse(res, 201, "註冊成功", true);
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof InputValidationError) {
         sendResponse(res, 400, error.message, false);
       } else {
         next(error);
@@ -66,7 +66,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       });
       sendResponse(res, 200, "登入成功", true, token);
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof InputValidationError) {
         sendResponse(res, 400, error.message, false);
       } else {
         next(error);
@@ -95,7 +95,7 @@ export const getProfile = async (
       const userData = await userService.getUserProfile(userId);
       sendResponse(res, 200, "success", true, userData);
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof InputValidationError) {
         sendResponse(res, 404, error.message, false);
       } else {
         next(error);
@@ -127,7 +127,7 @@ export const updateProfile = async (
 
       sendResponse(res, 200, "更新成功", true);
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof InputValidationError) {
         sendResponse(res, 400, error.message, false);
       } else {
         next(error);
@@ -147,7 +147,7 @@ export const forget = async (req: Request, res: Response, next: NextFunction): P
       await userService.requestPasswordReset(validatedData.email);
       sendResponse(res, 200, "發送成功", true);
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof InputValidationError) {
         sendResponse(res, 400, error.message, false);
       } else {
         next(error);
@@ -171,7 +171,7 @@ export const resetPassword = async (
       await userService.resetPassword(validatedData.resetToken, validatedData.newPassword);
       sendResponse(res, 200, "更新成功", true);
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof InputValidationError) {
         sendResponse(res, 400, error.message, false);
       } else {
         next(error);
@@ -276,7 +276,7 @@ export const uploadAvatar = async (
 
     sendResponse(res, 200, "上傳成功", true, imageUrl);
   } catch (error) {
-    if (error instanceof Error) {
+    if (error instanceof InputValidationError) {
       sendResponse(res, 400, error.message, false);
     } else {
       next(error);

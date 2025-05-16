@@ -1,10 +1,12 @@
 import type { NextFunction, Request, Response } from "express";
+import { InputValidationError } from "../errors/InputValidationError";
 import { activityIdSchema, activityQuerySchema } from "../schemas/zod/activity.schema";
 import * as activityService from "../services/activityService";
 import { getTicketTypesByActivityId } from "../services/ticketTypeService";
 import { sendResponse } from "../utils/sendResponse";
 import { validateInput } from "../utils/validateInput";
 
+// 取得特定活動的票種資料
 export const getActivityTicketTypes = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
     return next({
@@ -32,18 +34,15 @@ export const getActivityTicketTypes = async (req: Request, res: Response, next: 
       data: ticketTypes,
     });
   } catch (error) {
-    if (error instanceof Error) {
-      return next({
-        message: error.message,
-        statusCode: 400,
-      });
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
     }
-
-    return next(error);
   }
 };
 
-// 取得活動資料
+// 取得活動資料列表
 export const getActivities = async (
   req: Request,
   res: Response,
@@ -55,7 +54,7 @@ export const getActivities = async (
 
     sendResponse(res, 200, "請求成功", true, data, pagination);
   } catch (error) {
-    if (error instanceof Error) {
+    if (error instanceof InputValidationError) {
       sendResponse(res, 400, error.message, false);
     } else {
       next(error);
@@ -63,6 +62,7 @@ export const getActivities = async (
   }
 };
 
+// 取得特定活動資料
 export const getActivity = async (
   req: Request,
   res: Response,
@@ -78,7 +78,7 @@ export const getActivity = async (
       sendResponse(res, 200, "請求成功", true, activity);
     }
   } catch (error) {
-    if (error instanceof Error) {
+    if (error instanceof InputValidationError) {
       sendResponse(res, 400, error.message, false);
     } else {
       next(error);
