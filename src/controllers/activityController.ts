@@ -32,15 +32,9 @@ export const getActivityTicketTypes = async (req: Request, res: Response, next: 
     }
 
     const ticketTypes = await getTicketTypesByActivityId(activityId);
-    if (ticketTypes.length === 0) {
-      return next({
-        message: "該活動沒有票種",
-        statusCode: 404,
-      });
-    }
 
     res.status(200).json({
-      message: "成功",
+      message: "請求成功",
       status: true,
       data: ticketTypes,
     });
