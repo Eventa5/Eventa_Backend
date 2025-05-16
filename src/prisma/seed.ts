@@ -4,6 +4,7 @@ import { seedCategories } from "./seeds/categorySeed";
 import { seedCurrencies } from "./seeds/currencySeed";
 import { seedLocales } from "./seeds/localeSeed";
 import { seedOrganizers } from "./seeds/organizerSeed";
+import { seedTicketTypes } from "./seeds/ticketTypeSeed";
 import { seedUsers } from "./seeds/userSeed";
 
 const prisma = new PrismaClient();
@@ -17,6 +18,7 @@ async function main() {
     // 正式環境下不建立organizer和activities
     await seedOrganizers();
     await seedActivities();
+    await seedTicketTypes();
   }
 }
 
