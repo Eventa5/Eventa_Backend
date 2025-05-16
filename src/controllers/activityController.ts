@@ -2,7 +2,6 @@ import type { NextFunction, Request, Response } from "express";
 import { activityIdSchema, activityQuerySchema } from "../schemas/zod/activity.schema";
 import * as activityService from "../services/activityService";
 import { getTicketTypesByActivityId } from "../services/ticketTypeService";
-
 import { sendResponse } from "../utils/sendResponse";
 import { validateInput } from "../utils/validateInput";
 
@@ -69,9 +68,9 @@ export const getActivity = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  const { activityId } = validateInput(activityIdSchema, req.params);
-  const userId = req.user?.id || 0;
   try {
+    const { activityId } = validateInput(activityIdSchema, req.params);
+    const userId = req.user?.id || 0;
     const activity = await activityService.getActivityDetails(activityId, userId);
     if (!activity) {
       sendResponse(res, 404, "活動不存在", false);

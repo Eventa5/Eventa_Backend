@@ -10,6 +10,7 @@ import {
 import * as userService from "../services/userService";
 import { sendGoogleLoginEmail } from "../utils/emailClient";
 import { uploadToImgur } from "../utils/imgurClient";
+import { sendResponse } from "../utils/sendResponse";
 import { validateInput } from "../utils/validateInput";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
@@ -29,21 +30,6 @@ interface GoogleUserInfo {
   email: string;
   email_verified?: boolean;
 }
-
-// 回應輔助函數
-const sendResponse = (
-  res: Response,
-  status: number,
-  message: string,
-  success: boolean,
-  data?: any,
-) => {
-  return res.status(status).json({
-    message,
-    status: success,
-    ...(data && { data }),
-  });
-};
 
 // 使用者註冊
 export const signup = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
