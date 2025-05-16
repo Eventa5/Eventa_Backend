@@ -1,6 +1,6 @@
 import express from "express";
 import * as activityController from "../../controllers/activityController";
-
+import { optionalAuth } from "../../middlewares/auth";
 const router = express.Router();
 
 // router.get("/popular", () => {}); // 取得熱門活動
@@ -51,7 +51,7 @@ const router = express.Router();
  *         schema:
  *           type: string
  *           format: date
- *           example: 2025-06-01
+ *           example: 2025-05-01
  *       - name: endTime
  *         in: query
  *         description: 結束時間（格式：YYYY-MM-DD）
@@ -89,7 +89,11 @@ const router = express.Router();
  *                   type: boolean
  *                   example: true
  *                 data:
- *                   $ref: '#/components/schemas/ActivitiesResponse'
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ActivitiesResponse'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/PaginationResponse'
  *       400:
  *         description: 格式錯誤
  *         content:
@@ -100,7 +104,48 @@ const router = express.Router();
 router.get("/", activityController.getActivities); // 取得活動資料
 
 // router.get("/:activityId/participants", () => {}); // 取得活動參加名單
-// router.get("/:activityId", () => {}); // 取得特定活動資料
+
+/**
+ * @swagger
+ * /api/v1/activities/{activityId}:
+ *   get:
+ *     tags:
+ *       - Activities
+ *     summary: 獲取特定的活動資料
+ *     description: 獲取特定活動資料
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 成功獲取活動資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/ActivityResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get("/:activityId", optionalAuth, activityController.getActivity); // 取得特定活動資料
 
 // router.post("/", () => {}); // 創建活動
 // router.post("/:activityId/favorite", () => {}); // 收藏活動

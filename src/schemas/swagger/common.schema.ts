@@ -7,6 +7,8 @@
  * @swagger
  * components:
  *   schemas:
+ *     # 錯誤回應結構
+ *     # -----------------------------------------------
  *     ErrorResponse:
  *       type: object
  *       properties:
@@ -14,6 +16,26 @@
  *           type: string
  *           example: 錯誤訊息
  *         status:
+ *           type: boolean
+ *           example: false
+ *     # pagination結構
+ *     # -----------------------------------------------
+ *     PaginationResponse:
+ *       type: object
+ *       properties:
+ *         currentPage:
+ *           type: number
+ *           example: 1
+ *         totalItems:
+ *           type: number
+ *           example: 10
+ *         totalPage:
+ *           type: number
+ *           example: 2
+ *         hasNextPage:
+ *           type: boolean
+ *           example: true
+ *         hasPrevPage:
  *           type: boolean
  *           example: false
  */

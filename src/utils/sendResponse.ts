@@ -7,10 +7,12 @@ export const sendResponse = (
   message: string,
   success: boolean,
   data?: any,
+  pagination?: any,
 ) => {
   return res.status(statusCode).json({
     message,
     status: success,
     ...(data !== undefined && { data }),
+    ...(pagination !== undefined && { pagination }),
   });
 };

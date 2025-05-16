@@ -1,17 +1,18 @@
 import { faker } from "@faker-js/faker";
-import { type Prisma, PrismaClient } from "@prisma/client";
+import { ActivityStatus, type Prisma, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 const activities = [
   {
     organizerId: 1,
-    title: "活動TEST1",
+    title: "EVENET音樂祭",
     startTime: new Date(),
     endTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     isOnline: false,
     categoryIds: [1, 2], // 自訂欄位，用來 connect
     location: "台北",
     cover: faker.image.urlPicsumPhotos({ width: 800, height: 600 }),
+    status: ActivityStatus.published,
   },
   {
     organizerId: 1,
