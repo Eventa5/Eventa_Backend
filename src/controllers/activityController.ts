@@ -3,6 +3,7 @@ import type { NextFunction, Request, Response } from "express";
 import { activityIdSchema } from "../schemas/zod/activity.schema";
 import { getActivity } from "../services/activityService";
 import { getTicketTypesByActivityId } from "../services/ticketTypeService";
+import { validateInput } from "../utils/validateInput";
 
 export const getActivityTicketTypes = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
@@ -12,17 +13,9 @@ export const getActivityTicketTypes = async (req: Request, res: Response, next: 
     });
   }
 
-  const { success, data, error } = activityIdSchema.safeParse(req.params);
-  if (!success) {
-    return next({
-      message: error.issues[0].message,
-      statusCode: 404,
-    });
-  }
-
-  const { activityId } = data;
-
   try {
+    const { activityId } = validateInput(activityIdSchema, req.params);
+
     const activity = await getActivity(activityId);
     if (!activity) {
       return next({
@@ -39,6 +32,13 @@ export const getActivityTicketTypes = async (req: Request, res: Response, next: 
       data: ticketTypes,
     });
   } catch (error) {
+    if (error instanceof Error) {
+      return next({
+        message: error.message,
+        statusCode: 400,
+      });
+    }
+
     return next(error);
   }
 };
