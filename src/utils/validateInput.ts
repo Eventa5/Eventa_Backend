@@ -1,4 +1,5 @@
 import type { ZodTypeAny, z } from "zod";
+import { InputValidationError } from "../errors/InputValidationError";
 
 // 驗證輸入並返回結果
 export const validateInput = <Schema extends ZodTypeAny>(
@@ -10,7 +11,8 @@ export const validateInput = <Schema extends ZodTypeAny>(
     const errorMessage = result.error.errors
       .map((err) => `${err.path.join(".")}: ${err.message}`)
       .join(", ");
-    throw new Error(errorMessage);
+    throw new InputValidationError(errorMessage);
   }
+
   return result.data;
 };

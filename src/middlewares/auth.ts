@@ -16,6 +16,7 @@ declare global {
   }
 }
 
+// 強制登入middleware
 export const auth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     // 從請求標頭獲取並驗證 Authorization
@@ -74,5 +75,41 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
       return;
     }
     next(error);
+  }
+};
+
+// 可選登入middleware
+export const optionalAuth = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return next(); // 沒token就直接跳過
+    }
+
+    const token = authHeader.split(" ")[1];
+    if (!token) return next();
+
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      id: number;
+      email: string;
+    };
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+    });
+    if (user) {
+      req.user = {
+        id: user.id,
+        email: user.email,
+      };
+    }
+    return next();
+  } catch (error) {
+    // 略過token解析錯誤
+    return next(error);
   }
 };

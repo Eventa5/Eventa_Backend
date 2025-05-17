@@ -1,13 +1,25 @@
 import { PrismaClient } from "@prisma/client";
+import { seedActivities } from "./seeds/activitySeed";
 import { seedCategories } from "./seeds/categorySeed";
 import { seedCurrencies } from "./seeds/currencySeed";
 import { seedLocales } from "./seeds/localeSeed";
+import { seedOrganizers } from "./seeds/organizerSeed";
+import { seedTicketTypes } from "./seeds/ticketTypeSeed";
+import { seedUsers } from "./seeds/userSeed";
+
 const prisma = new PrismaClient();
 
 async function main() {
   await seedCategories();
   await seedCurrencies();
   await seedLocales();
+  await seedUsers();
+  if (process.env.NODE_ENV !== "production") {
+    // 正式環境下不建立organizer和activities
+    await seedOrganizers();
+    await seedActivities();
+    await seedTicketTypes();
+  }
 }
 
 main()
