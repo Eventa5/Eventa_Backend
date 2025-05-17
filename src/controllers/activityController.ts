@@ -1,10 +1,12 @@
 import type { NextFunction, Request, Response } from "express";
-
-import { activityIdSchema } from "../schemas/zod/activity.schema";
-import { getActivity } from "../services/activityService";
+import { InputValidationError } from "../errors/InputValidationError";
+import { activityIdSchema, activityQuerySchema } from "../schemas/zod/activity.schema";
+import * as activityService from "../services/activityService";
 import { getTicketTypesByActivityId } from "../services/ticketTypeService";
+import { sendResponse } from "../utils/sendResponse";
 import { validateInput } from "../utils/validateInput";
 
+// 取得特定活動的票種資料
 export const getActivityTicketTypes = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
     return next({
@@ -16,7 +18,7 @@ export const getActivityTicketTypes = async (req: Request, res: Response, next: 
   try {
     const { activityId } = validateInput(activityIdSchema, req.params);
 
-    const activity = await getActivity(activityId);
+    const activity = await activityService.getActivityById(activityId);
     if (!activity) {
       return next({
         message: "活動不存在",
@@ -32,13 +34,54 @@ export const getActivityTicketTypes = async (req: Request, res: Response, next: 
       data: ticketTypes,
     });
   } catch (error) {
-    if (error instanceof Error) {
-      return next({
-        message: error.message,
-        statusCode: 400,
-      });
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
     }
+  }
+};
 
-    return next(error);
+// 取得活動資料列表
+export const getActivities = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const validatedData = validateInput(activityQuerySchema, req.query);
+    const { data, pagination } = await activityService.getActivities(validatedData);
+
+    sendResponse(res, 200, "請求成功", true, data, pagination);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 取得特定活動資料
+export const getActivity = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { activityId } = validateInput(activityIdSchema, req.params);
+    const userId = req.user?.id || 0;
+    const activity = await activityService.getActivityDetails(activityId, userId);
+    if (!activity) {
+      sendResponse(res, 404, "活動不存在", false);
+    } else {
+      sendResponse(res, 200, "請求成功", true, activity);
+    }
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
   }
 };
