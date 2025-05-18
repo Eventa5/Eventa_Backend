@@ -77,13 +77,19 @@
  *     # -----------------------------------------------
  *     # 新增票種資料結構
  *     # -----------------------------------------------
- *     TicketTypeRequestSchema:
+ *     TicketTypeRequestActivityIdSchema:
  *       type: object
  *       properties:
  *         activityId:
  *           type: integer
  *           description: 目前活動 id
  *           example: 1
+ *       required:
+ *         - activityId
+ *
+ *     TicketTypeRequestSchema:
+ *       type: object
+ *       properties:
  *         name:
  *           type: string
  *           description: 票種名稱，如 一般票、早鳥票、特殊票
@@ -120,7 +126,6 @@
  *           description: 是否為活動中
  *           example: true
  *       required:
- *         - activityId
  *         - name
  *         - price
  *         - totalQuantity
