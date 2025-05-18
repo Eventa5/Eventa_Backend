@@ -1,10 +1,10 @@
 import { ActivityStatus } from "@prisma/client";
 import prisma from "../prisma/client";
-import type { ActivityQueryParams } from "../schemas/zod/activity.schema";
+import type { ActivityIdParams, ActivityQueryParams } from "../schemas/zod/activity.schema";
 import * as paginator from "../utils/paginator";
 
 //
-export const getActivityById = async (activityId: number) => {
+export const getActivityById = async (activityId: ActivityIdParams) => {
   return prisma.activity.findUnique({
     where: {
       id: activityId,
@@ -56,7 +56,7 @@ export const getActivities = async (params: ActivityQueryParams) => {
 };
 
 // 取得單一活動資料
-export const getActivityDetails = async (activityId: number, userId: number) => {
+export const getActivityDetails = async (activityId: ActivityIdParams, userId: number) => {
   const activityRaw = await prisma.activity.findFirst({
     where: {
       id: activityId,
