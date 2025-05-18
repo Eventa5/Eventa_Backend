@@ -1,31 +1,12 @@
 import { z } from "zod";
 
 // 活動 id 驗證
-export const activityIdSchema = z.object({
-  activityId: z.string().transform((val, ctx) => {
-    const parsed = Number(val);
-
-    if (Number.isNaN(parsed)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "活動 id 格式錯誤",
-      });
-
-      return z.NEVER;
-    }
-
-    if (parsed <= 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "活動 id 必須大於 0",
-      });
-
-      return z.NEVER;
-    }
-
-    return parsed;
-  }),
-});
+export const activityIdSchema = z.coerce
+  .number({
+    invalid_type_error: "活動 id 格式錯誤",
+    required_error: "活動 id 為必要欄位",
+  })
+  .min(1, "活動 id 必須大於 0");
 
 // 取得活動資料Query
 export const activityQuerySchema = z.object({
@@ -50,4 +31,5 @@ export const activityQuerySchema = z.object({
 });
 
 // 匯出型別
+export type ActivityIdParams = z.infer<typeof activityIdSchema>;
 export type ActivityQueryParams = z.infer<typeof activityQuerySchema>;

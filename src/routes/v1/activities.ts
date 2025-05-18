@@ -149,7 +149,7 @@ router.get("/", activityController.getActivities); // 取得活動資料
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/:activityId/ticketTypes", auth, activityController.getActivityTicketTypes);
+router.get("/:activityId/ticketTypes", activityController.getActivityTicketTypes);
 
 // router.get("/:activityId/participants", () => {}); // 取得活動參加名單
 
