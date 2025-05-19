@@ -120,4 +120,54 @@ router.post("/", auth, ticketTypeController.createTicketTypes);
  */
 router.put("/:ticketTypeId", auth, ticketTypeController.updateTicketType);
 
+/**
+ * @swagger
+ * /api/v1/ticketTypes/{ticketTypeId}:
+ *   delete:
+ *     tags:
+ *       - TicketTypes
+ *     summary: 刪除票種
+ *     description: 主辦方刪除票種功能
+ *     parameters:
+ *       - in: path
+ *         name: ticketTypeId
+ *         required: true
+ *         description: 需要刪除的票種 id
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 刪除票種成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 刪除成功
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未提供授權令牌
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 票種不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.delete("/:ticketTypeId", auth, ticketTypeController.deleteTicketType);
+
 export default router;

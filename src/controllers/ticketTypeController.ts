@@ -94,3 +94,38 @@ export const updateTicketType = async (req: Request, res: Response, next: NextFu
     next(error);
   }
 };
+
+export const deleteTicketType = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return next({
+      message: "未提供授權令牌",
+      statusCode: 401,
+    });
+  }
+
+  try {
+    const ticketTypeId = validateInput(ticketTypeIdSchema, req.params.ticketTypeId);
+    const retrievedTicketType = await ticketTypeService.getTicketTypeById(ticketTypeId);
+    if (!retrievedTicketType) {
+      return next({
+        message: "該票種不存在",
+        statusCode: 404,
+      });
+    }
+
+    await ticketTypeService.deleteTicketType(ticketTypeId);
+
+    res.status(200).json({
+      message: "刪除成功",
+      status: true,
+    });
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      next({
+        message: error.message,
+        statusCode: 400,
+      });
+    }
+    next(error);
+  }
+};

@@ -36,3 +36,11 @@ export const updateTicketType = async (
     data,
   });
 };
+
+export const deleteTicketType = async (ticketTypeId: TicketTypeIdParams) => {
+  return prisma.ticketType.delete({
+    where: {
+      id: ticketTypeId,
+    },
+  });
+};
