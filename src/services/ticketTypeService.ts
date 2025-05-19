@@ -27,7 +27,7 @@ export const getTicketTypeById = async (ticketTypeId: TicketTypeIdParams) => {
 
 export const updateTicketType = async (
   ticketTypeId: TicketTypeIdParams,
-  data: Partial<TicketTypeParams>,
+  data: Omit<TicketTypeParams, "activityId">,
 ) => {
   return prisma.ticketType.update({
     where: {

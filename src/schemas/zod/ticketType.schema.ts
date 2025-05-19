@@ -82,9 +82,29 @@ export const createTicketTypesSchema = ticketTypeSchema
     message: "票種資料 為必填",
   });
 
-export const updateTicketTypeSchema = ticketTypeSchema.omit({
-  activityId: true,
-});
+export const updateTicketTypeSchema = ticketTypeSchema
+  .omit({
+    activityId: true,
+  })
+  .superRefine((val, ctx) => {
+    if (val.remainingQuantity > val.totalQuantity) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "票券剩餘數量 必須小於或等於 票券總數量",
+        path: ["remainingQuantity"],
+      });
+    }
+
+    if (val.startTime >= val.endTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "開賣時間 不可晚於 開賣結束時間，或 開賣結束時間 不可早於 開賣時間",
+        path: ["startTime"],
+      });
+    }
+
+    return z.NEVER;
+  });
 
 // 匯出型別
 export type TicketTypeIdParams = z.infer<typeof ticketTypeIdSchema>;
