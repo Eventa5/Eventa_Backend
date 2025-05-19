@@ -15,7 +15,7 @@ declare global {
       user?: {
         id: number;
         email: string;
-        organizerId?: number; // 可選屬性，主辦者身份驗證為真時使用
+        organizerId?: number;
       };
     }
   }
@@ -151,7 +151,6 @@ export const activityOrganizerAuth = async (
     const { id: userId } = req.user;
     const { organizerId } = retrievedActivity;
 
-    // 查詢用戶是否為主辦者
     const organizer = await prisma.organizer.findFirst({
       where: {
         id: organizerId,
@@ -168,7 +167,7 @@ export const activityOrganizerAuth = async (
 
     req.user = {
       ...req.user,
-      organizerId: organizer.id, // 將主辦者ID附加到請求對象
+      organizerId: organizer.id,
     };
 
     next();
