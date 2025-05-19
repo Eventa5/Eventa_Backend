@@ -1,6 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+
+import { InputValidationError } from "../errors/InputValidationError";
 import prisma from "../prisma/client";
+import { activityIdSchema } from "../schemas/zod/activity.schema";
+import { validateInput } from "../utils/validateInput";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -11,6 +15,7 @@ declare global {
       user?: {
         id: number;
         email: string;
+        organizerId?: number; // 可選屬性，主辦者身份驗證為真時使用
       };
     }
   }
@@ -111,5 +116,70 @@ export const optionalAuth = async (
   } catch (error) {
     // 略過token解析錯誤
     return next(error);
+  }
+};
+
+// 活動主辦者身份驗證middleware
+export const activityOrganizerAuth = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        message: "未登入或無效 token",
+        status: false,
+      });
+      return;
+    }
+
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
+    const retrievedActivity = await prisma.activity.findUnique({
+      where: {
+        id: activityId,
+      },
+    });
+    if (!retrievedActivity) {
+      res.status(404).json({
+        message: "活動不存在",
+        status: false,
+      });
+      return;
+    }
+
+    const { id: userId } = req.user;
+    const { organizerId } = retrievedActivity;
+
+    // 查詢用戶是否為主辦者
+    const organizer = await prisma.organizer.findFirst({
+      where: {
+        id: organizerId,
+        userId,
+      },
+    });
+    if (!organizer) {
+      res.status(403).json({
+        message: "無權限訪問，您不是主辦者",
+        status: false,
+      });
+      return;
+    }
+
+    req.user = {
+      ...req.user,
+      organizerId: organizer.id, // 將主辦者ID附加到請求對象
+    };
+
+    next();
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      res.status(400).json({
+        message: error.message,
+        status: false,
+      });
+    } else {
+      next(error);
+    }
   }
 };
