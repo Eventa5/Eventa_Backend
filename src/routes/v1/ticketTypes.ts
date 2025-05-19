@@ -54,7 +54,7 @@ const router = express.Router();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *.      404:
+ *       404:
  *         description: 活動不存在
  *         content:
  *           application/json:

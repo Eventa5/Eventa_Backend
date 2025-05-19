@@ -43,7 +43,7 @@ export const createTicketTypes = async (req: Request, res: Response, next: NextF
     const { count } = await ticketTypeService.createTicketTypes(validatedData);
 
     res.status(201).json({
-      message: "票種資料創建成功",
+      message: "票種新增成功",
       status: true,
       data: `成功新增 ${count} 筆資料`,
     });
@@ -90,8 +90,9 @@ export const updateTicketType = async (req: Request, res: Response, next: NextFu
         message: error.message,
         statusCode: 400,
       });
+    } else {
+      next(error);
     }
-    next(error);
   }
 };
 
@@ -125,7 +126,8 @@ export const deleteTicketType = async (req: Request, res: Response, next: NextFu
         message: error.message,
         statusCode: 400,
       });
+    } else {
+      next(error);
     }
-    next(error);
   }
 };
