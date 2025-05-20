@@ -21,20 +21,20 @@ export const ticketTypeSchema = z
         required_error: "請填寫 票種價格",
         invalid_type_error: "票種價格 格式錯誤",
       })
-      .nonnegative({ message: "票券價格 必須大於或等於0" }),
+      .nonnegative({ message: "票種價格 必須大於或等於0" }),
     totalQuantity: z.coerce
       .number({
-        required_error: "票券總數量 為必填欄位",
-        invalid_type_error: "票券總數量 格式錯誤",
+        required_error: "票種總數量 為必填欄位",
+        invalid_type_error: "票種總數量 格式錯誤",
       })
-      .positive({ message: "票券總數量 必須大於 0" }),
+      .positive({ message: "票種總數量 必須大於 0" }),
     remainingQuantity: z.coerce
       .number({
-        required_error: "票券剩餘數量 為必填欄位",
-        invalid_type_error: "票券剩餘數量 格式錯誤",
+        required_error: "票種剩餘數量 為必填欄位",
+        invalid_type_error: "票種剩餘數量 格式錯誤",
       })
-      .nonnegative({ message: "票券剩餘數量 必須大於或等於 0" }),
-    description: z.string().trim().max(255, { message: "票券描述不能超過255個字符" }).optional(),
+      .nonnegative({ message: "票種剩餘數量 必須大於或等於 0" }),
+    description: z.string().trim().max(255, { message: "票種描述不能超過255個字符" }).optional(),
     startTime: z.coerce
       .date({
         required_error: "開賣時間 為必填欄位",
@@ -58,7 +58,7 @@ export const ticketTypeSchema = z
     if (val.remainingQuantity > val.totalQuantity) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "票券剩餘數量 必須小於或等於 票券總數量",
+        message: "票種剩餘數量 必須小於或等於 票種總數量",
         path: ["remainingQuantity"],
       });
     }
