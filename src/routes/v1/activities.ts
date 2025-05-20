@@ -1,6 +1,6 @@
 import express from "express";
 import * as activityController from "../../controllers/activityController";
-import { auth, optionalAuth } from "../../middlewares/auth";
+import { optionalAuth } from "../../middlewares/auth";
 const router = express.Router();
 
 // router.get("/popular", () => {}); // 取得熱門活動
@@ -149,7 +149,7 @@ router.get("/", activityController.getActivities); // 取得活動資料
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/:activityId/ticketTypes", auth, activityController.getActivityTicketTypes);
+router.get("/:activityId/ticketTypes", activityController.getActivityTicketTypes);
 
 // router.get("/:activityId/participants", () => {}); // 取得活動參加名單
 

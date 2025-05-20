@@ -8,15 +8,8 @@ import { validateInput } from "../utils/validateInput";
 
 // 取得特定活動的票種資料
 export const getActivityTicketTypes = async (req: Request, res: Response, next: NextFunction) => {
-  if (!req.user) {
-    return next({
-      message: "未登入或無效 token",
-      statusCode: 401,
-    });
-  }
-
   try {
-    const { activityId } = validateInput(activityIdSchema, req.params);
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
 
     const activity = await activityService.getActivityById(activityId);
     if (!activity) {
@@ -69,7 +62,7 @@ export const getActivity = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { activityId } = validateInput(activityIdSchema, req.params);
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
     const userId = req.user?.id || 0;
     const activity = await activityService.getActivityDetails(activityId, userId);
     if (!activity) {
