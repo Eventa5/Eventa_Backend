@@ -1,10 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-import { InputValidationError } from "../errors/InputValidationError";
 import prisma from "../prisma/client";
-import { activityIdSchema } from "../schemas/zod/activity.schema";
-import { validateInput } from "../utils/validateInput";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -15,7 +12,7 @@ declare global {
       user?: {
         id: number;
         email: string;
-        organizerId?: number;
+        organizerIds: { id: number }[];
       };
     }
   }
@@ -55,6 +52,12 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
       where: { id: decoded.id },
     });
 
+    // 查詢用戶的主辦者ID
+    const organizerIds = await prisma.organizer.findMany({
+      where: { userId: decoded.id },
+      select: { id: true },
+    });
+
     if (!user) {
       res.status(401).json({
         message: "無效的令牌，用戶不存在",
@@ -67,18 +70,12 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
     req.user = {
       id: user.id,
       email: user.email,
+      organizerIds,
     };
 
     next();
   } catch (error) {
-    // 處理 jwt.verify 可能拋出的錯誤
-    if (error instanceof jwt.JsonWebTokenError || error instanceof jwt.TokenExpiredError) {
-      res.status(401).json({
-        message: "無效的令牌",
-        status: false,
-      });
-      return;
-    }
+    // 略過token解析錯誤
     next(error);
   }
 };
@@ -106,79 +103,28 @@ export const optionalAuth = async (
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
     });
-    if (user) {
-      req.user = {
-        id: user.id,
-        email: user.email,
-      };
-    }
-    return next();
-  } catch (error) {
-    // 略過token解析錯誤
-    return next(error);
-  }
-};
+    const organizerIds = await prisma.organizer.findMany({
+      where: { userId: decoded.id },
+      select: { id: true },
+    });
 
-// 活動主辦者身份驗證middleware
-export const activityOrganizerAuth = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> => {
-  try {
-    if (!req.user) {
+    if (!user) {
       res.status(401).json({
-        message: "未登入或無效 token",
-        status: false,
-      });
-      return;
-    }
-
-    const activityId = validateInput(activityIdSchema, req.params.activityId);
-    const retrievedActivity = await prisma.activity.findUnique({
-      where: {
-        id: activityId,
-      },
-    });
-    if (!retrievedActivity) {
-      res.status(404).json({
-        message: "活動不存在",
-        status: false,
-      });
-      return;
-    }
-
-    const { id: userId } = req.user;
-    const { organizerId } = retrievedActivity;
-
-    const organizer = await prisma.organizer.findFirst({
-      where: {
-        id: organizerId,
-        userId,
-      },
-    });
-    if (!organizer) {
-      res.status(403).json({
-        message: "無權限訪問，您不是主辦者",
+        message: "無效的令牌，用戶不存在",
         status: false,
       });
       return;
     }
 
     req.user = {
-      ...req.user,
-      organizerId: organizer.id,
+      id: user.id,
+      email: user.email,
+      organizerIds,
     };
 
     next();
   } catch (error) {
-    if (error instanceof InputValidationError) {
-      res.status(400).json({
-        message: error.message,
-        status: false,
-      });
-    } else {
-      next(error);
-    }
+    // 略過token解析錯誤
+    next(error);
   }
 };
