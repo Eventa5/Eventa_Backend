@@ -51,13 +51,6 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
     });
-
-    // 查詢用戶的主辦者ID
-    const organizerIds = await prisma.organizer.findMany({
-      where: { userId: decoded.id },
-      select: { id: true },
-    });
-
     if (!user) {
       res.status(401).json({
         message: "無效的令牌，用戶不存在",
@@ -65,6 +58,12 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
       });
       return;
     }
+
+    // 查詢用戶的主辦者ID
+    const organizerIds = await prisma.organizer.findMany({
+      where: { userId: decoded.id },
+      select: { id: true },
+    });
 
     // 將用戶資訊附加到請求對象
     req.user = {
@@ -118,11 +117,6 @@ export const optionalAuth = async (
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
     });
-    const organizerIds = await prisma.organizer.findMany({
-      where: { userId: decoded.id },
-      select: { id: true },
-    });
-
     if (!user) {
       res.status(401).json({
         message: "無效的令牌，用戶不存在",
@@ -130,6 +124,11 @@ export const optionalAuth = async (
       });
       return;
     }
+
+    const organizerIds = await prisma.organizer.findMany({
+      where: { userId: decoded.id },
+      select: { id: true },
+    });
 
     req.user = {
       id: user.id,
