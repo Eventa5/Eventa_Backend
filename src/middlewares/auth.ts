@@ -12,7 +12,7 @@ declare global {
       user?: {
         id: number;
         email: string;
-        organizerIds: { id: number }[];
+        organizerIds: number[];
       };
     }
   }
@@ -69,7 +69,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
     req.user = {
       id: user.id,
       email: user.email,
-      organizerIds,
+      organizerIds: organizerIds.map((organizer) => organizer.id),
     };
 
     next();
@@ -133,7 +133,7 @@ export const optionalAuth = async (
     req.user = {
       id: user.id,
       email: user.email,
-      organizerIds,
+      organizerIds: organizerIds.map((organizer) => organizer.id),
     };
 
     next();
