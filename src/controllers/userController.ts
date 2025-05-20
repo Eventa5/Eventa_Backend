@@ -87,6 +87,7 @@ export const getProfile = async (
     const userId = req.user?.id;
 
     if (!userId) {
+      sendResponse(res, 401, "未授權", false);
       return;
     }
 
@@ -115,6 +116,7 @@ export const updateProfile = async (
     const userId = req.user?.id;
 
     if (!userId) {
+      sendResponse(res, 401, "未授權", false);
       return;
     }
 
@@ -256,6 +258,7 @@ export const uploadAvatar = async (
   const avatar = req.file;
 
   if (!userId) {
+    sendResponse(res, 401, "未授權", false);
     return;
   }
 
