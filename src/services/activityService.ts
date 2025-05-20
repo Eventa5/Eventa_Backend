@@ -1,8 +1,12 @@
-import { ActivityStatus } from "@prisma/client";
+import { ActivityStatus, ActivityStep } from "@prisma/client";
+import { InputValidationError } from "../errors/InputValidationError";
 import prisma from "../prisma/client";
-import type { ActivityQueryParams } from "../schemas/zod/activity.schema";
+import type {
+  ActivityQueryParams,
+  CreateActivityBody,
+  PatchActivityCategoriesBody,
+} from "../schemas/zod/activity.schema";
 import * as paginator from "../utils/paginator";
-
 //
 export const getActivityById = async (activityId: number) => {
   return prisma.activity.findUnique({
@@ -99,9 +103,45 @@ export const getActivityDetails = async (activityId: number, userId: number) => 
 };
 
 // 新增活動
-export const createActivity = async (data: any) => {
+export const createActivity = async (data: CreateActivityBody) => {
   return prisma.activity.create({
     data,
+    select: {
+      id: true,
+      currentStep: true,
+    },
+  });
+};
+
+// 設定活動主題
+export const patchActivityCategories = async (data: PatchActivityCategoriesBody) => {
+  // 檢查categoryId存在
+  const existingCategories = await prisma.category.findMany({
+    where: {
+      id: { in: data.categoryIds },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  const existingCategoryIds = existingCategories.map((category) => category.id);
+  const invalidCategoryIds = data.categoryIds.filter((id) => !existingCategoryIds.includes(id));
+  if (invalidCategoryIds.length > 0) {
+    throw new InputValidationError(`無效的Category ID: ${invalidCategoryIds.join(", ")}`);
+  }
+
+  return prisma.activity.update({
+    where: {
+      id: data.activityId,
+    },
+    data: {
+      categories: {
+        set: [],
+        connect: data.categoryIds.map((id) => ({ id })),
+      },
+      currentStep: ActivityStep.categories,
+    },
     select: {
       id: true,
       currentStep: true,

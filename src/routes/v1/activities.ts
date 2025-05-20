@@ -251,7 +251,65 @@ router.post("/", auth, activityController.createActivity); // 創建活動
 
 // router.put("/:activityId", () => {}); // 編輯活動
 
-// router.patch("/:activityId/categories", () => {}); // 新增活動 - 活動主題步驟
+/**
+ * @swagger
+ * /api/v1/activities/{activityId}/categories:
+ *   patch:
+ *     tags:
+ *       - Activities
+ *     summary: 新增活動時，設定指定活動ID的主題步驟
+ *     description: 設定活動主題，至少要選擇一個主題
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PatchActivityCategoriesRequest'
+ *     responses:
+ *       200:
+ *         description: 成功設定活動主題
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/CreateActivityResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.patch("/:activityId/categories", auth, activityController.patchActivityCategories); // 新增活動 - 活動主題步驟
 // router.patch("/:activityId/basic", () => {}); // 新增活動 - 基本資料步驟
 // router.patch("/:activityId/content", () => {}); // 新增活動 - 詳細內容步驟
 // router.patch("/:activityId/publish", () => {}); // 新增活動 - 發布活動

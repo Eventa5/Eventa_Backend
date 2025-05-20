@@ -42,8 +42,7 @@ export const createActivitySchema = z
       required_error: "isOnline 為必要欄位",
     }),
     livestreamUrl: z
-      .string()
-      .url("請提供有效的網址")
+      .union([z.string().url("請提供有效的網址"), z.literal(null)])
       .optional()
       .transform((val) => val ?? null),
   })
@@ -57,5 +56,16 @@ export const createActivitySchema = z
     }
   });
 
+// 新增活動 - 設定活動主題步驟
+export const patchActivityCategoriesSchema = z.object({
+  activityId: activityIdSchema,
+  categoryIds: z
+    .array(z.number({ invalid_type_error: "分類 ID 必須為數字" }))
+    .min(1, "請至少選擇一個分類"),
+});
+
 // 匯出型別
+export type ActivityId = z.infer<typeof activityIdSchema>;
 export type ActivityQueryParams = z.infer<typeof activityQuerySchema>;
+export type CreateActivityBody = z.infer<typeof createActivitySchema>;
+export type PatchActivityCategoriesBody = z.infer<typeof patchActivityCategoriesSchema>;

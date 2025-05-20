@@ -148,5 +148,17 @@
  *               example: 1
  *             currentStep:
  *               type: string
- *               example: activityType
+ *               example: activityType | categories | basic | content
+ *     # 新增活動 - 設定主題步驟資料結構
+ *     # -----------------------------------------------
+ *     PatchActivityCategoriesRequest:
+ *       type: object
+ *       required:
+ *         - categoryIds
+ *       properties:
+ *         categoryIds:
+ *           type: array
+ *           items:
+ *             type: number
+ *             example: 1
  */
