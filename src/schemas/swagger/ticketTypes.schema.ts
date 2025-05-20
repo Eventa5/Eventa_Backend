@@ -77,16 +77,6 @@
  *     # -----------------------------------------------
  *     # 新增票種資料結構
  *     # -----------------------------------------------
- *     TicketTypeRequestActivityIdSchema:
- *       type: object
- *       properties:
- *         activityId:
- *           type: integer
- *           description: 目前活動 id
- *           example: 1
- *       required:
- *         - activityId
- *
  *     TicketTypeRequestSchema:
  *       type: object
  *       properties:

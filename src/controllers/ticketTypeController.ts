@@ -1,14 +1,16 @@
 import type { NextFunction, Request, Response } from "express";
 
 import { InputValidationError } from "../errors/InputValidationError";
+import { activityIdSchema } from "../schemas/zod/activity.schema";
 import {
   createTicketTypesSchema,
   ticketTypeIdSchema,
-  updateTicketTypeSchema,
+  ticketTypeSchema,
 } from "../schemas/zod/ticketType.schema";
+import { validateInput } from "../utils/validateInput";
+
 import * as activityService from "../services/activityService";
 import * as ticketTypeService from "../services/ticketTypeService";
-import { validateInput } from "../utils/validateInput";
 
 export const createTicketTypes = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
@@ -19,20 +21,10 @@ export const createTicketTypes = async (req: Request, res: Response, next: NextF
   }
 
   try {
-    if (req.body.length === 0) {
-      throw new InputValidationError("需提供至少一筆票種資料");
-    }
-
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
     const validatedData = validateInput(createTicketTypesSchema, req.body);
-    const activityIdSet = new Set(validatedData.map((item) => item.activityId));
 
-    if (activityIdSet.size > 1) {
-      throw new InputValidationError("票種資料的活動 ID 必須相同");
-    }
-
-    const activityId = Array.from(activityIdSet)[0];
     const retrievedActivity = await activityService.getActivityById(activityId);
-
     if (!retrievedActivity) {
       return next({
         message: "活動不存在",
@@ -40,7 +32,14 @@ export const createTicketTypes = async (req: Request, res: Response, next: NextF
       });
     }
 
-    const { count } = await ticketTypeService.createTicketTypes(validatedData);
+    if (!req.user.organizerIds.includes(retrievedActivity.organizerId)) {
+      return next({
+        message: "非主辦單位，無法新增票種",
+        statusCode: 403,
+      });
+    }
+
+    const { count } = await ticketTypeService.createTicketTypes(activityId, validatedData);
 
     res.status(201).json({
       message: "票種新增成功",
@@ -68,7 +67,25 @@ export const updateTicketType = async (req: Request, res: Response, next: NextFu
   }
 
   try {
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
     const ticketTypeId = validateInput(ticketTypeIdSchema, req.params.ticketTypeId);
+    const validatedData = validateInput(ticketTypeSchema, req.body);
+
+    const retrievedActivity = await activityService.getActivityById(activityId);
+    if (!retrievedActivity) {
+      return next({
+        message: "活動不存在",
+        statusCode: 404,
+      });
+    }
+
+    if (!req.user.organizerIds.includes(retrievedActivity.organizerId)) {
+      return next({
+        message: "非主辦單位，無法編輯票種",
+        statusCode: 403,
+      });
+    }
+
     const retrievedTicketType = await ticketTypeService.getTicketTypeById(ticketTypeId);
     if (!retrievedTicketType) {
       return next({
@@ -77,7 +94,13 @@ export const updateTicketType = async (req: Request, res: Response, next: NextFu
       });
     }
 
-    const validatedData = validateInput(updateTicketTypeSchema, req.body);
+    if (retrievedTicketType.activityId !== activityId) {
+      return next({
+        message: "該票種不屬於此活動",
+        statusCode: 404,
+      });
+    }
+
     await ticketTypeService.updateTicketType(ticketTypeId, validatedData);
 
     res.status(200).json({
@@ -105,11 +128,35 @@ export const deleteTicketType = async (req: Request, res: Response, next: NextFu
   }
 
   try {
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
     const ticketTypeId = validateInput(ticketTypeIdSchema, req.params.ticketTypeId);
+
+    const retrievedActivity = await activityService.getActivityById(activityId);
+    if (!retrievedActivity) {
+      return next({
+        message: "活動不存在",
+        statusCode: 404,
+      });
+    }
+
+    if (!req.user.organizerIds.includes(retrievedActivity.organizerId)) {
+      return next({
+        message: "非主辦單位，無法刪除票種",
+        statusCode: 403,
+      });
+    }
+
     const retrievedTicketType = await ticketTypeService.getTicketTypeById(ticketTypeId);
     if (!retrievedTicketType) {
       return next({
         message: "該票種不存在",
+        statusCode: 404,
+      });
+    }
+
+    if (retrievedTicketType.activityId !== activityId) {
+      return next({
+        message: "該票種不屬於此活動",
         statusCode: 404,
       });
     }

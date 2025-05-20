@@ -1,9 +1,8 @@
 import prisma from "../prisma/client";
 
-import type { ActivityIdParams } from "../schemas/zod/activity.schema";
-import type { TicketTypeIdParams, TicketTypeParams } from "../schemas/zod/ticketType.schema";
+import type { TicketTypeParams } from "../schemas/zod/ticketType.schema";
 
-export const getTicketTypesByActivityId = async (activityId: ActivityIdParams) => {
+export const getTicketTypesByActivityId = async (activityId: number) => {
   return prisma.ticketType.findMany({
     where: {
       activityId,
@@ -11,13 +10,7 @@ export const getTicketTypesByActivityId = async (activityId: ActivityIdParams) =
   });
 };
 
-export const createTicketTypes = async (ticketTypes: TicketTypeParams[]) => {
-  return prisma.ticketType.createMany({
-    data: ticketTypes,
-  });
-};
-
-export const getTicketTypeById = async (ticketTypeId: TicketTypeIdParams) => {
+export const getTicketTypeById = async (ticketTypeId: number) => {
   return prisma.ticketType.findUnique({
     where: {
       id: ticketTypeId,
@@ -25,10 +18,18 @@ export const getTicketTypeById = async (ticketTypeId: TicketTypeIdParams) => {
   });
 };
 
-export const updateTicketType = async (
-  ticketTypeId: TicketTypeIdParams,
-  data: Omit<TicketTypeParams, "activityId">,
-) => {
+export const createTicketTypes = async (activityId: number, ticketTypes: TicketTypeParams[]) => {
+  const data = ticketTypes.map((ticketType) => ({
+    ...ticketType,
+    activityId,
+  }));
+
+  return prisma.ticketType.createMany({
+    data,
+  });
+};
+
+export const updateTicketType = async (ticketTypeId: number, data: TicketTypeParams) => {
   return prisma.ticketType.update({
     where: {
       id: ticketTypeId,
@@ -37,7 +38,7 @@ export const updateTicketType = async (
   });
 };
 
-export const deleteTicketType = async (ticketTypeId: TicketTypeIdParams) => {
+export const deleteTicketType = async (ticketTypeId: number) => {
   return prisma.ticketType.delete({
     where: {
       id: ticketTypeId,
