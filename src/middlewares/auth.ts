@@ -75,7 +75,22 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
 
     next();
   } catch (error) {
-    // 略過token解析錯誤
+    if (error instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({
+        message: "無效的令牌",
+        status: false,
+      });
+      return;
+    }
+
+    if (error instanceof jwt.TokenExpiredError) {
+      res.status(401).json({
+        message: "令牌已過期",
+        status: false,
+      });
+      return;
+    }
+
     next(error);
   }
 };
@@ -124,7 +139,22 @@ export const optionalAuth = async (
 
     next();
   } catch (error) {
-    // 略過token解析錯誤
+    if (error instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({
+        message: "無效的令牌",
+        status: false,
+      });
+      return;
+    }
+
+    if (error instanceof jwt.TokenExpiredError) {
+      res.status(401).json({
+        message: "令牌已過期",
+        status: false,
+      });
+      return;
+    }
+
     next(error);
   }
 };
