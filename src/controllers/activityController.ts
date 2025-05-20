@@ -1,6 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
 import { InputValidationError } from "../errors/InputValidationError";
-import { activityIdSchema, activityQuerySchema } from "../schemas/zod/activity.schema";
+import {
+  activityIdSchema,
+  activityQuerySchema,
+  createActivitySchema,
+} from "../schemas/zod/activity.schema";
 import * as activityService from "../services/activityService";
 import { getTicketTypesByActivityId } from "../services/ticketTypeService";
 import { sendResponse } from "../utils/sendResponse";
@@ -70,6 +74,28 @@ export const getActivity = async (
     } else {
       sendResponse(res, 200, "請求成功", true, activity);
     }
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+export const createActivity = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (
+      !req.user?.organizationIds.find(
+        (organizationId) => organizationId === req.body.organizationId,
+      )
+    ) {
+      sendResponse(res, 403, "無權限，非主辦單位成員", false);
+      return;
+    }
+    const data = validateInput(createActivitySchema, req.body);
+    const activity = await activityService.createActivity(data);
+    sendResponse(res, 201, "活動建立成功", true, activity);
   } catch (error) {
     if (error instanceof InputValidationError) {
       sendResponse(res, 400, error.message, false);

@@ -30,5 +30,32 @@ export const activityQuerySchema = z.object({
     .optional(),
 });
 
+// 新增活動 Schema
+export const createActivitySchema = z
+  .object({
+    organizationId: z.number({
+      invalid_type_error: "主辦單位 id 格式錯誤",
+      required_error: "主辦單位 id 為必要欄位",
+    }),
+    isOnline: z.boolean({
+      invalid_type_error: "isOnline請填boolean值",
+      required_error: "isOnline 為必要欄位",
+    }),
+    livestreamUrl: z
+      .string()
+      .url("請提供有效的網址")
+      .optional()
+      .transform((val) => val ?? null),
+  })
+  .superRefine((data, ctx) => {
+    if (data.isOnline && !data.livestreamUrl) {
+      ctx.addIssue({
+        path: ["livestreamUrl"],
+        code: z.ZodIssueCode.custom,
+        message: "isOnline為true時, livestreamUrl為必填欄位",
+      });
+    }
+  });
+
 // 匯出型別
 export type ActivityQueryParams = z.infer<typeof activityQuerySchema>;

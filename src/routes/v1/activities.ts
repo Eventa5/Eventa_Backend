@@ -1,6 +1,6 @@
 import express from "express";
 import * as activityController from "../../controllers/activityController";
-import { optionalAuth } from "../../middlewares/auth";
+import { auth, optionalAuth } from "../../middlewares/auth";
 const router = express.Router();
 
 // router.get("/popular", () => {}); // 取得熱門活動
@@ -195,11 +195,66 @@ router.get("/:activityId/ticketTypes", activityController.getActivityTicketTypes
  */
 router.get("/:activityId", optionalAuth, activityController.getActivity); // 取得特定活動資料
 
-// router.post("/", () => {}); // 創建活動
+/**
+ * @swagger
+ * /api/v1/activities:
+ *   post:
+ *     tags:
+ *       - Activities
+ *     summary: 新增一筆活動資料
+ *     description: 在選擇活動形式為線上或線下後，即新增一筆活動資料到db中
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateActivityRequest'
+ *     responses:
+ *       201:
+ *         description: 成功新增一筆活動資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/CreateActivityResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post("/", auth, activityController.createActivity); // 創建活動
 // router.post("/:activityId/favorite", () => {}); // 收藏活動
 
 // router.put("/:activityId", () => {}); // 編輯活動
 
+// router.patch("/:activityId/categories", () => {}); // 新增活動 - 活動主題步驟
+// router.patch("/:activityId/basic", () => {}); // 新增活動 - 基本資料步驟
+// router.patch("/:activityId/content", () => {}); // 新增活動 - 詳細內容步驟
+// router.patch("/:activityId/publish", () => {}); // 新增活動 - 發布活動
 // router.patch("/:activityId/cancel", () => {}); // 取消活動
 
 // router.delete("/:activityId/favorite", () => {}); // 取消收藏

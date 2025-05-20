@@ -97,3 +97,14 @@ export const getActivityDetails = async (activityId: number, userId: number) => 
     },
   };
 };
+
+// 新增活動
+export const createActivity = async (data: any) => {
+  return prisma.activity.create({
+    data,
+    select: {
+      id: true,
+      currentStep: true,
+    },
+  });
+};

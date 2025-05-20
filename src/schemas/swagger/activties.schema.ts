@@ -113,5 +113,40 @@
  *             isRegistered:
  *               type: boolean
  *               example: true
+ *     # 新增一筆活動資料結構
+ *     # -----------------------------------------------
+ *     CreateActivityRequest:
+ *       type: object
+ *       required:
+ *         - organizationId
+ *         - isOnline
+ *       properties:
+ *         organizationId:
+ *           type: number
+ *           example: 1
+ *         isOnline:
+ *           type: boolean
+ *           example: true
+ *         livestreamUrl:
+ *           type: string
+ *           example: https://activity.com/livestream
  *
+ *     CreateActivityResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: 活動建立成功
+ *         status:
+ *           type: boolean
+ *           example: true
+ *         data:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: number
+ *               example: 1
+ *             currentStep:
+ *               type: string
+ *               example: activityType
  */
