@@ -1,6 +1,6 @@
 import express from "express";
 import * as activityController from "../../controllers/activityController";
-import { auth, optionalAuth } from "../../middlewares/auth";
+import { optionalAuth } from "../../middlewares/auth";
 const router = express.Router();
 
 // router.get("/popular", () => {}); // 取得熱門活動

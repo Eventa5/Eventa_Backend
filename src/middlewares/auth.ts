@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+
 import prisma from "../prisma/client";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
@@ -11,6 +12,7 @@ declare global {
       user?: {
         id: number;
         email: string;
+        organizerIds: number[];
       };
     }
   }
@@ -49,7 +51,6 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
     });
-
     if (!user) {
       res.status(401).json({
         message: "無效的令牌，用戶不存在",
@@ -58,22 +59,37 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
       return;
     }
 
+    // 查詢用戶的主辦者ID
+    const organizerIds = await prisma.organizer.findMany({
+      where: { userId: decoded.id },
+      select: { id: true },
+    });
+
     // 將用戶資訊附加到請求對象
     req.user = {
       id: user.id,
       email: user.email,
+      organizerIds: organizerIds.map((organizer) => organizer.id),
     };
 
     next();
   } catch (error) {
-    // 處理 jwt.verify 可能拋出的錯誤
-    if (error instanceof jwt.JsonWebTokenError || error instanceof jwt.TokenExpiredError) {
+    if (error instanceof jwt.JsonWebTokenError) {
       res.status(401).json({
         message: "無效的令牌",
         status: false,
       });
       return;
     }
+
+    if (error instanceof jwt.TokenExpiredError) {
+      res.status(401).json({
+        message: "令牌已過期",
+        status: false,
+      });
+      return;
+    }
+
     next(error);
   }
 };
@@ -101,15 +117,43 @@ export const optionalAuth = async (
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
     });
-    if (user) {
-      req.user = {
-        id: user.id,
-        email: user.email,
-      };
+    if (!user) {
+      res.status(401).json({
+        message: "無效的令牌，用戶不存在",
+        status: false,
+      });
+      return;
     }
-    return next();
+
+    const organizerIds = await prisma.organizer.findMany({
+      where: { userId: decoded.id },
+      select: { id: true },
+    });
+
+    req.user = {
+      id: user.id,
+      email: user.email,
+      organizerIds: organizerIds.map((organizer) => organizer.id),
+    };
+
+    next();
   } catch (error) {
-    // 略過token解析錯誤
-    return next(error);
+    if (error instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({
+        message: "無效的令牌",
+        status: false,
+      });
+      return;
+    }
+
+    if (error instanceof jwt.TokenExpiredError) {
+      res.status(401).json({
+        message: "令牌已過期",
+        status: false,
+      });
+      return;
+    }
+
+    next(error);
   }
 };
