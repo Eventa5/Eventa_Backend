@@ -67,7 +67,7 @@ const router = express.Router();
  *         schema:
  *           type: string
  *           example: 音樂
- *       - name: organizerId
+ *       - name: organizationId
  *         in: query
  *         description: 主辦單位 ID
  *         required: false

@@ -38,7 +38,7 @@
  *         id:
  *           type: string
  *           example: 1
- *         organizerId:
+ *         organizationId:
  *           type: number
  *           example: 1
  *         cover:

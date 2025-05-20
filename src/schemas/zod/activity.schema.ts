@@ -22,7 +22,7 @@ export const activityQuerySchema = z.object({
   startTime: z.coerce.date().optional(),
   endTime: z.coerce.date().optional(),
   keyword: z.string().optional(),
-  organizerId: z.coerce
+  organizationId: z.coerce
     .number()
     .refine((val) => !Number.isNaN(val), {
       message: "無效的類別 ID，請輸入Number",

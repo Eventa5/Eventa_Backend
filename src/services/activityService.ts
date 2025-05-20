@@ -14,7 +14,7 @@ export const getActivityById = async (activityId: number) => {
 
 // 取得活動資料
 export const getActivities = async (params: ActivityQueryParams) => {
-  const { page, limit, categoryId, location, startTime, endTime, keyword, organizerId } = params;
+  const { page, limit, categoryId, location, startTime, endTime, keyword, organizationId } = params;
 
   const where: any = {
     status: { not: ActivityStatus.draft }, // 排除未發布活動
@@ -23,7 +23,7 @@ export const getActivities = async (params: ActivityQueryParams) => {
   if (location) where.location = { contains: location };
   if (startTime) where.startTime = { gte: startTime };
   if (endTime) where.endTime = { lte: endTime };
-  if (organizerId) where.organizerId = organizerId;
+  if (organizationId) where.organizationId = organizationId;
   if (keyword) {
     where.OR = [{ title: { contains: keyword } }, { descriptionMd: { contains: keyword } }];
   }
