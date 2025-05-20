@@ -31,5 +31,4 @@ export const activityQuerySchema = z.object({
 });
 
 // 匯出型別
-export type ActivityIdParams = z.infer<typeof activityIdSchema>;
 export type ActivityQueryParams = z.infer<typeof activityQuerySchema>;
