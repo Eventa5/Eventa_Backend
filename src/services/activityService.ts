@@ -2,9 +2,12 @@ import { ActivityStatus, ActivityStep } from "@prisma/client";
 import { InputValidationError } from "../errors/InputValidationError";
 import prisma from "../prisma/client";
 import type {
+  ActivityId,
   ActivityQueryParams,
   CreateActivityBody,
+  PatchActivityBasicInfoBody,
   PatchActivityCategoriesBody,
+  PatchActivityContentBody,
 } from "../schemas/zod/activity.schema";
 import * as paginator from "../utils/paginator";
 //
@@ -114,7 +117,10 @@ export const createActivity = async (data: CreateActivityBody) => {
 };
 
 // 設定活動主題
-export const patchActivityCategories = async (data: PatchActivityCategoriesBody) => {
+export const patchActivityCategories = async (
+  activityId: ActivityId,
+  data: PatchActivityCategoriesBody,
+) => {
   // 檢查categoryId存在
   const existingCategories = await prisma.category.findMany({
     where: {
@@ -133,7 +139,7 @@ export const patchActivityCategories = async (data: PatchActivityCategoriesBody)
 
   return prisma.activity.update({
     where: {
-      id: data.activityId,
+      id: activityId,
     },
     data: {
       categories: {
@@ -145,6 +151,62 @@ export const patchActivityCategories = async (data: PatchActivityCategoriesBody)
     select: {
       id: true,
       currentStep: true,
+    },
+  });
+};
+
+// 設定活動基本資料
+export const patchActivityBasicInfo = async (
+  activityId: ActivityId,
+  data: PatchActivityBasicInfoBody,
+) => {
+  return prisma.activity.update({
+    where: {
+      id: activityId,
+    },
+    data: {
+      ...data,
+      currentStep: ActivityStep.basic,
+    },
+    select: {
+      id: true,
+      currentStep: true,
+    },
+  });
+};
+
+// 設定活動詳細內容
+export const patchActivityContent = async (
+  activityId: ActivityId,
+  data: PatchActivityContentBody,
+) => {
+  return prisma.activity.update({
+    where: {
+      id: activityId,
+    },
+    data: {
+      ...data,
+      currentStep: ActivityStep.content,
+    },
+    select: {
+      id: true,
+      currentStep: true,
+    },
+  });
+};
+
+// 發布活動
+export const patchActivityPublish = async (activityId: ActivityId) => {
+  return prisma.activity.update({
+    where: {
+      id: activityId,
+    },
+    data: {
+      status: ActivityStatus.published,
+    },
+    select: {
+      id: true,
+      status: true,
     },
   });
 };

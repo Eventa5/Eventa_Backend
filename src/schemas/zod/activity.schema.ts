@@ -58,10 +58,31 @@ export const createActivitySchema = z
 
 // 新增活動 - 設定活動主題步驟
 export const patchActivityCategoriesSchema = z.object({
-  activityId: activityIdSchema,
   categoryIds: z
     .array(z.number({ invalid_type_error: "分類 ID 必須為數字" }))
     .min(1, "請至少選擇一個分類"),
+});
+
+export const patchActivityBasicInfoSchema = z.object({
+  cover: z.union([z.string().url("請提供有效的網址"), z.literal(null)]).optional(),
+  title: z.string().min(1, "活動名稱為必填欄位"),
+  startTime: z.coerce.date({ invalid_type_error: "開始時間格式錯誤" }),
+  endTime: z.coerce.date({ invalid_type_error: "結束時間格式錯誤" }),
+  tags: z.string().optional(),
+  location: z.string().optional(),
+});
+
+export const patchActivityContentSchema = z.object({
+  summary: z
+    .string({
+      required_error: "請輸入50到250字",
+    })
+    .min(50, "最少輸入50字")
+    .max(250, "最多輸入250字"),
+  descriptionMd: z.string({
+    required_error: "活動簡介為必填",
+  }),
+  note: z.string().optional(),
 });
 
 // 匯出型別
@@ -69,3 +90,5 @@ export type ActivityId = z.infer<typeof activityIdSchema>;
 export type ActivityQueryParams = z.infer<typeof activityQuerySchema>;
 export type CreateActivityBody = z.infer<typeof createActivitySchema>;
 export type PatchActivityCategoriesBody = z.infer<typeof patchActivityCategoriesSchema>;
+export type PatchActivityBasicInfoBody = z.infer<typeof patchActivityBasicInfoSchema>;
+export type PatchActivityContentBody = z.infer<typeof patchActivityContentSchema>;

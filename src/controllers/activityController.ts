@@ -4,7 +4,9 @@ import {
   activityIdSchema,
   activityQuerySchema,
   createActivitySchema,
+  patchActivityBasicInfoSchema,
   patchActivityCategoriesSchema,
+  patchActivityContentSchema,
 } from "../schemas/zod/activity.schema";
 import * as activityService from "../services/activityService";
 import { getTicketTypesByActivityId } from "../services/ticketTypeService";
@@ -120,11 +122,97 @@ export const patchActivityCategories = async (req: Request, res: Response, next:
     }
 
     const data = validateInput(patchActivityCategoriesSchema, {
-      activityId: req.params.activityId,
       ...req.body,
     });
-    const result = await activityService.patchActivityCategories(data);
+    const result = await activityService.patchActivityCategories(activityId, data);
     sendResponse(res, 200, "活動主題設定成功", true, result);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 新增活動 - 活動基本資訊步驟
+export const patchActivityBasicInfo = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
+    const activity = await activityService.getActivityById(activityId);
+    if (!activity) {
+      sendResponse(res, 404, "活動不存在", false);
+      return;
+    }
+
+    const isOrganization = req.user?.organizationIds.includes(activity.organizationId);
+    if (!isOrganization) {
+      sendResponse(res, 403, "無權限，非主辦單位成員", false);
+      return;
+    }
+
+    const data = validateInput(patchActivityBasicInfoSchema, {
+      ...req.body,
+    });
+    const result = await activityService.patchActivityBasicInfo(activityId, data);
+    sendResponse(res, 200, "活動基本資訊設定成功", true, result);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 新增活動 - 活動詳細內容步驟
+export const patchActivityContent = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
+    const activity = await activityService.getActivityById(activityId);
+    if (!activity) {
+      sendResponse(res, 404, "活動不存在", false);
+      return;
+    }
+
+    const isOrganization = req.user?.organizationIds.includes(activity.organizationId);
+    if (!isOrganization) {
+      sendResponse(res, 403, "無權限，非主辦單位成員", false);
+      return;
+    }
+
+    const data = validateInput(patchActivityContentSchema, {
+      ...req.body,
+    });
+    const result = await activityService.patchActivityContent(activityId, data);
+    sendResponse(res, 200, "活動詳細內容設定成功", true, result);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 新增活動 - 發布活動步驟
+export const patchActivityPublish = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
+    const activity = await activityService.getActivityById(activityId);
+    if (!activity) {
+      sendResponse(res, 404, "活動不存在", false);
+      return;
+    }
+
+    const isOrganization = req.user?.organizationIds.includes(activity.organizationId);
+    if (!isOrganization) {
+      sendResponse(res, 403, "無權限，非主辦單位成員", false);
+      return;
+    }
+
+    const result = await activityService.patchActivityPublish(activityId);
+    sendResponse(res, 200, "活動發布成功", true, result);
   } catch (error) {
     if (error instanceof InputValidationError) {
       sendResponse(res, 400, error.message, false);

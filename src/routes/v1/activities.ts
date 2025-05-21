@@ -217,16 +217,7 @@ router.get("/:activityId", optionalAuth, activityController.getActivity); // 取
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: success
- *                 status:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   $ref: '#/components/schemas/CreateActivityResponse'
+ *               $ref: '#/components/schemas/CreateActivityResponse'
  *       400:
  *         description: 格式錯誤
  *         content:
@@ -257,8 +248,8 @@ router.post("/", auth, activityController.createActivity); // 創建活動
  *   patch:
  *     tags:
  *       - Activities
- *     summary: 新增活動時，設定指定活動ID的主題步驟
- *     description: 設定活動主題，至少要選擇一個主題
+ *     summary: 新增活動時，設定活動主題步驟
+ *     description: 設定活動主題，至少要選擇一個主題，最多兩個，帶入主題ID array
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -280,16 +271,7 @@ router.post("/", auth, activityController.createActivity); // 創建活動
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: success
- *                 status:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   $ref: '#/components/schemas/CreateActivityResponse'
+ *               $ref: '#/components/schemas/PatchActivityResponse'
  *       400:
  *         description: 格式錯誤
  *         content:
@@ -310,9 +292,153 @@ router.post("/", auth, activityController.createActivity); // 創建活動
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch("/:activityId/categories", auth, activityController.patchActivityCategories); // 新增活動 - 活動主題步驟
-// router.patch("/:activityId/basic", () => {}); // 新增活動 - 基本資料步驟
-// router.patch("/:activityId/content", () => {}); // 新增活動 - 詳細內容步驟
-// router.patch("/:activityId/publish", () => {}); // 新增活動 - 發布活動
+
+/**
+ * @swagger
+ * /api/v1/activities/{activityId}/basic:
+ *   patch:
+ *     tags:
+ *       - Activities
+ *     summary: 新增活動時，設定基本資料步驟
+ *     description: 新增活動時的基本資料步驟，包含活動名稱、活動起迄時間、活動地點
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PatchActivityBasicRequest'
+ *     responses:
+ *       200:
+ *         description: 成功設定活動基本資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PatchActivityResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.patch("/:activityId/basic", auth, activityController.patchActivityBasicInfo); // 新增活動 - 基本資料步驟
+
+/**
+ * @swagger
+ * /api/v1/activities/{activityId}/content:
+ *   patch:
+ *     tags:
+ *       - Activities
+ *     summary: 新增活動時，設定詳細內容步驟
+ *     description: 新增活動時的詳細內容步驟，包含活動簡介、活動詳細內容
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PatchActivityContentRequest'
+ *     responses:
+ *       200:
+ *         description: 成功設定詳細內容
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PatchActivityResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.patch("/:activityId/content", auth, activityController.patchActivityContent); // 新增活動 - 詳細內容步驟
+
+/**
+ * @swagger
+ * /api/v1/activities/{activityId}/publish:
+ *   patch:
+ *     tags:
+ *       - Activities
+ *     summary: 新增活動時最後一步驟，發布活動
+ *     description: 前置步驟都設定完成後的最後一步，發布活動，所有使用者皆可看到此活動
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 成功發布活動
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PublishActivityResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.patch("/:activityId/publish", auth, activityController.patchActivityPublish); // 新增活動 - 發布活動
 // router.patch("/:activityId/cancel", () => {}); // 取消活動
 
 // router.delete("/:activityId/favorite", () => {}); // 取消收藏
