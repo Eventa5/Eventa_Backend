@@ -5,6 +5,7 @@ import type {
   ActivityId,
   ActivityQueryParams,
   CreateActivityBody,
+  EditActivityBody,
   PatchActivityBasicInfoBody,
   PatchActivityCategoriesBody,
   PatchActivityContentBody,
@@ -97,6 +98,7 @@ export const getActivityDetails = async (activityId: number, userId: number) => 
 
   return {
     ...activity,
+    tags: activity.tags?.split(",") || [],
     likeCount: _count.activityLike,
     userStatus: {
       isFavorited: activityLike.length > 0,
@@ -166,6 +168,7 @@ export const patchActivityBasicInfo = async (
     },
     data: {
       ...data,
+      tags: data.tags?.join(", ") || "",
       currentStep: ActivityStep.basic,
     },
     select: {
@@ -207,6 +210,38 @@ export const patchActivityPublish = async (activityId: ActivityId) => {
     select: {
       id: true,
       status: true,
+    },
+  });
+};
+
+// 取消活動
+export const cancelActivity = async (activityId: ActivityId) => {
+  return prisma.activity.update({
+    where: {
+      id: activityId,
+    },
+    data: {
+      status: ActivityStatus.canceled,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+};
+
+// 編輯活動
+export const editActivity = async (activityId: ActivityId, data: EditActivityBody) => {
+  return prisma.activity.update({
+    where: {
+      id: activityId,
+    },
+    data: {
+      ...data,
+      tags: data.tags?.join(", ") || "",
+    },
+    select: {
+      id: true,
     },
   });
 };

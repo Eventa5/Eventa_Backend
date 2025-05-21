@@ -240,7 +240,69 @@ router.get("/:activityId", optionalAuth, activityController.getActivity); // 取
 router.post("/", auth, activityController.createActivity); // 創建活動
 // router.post("/:activityId/favorite", () => {}); // 收藏活動
 
-// router.put("/:activityId", () => {}); // 編輯活動
+/**
+ * @swagger
+ * /api/v1/activities/{activityId}:
+ *   put:
+ *     tags:
+ *       - Activities
+ *     summary: 更新活動資料
+ *     description: 更新活動資料
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/EditActivityRequest'
+ *     responses:
+ *       200:
+ *         description: 成功更新活動資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 編輯成功
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.put("/:activityId", auth, activityController.editActivity); // 編輯活動
 
 /**
  * @swagger
@@ -418,7 +480,7 @@ router.patch("/:activityId/content", auth, activityController.patchActivityConte
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/PublishActivityResponse'
+ *               $ref: '#/components/schemas/PatchActivityStatusResponse'
  *       400:
  *         description: 格式錯誤
  *         content:
@@ -439,7 +501,51 @@ router.patch("/:activityId/content", auth, activityController.patchActivityConte
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch("/:activityId/publish", auth, activityController.patchActivityPublish); // 新增活動 - 發布活動
-// router.patch("/:activityId/cancel", () => {}); // 取消活動
+
+/**
+ * @swagger
+ * /api/v1/activities/{activityId}/cancel:
+ *   patch:
+ *     tags:
+ *       - Activities
+ *     summary: 取消活動
+ *     description: 將活動狀態改為canceled
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 成功取消活動
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PatchActivityStatusResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.patch("/:activityId/cancel", auth, activityController.cancelActivity); // 取消活動
 
 // router.delete("/:activityId/favorite", () => {}); // 取消收藏
 

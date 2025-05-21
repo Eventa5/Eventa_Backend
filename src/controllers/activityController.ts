@@ -4,6 +4,7 @@ import {
   activityIdSchema,
   activityQuerySchema,
   createActivitySchema,
+  editActivitySchema,
   patchActivityBasicInfoSchema,
   patchActivityCategoriesSchema,
   patchActivityContentSchema,
@@ -213,6 +214,63 @@ export const patchActivityPublish = async (req: Request, res: Response, next: Ne
 
     const result = await activityService.patchActivityPublish(activityId);
     sendResponse(res, 200, "活動發布成功", true, result);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 取消活動
+export const cancelActivity = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
+    const activity = await activityService.getActivityById(activityId);
+    if (!activity) {
+      sendResponse(res, 404, "活動不存在", false);
+      return;
+    }
+
+    const isOrganization = req.user?.organizationIds.includes(activity.organizationId);
+    if (!isOrganization) {
+      sendResponse(res, 403, "無權限，非主辦單位成員", false);
+      return;
+    }
+
+    const result = await activityService.cancelActivity(activityId);
+    sendResponse(res, 200, "活動取消成功", true, result);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 編輯活動
+export const editActivity = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
+    const activity = await activityService.getActivityById(activityId);
+    if (!activity) {
+      sendResponse(res, 404, "活動不存在", false);
+      return;
+    }
+
+    const isOrganization = req.user?.organizationIds.includes(activity.organizationId);
+    if (!isOrganization) {
+      sendResponse(res, 403, "無權限，非主辦單位成員", false);
+      return;
+    }
+
+    const data = validateInput(editActivitySchema, {
+      ...req.body,
+    });
+    const result = await activityService.editActivity(activityId, data);
+    sendResponse(res, 200, "活動編輯成功", true, result);
   } catch (error) {
     if (error instanceof InputValidationError) {
       sendResponse(res, 400, error.message, false);
