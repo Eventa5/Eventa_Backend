@@ -5,7 +5,6 @@ import categoryRoutes from "./v1/categories";
 import currencyRouter from "./v1/currencies";
 import orderRoutes from "./v1/orders";
 import organizationRoutes from "./v1/organizations";
-import ticketTypeRoutes from "./v1/ticketTypes";
 import ticketRoutes from "./v1/tickets";
 import userRoutes from "./v1/users";
 
@@ -15,7 +14,6 @@ router.use("/v1/users", userRoutes);
 router.use("/v1/activities", activityRoutes);
 router.use("/v1/categories", categoryRoutes);
 router.use("/v1/tickets", ticketRoutes);
-router.use("/v1/ticketTypes", ticketTypeRoutes);
 router.use("/v1/orders", orderRoutes);
 router.use("/v1/organizations", organizationRoutes);
 router.use("/v1/currencies", currencyRouter);
