@@ -19,20 +19,20 @@ export const getActivityTicketTypes = async (req: Request, res: Response, next: 
   try {
     const activityId = validateInput(activityIdSchema, req.params.activityId);
 
-    const activity = await activityService.getActivityById(activityId);
-    if (!activity) {
+    const retrievedActivity = await activityService.getActivityById(activityId);
+    if (!retrievedActivity) {
       return next({
         message: "活動不存在",
         statusCode: 404,
       });
     }
 
-    const ticketTypes = await getTicketTypesByActivityId(activityId);
+    const retrievedTicketTypes = await getTicketTypesByActivityId(activityId);
 
     res.status(200).json({
       message: "請求成功",
       status: true,
-      data: ticketTypes,
+      data: retrievedTicketTypes,
     });
   } catch (error) {
     if (error instanceof InputValidationError) {
