@@ -33,7 +33,7 @@
  *           example: "1234"
  *         officialSiteUrl:
  *           type: string
- *           example: "https://organizer.com"
+ *           example: "https://organization.com"
  *         email:
  *           type: string
  *           example: "example@gmail.com"

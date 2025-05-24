@@ -32,7 +32,7 @@ export const createTicketTypes = async (req: Request, res: Response, next: NextF
       });
     }
 
-    if (!req.user.organizerIds.includes(retrievedActivity.organizerId)) {
+    if (!req.user.organizationIds.includes(retrievedActivity.organizationId)) {
       return next({
         message: "非主辦單位，無法新增票種",
         statusCode: 403,
@@ -79,7 +79,7 @@ export const updateTicketType = async (req: Request, res: Response, next: NextFu
       });
     }
 
-    if (!req.user.organizerIds.includes(retrievedActivity.organizerId)) {
+    if (!req.user.organizationIds.includes(retrievedActivity.organizationId)) {
       return next({
         message: "非主辦單位，無法編輯票種",
         statusCode: 403,
@@ -139,7 +139,7 @@ export const deleteTicketType = async (req: Request, res: Response, next: NextFu
       });
     }
 
-    if (!req.user.organizerIds.includes(retrievedActivity.organizerId)) {
+    if (!req.user.organizationIds.includes(retrievedActivity.organizationId)) {
       return next({
         message: "非主辦單位，無法刪除票種",
         statusCode: 403,

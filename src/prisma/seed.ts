@@ -3,7 +3,7 @@ import { seedActivities } from "./seeds/activitySeed";
 import { seedCategories } from "./seeds/categorySeed";
 import { seedCurrencies } from "./seeds/currencySeed";
 import { seedLocales } from "./seeds/localeSeed";
-import { seedOrganizers } from "./seeds/organizerSeed";
+import { seedOrganizations } from "./seeds/organizationSeed";
 import { seedTicketTypes } from "./seeds/ticketTypeSeed";
 import { seedUsers } from "./seeds/userSeed";
 
@@ -15,8 +15,8 @@ async function main() {
   await seedLocales();
   await seedUsers();
   if (process.env.NODE_ENV !== "production") {
-    // 正式環境下不建立organizer和activities
-    await seedOrganizers();
+    // 正式環境下不建立organization和activities
+    await seedOrganizations();
     await seedActivities();
     await seedTicketTypes();
   }

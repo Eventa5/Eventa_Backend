@@ -16,6 +16,15 @@ enum ActivityStatus {
   canceled
 }
 
+// 新增活動時的當前步驟
+enum ActivityStep {
+  activityType
+  categories
+  basic
+  content
+  ticketTypes
+}
+
 enum OrderStatus {
   paid
   pending
@@ -54,7 +63,7 @@ model User {
   address          String?
   identity         String?
   userIdentity     UserIdentity[]
-  organizer        Organizer[]
+  organization     Organization[]
   createdAt        DateTime       @default(now())
   updateAt         DateTime       @updatedAt
   activityLike     ActivityLike[]
@@ -77,7 +86,7 @@ model UserIdentity {
   @@map("user_identities")
 }
 
-model Organizer {
+model Organization {
   id              Int        @id @default(autoincrement())
   userId          Int
   email           String     @unique
@@ -99,51 +108,52 @@ model Organizer {
   currency        Currency?  @relation(fields: [currencyId], references: [id])
   Activity        Activity[]
 
-  @@map("organizers")
+  @@map("organizations")
 }
 
 model Locale {
-  id        Int         @id @default(autoincrement())
-  name      String
-  code      String
-  organizer Organizer[]
+  id           Int            @id @default(autoincrement())
+  name         String
+  code         String
+  organization Organization[]
 
   @@map("locales")
 }
 
 model Currency {
-  id        Int         @id @default(autoincrement())
-  name      String
-  code      String
-  organizer Organizer[]
+  id           Int            @id @default(autoincrement())
+  name         String
+  code         String
+  organization Organization[]
 
   @@map("currencies")
 }
 
 model Activity {
-  id            Int            @id @default(autoincrement())
-  organizerId   Int
-  cover         String?
-  title         String
-  location      String?
-  startTime     DateTime
-  endTime       DateTime
-  isOnline      Boolean
-  tags          String?
-  status        ActivityStatus @default(draft)
-  descriptionMd String?
-  viewCount     Int            @default(0)
-  summary       String?
-  notes         String?
-  livestreamUrl String?
-  createdAt     DateTime       @default(now())
-  updateAt      DateTime       @updatedAt
-  organizer     Organizer      @relation(fields: [organizerId], references: [id])
-  categories    Category[]
-  activityLike  ActivityLike[]
-  orders        Order[]
-  tickets       Ticket[]
-  ticketTypes   TicketType[]
+  id             Int            @id @default(autoincrement())
+  organizationId Int
+  cover          String?
+  title          String?
+  location       String?
+  startTime      DateTime?
+  endTime        DateTime?
+  isOnline       Boolean
+  tags           String?
+  status         ActivityStatus @default(draft)
+  descriptionMd  String?
+  viewCount      Int            @default(0)
+  summary        String?
+  notes          String?
+  livestreamUrl  String?
+  currentStep    ActivityStep   @default(activityType)
+  createdAt      DateTime       @default(now())
+  updateAt       DateTime       @updatedAt
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  categories     Category[]
+  activityLike   ActivityLike[]
+  orders         Order[]
+  tickets        Ticket[]
+  ticketTypes    TicketType[]
 
   @@map("activities")
 }

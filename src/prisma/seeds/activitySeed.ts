@@ -4,7 +4,7 @@ import { ActivityStatus, type Prisma, PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 const activities = [
   {
-    organizerId: 1,
+    organizationId: 1,
     title: "EVENET音樂祭",
     startTime: new Date(),
     endTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
@@ -15,7 +15,7 @@ const activities = [
     status: ActivityStatus.published,
   },
   {
-    organizerId: 1,
+    organizationId: 1,
     title: "活動TEST2",
     startTime: new Date(),
     endTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),

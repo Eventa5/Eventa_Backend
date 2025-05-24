@@ -12,7 +12,7 @@ declare global {
       user?: {
         id: number;
         email: string;
-        organizerIds: number[];
+        organizationIds: number[];
       };
     }
   }
@@ -60,7 +60,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
     }
 
     // 查詢用戶的主辦者ID
-    const organizerIds = await prisma.organizer.findMany({
+    const organizationIds = await prisma.organization.findMany({
       where: { userId: decoded.id },
       select: { id: true },
     });
@@ -69,7 +69,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
     req.user = {
       id: user.id,
       email: user.email,
-      organizerIds: organizerIds.map((organizer) => organizer.id),
+      organizationIds: organizationIds.map((organization) => organization.id),
     };
 
     next();
@@ -125,7 +125,7 @@ export const optionalAuth = async (
       return;
     }
 
-    const organizerIds = await prisma.organizer.findMany({
+    const organizationIds = await prisma.organization.findMany({
       where: { userId: decoded.id },
       select: { id: true },
     });
@@ -133,7 +133,7 @@ export const optionalAuth = async (
     req.user = {
       id: user.id,
       email: user.email,
-      organizerIds: organizerIds.map((organizer) => organizer.id),
+      organizationIds: organizationIds.map((organization) => organization.id),
     };
 
     next();
