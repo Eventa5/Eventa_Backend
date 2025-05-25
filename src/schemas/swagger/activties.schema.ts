@@ -30,6 +30,9 @@
  *           type: string
  *           format: date
  *           example: 2025-05-15T10:00:00Z
+ *         status:
+ *           type: string
+ *           example: draft | published | ended | canceled
  *     # 單一活動資料結構
  *     # -----------------------------------------------
  *     ActivityResponse:
@@ -290,5 +293,16 @@
  *         notes:
  *           type: string
  *           example: 活動完全免費
+ *         categories:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: number
+ *                 example: 1
+ *               name:
+ *                 type: string
+ *                 example: 音樂
  *
  */

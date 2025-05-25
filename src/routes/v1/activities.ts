@@ -78,6 +78,13 @@ const router = express.Router();
  *         schema:
  *           type: integer
  *           example: 1
+ *       - name: statuts
+ *         in: query
+ *         description: 活動狀態 draft | published | ended | canceled
+ *         required: false
+ *         schema:
+ *           type: string
+ *           example: published
  *     responses:
  *       200:
  *         description: 成功獲取活動資料
