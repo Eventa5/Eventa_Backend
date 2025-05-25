@@ -71,7 +71,8 @@ export const patchActivityBasicInfoSchema = z
     startTime: z.coerce.date({ invalid_type_error: "開始時間格式錯誤" }),
     endTime: z.coerce.date({ invalid_type_error: "結束時間格式錯誤" }),
     tags: z.array(z.string().trim()).max(5, "最多只能填寫 5 個標籤").optional(),
-    location: z.string().trim().optional(),
+    location: z.string().trim().nullish(),
+    isOnline: z.boolean(),
   })
   .superRefine((data, ctx) => {
     const now = new Date();
@@ -89,6 +90,14 @@ export const patchActivityBasicInfoSchema = z
         path: ["endTime"],
         code: z.ZodIssueCode.custom,
         message: "結束時間不得早於開始時間",
+      });
+    }
+
+    if (!data.isOnline && !data.location) {
+      ctx.addIssue({
+        path: ["location"],
+        code: z.ZodIssueCode.custom,
+        message: "活動形式為線下活動時, location為必填欄位",
       });
     }
   });

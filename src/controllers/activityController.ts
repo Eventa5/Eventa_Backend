@@ -154,6 +154,7 @@ export const patchActivityBasicInfo = async (req: Request, res: Response, next: 
 
     const data = validateInput(patchActivityBasicInfoSchema, {
       ...req.body,
+      isOnline: activity.isOnline,
     });
     const result = await activityService.patchActivityBasicInfo(activityId, data);
     sendResponse(res, 200, "活動基本資訊設定成功", true, result);
