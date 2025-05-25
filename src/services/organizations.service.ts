@@ -9,7 +9,7 @@ import type {
  * 獲取當前用戶的主辦單位列表
  */
 export const getUserOrganizations = async (userId: number) => {
-  const organizers = await prisma.organizer.findMany({
+  const organizations = await prisma.organization.findMany({
     where: {
       userId: userId,
       deletedAt: null,
@@ -19,7 +19,7 @@ export const getUserOrganizations = async (userId: number) => {
     },
   });
 
-  return organizers.map((org) => ({
+  return organizations.map((org) => ({
     id: org.id,
     name: org.name || "",
     avatar: org.avatar || "",
@@ -31,7 +31,7 @@ export const getUserOrganizations = async (userId: number) => {
  * 根據ID獲取主辦單位詳細資訊
  */
 export const getOrganizationById = async (organizationId: number) => {
-  const organizer = await prisma.organizer.findUnique({
+  const organization = await prisma.organization.findUnique({
     where: {
       id: organizationId,
       deletedAt: null,
@@ -41,22 +41,22 @@ export const getOrganizationById = async (organizationId: number) => {
     },
   });
 
-  if (!organizer) {
+  if (!organization) {
     return null;
   }
 
   return {
-    id: organizer.id,
-    name: organizer.name || "",
-    avatar: organizer.avatar || "",
-    cover: organizer.cover || "",
-    introduction: organizer.introduction || "",
-    phoneNumber: organizer.phoneNumber || "",
-    countryCode: organizer.countryCode || "",
-    ext: organizer.ext || "",
-    officialSiteUrl: organizer.officialSiteUrl || "",
-    email: organizer.email,
-    currency: organizer.currency?.code || "TWD",
+    id: organization.id,
+    name: organization.name || "",
+    avatar: organization.avatar || "",
+    cover: organization.cover || "",
+    introduction: organization.introduction || "",
+    phoneNumber: organization.phoneNumber || "",
+    countryCode: organization.countryCode || "",
+    ext: organization.ext || "",
+    officialSiteUrl: organization.officialSiteUrl || "",
+    email: organization.email,
+    currency: organization.currency?.code || "TWD",
   };
 };
 
@@ -66,19 +66,19 @@ export const getOrganizationById = async (organizationId: number) => {
 export const createOrganization = async (data: CreateOrganizationRequest, userId: number) => {
   // 檢查 email 是否已被使用
   if (data.email) {
-    const existingOrganizer = await prisma.organizer.findFirst({
+    const existingOrganization = await prisma.organization.findFirst({
       where: {
         email: data.email,
         deletedAt: null,
       },
     });
 
-    if (existingOrganizer) {
+    if (existingOrganization) {
       throw new Error("此電子郵件已被使用");
     }
   }
 
-  const organizer = await prisma.organizer.create({
+  const organization = await prisma.organization.create({
     data: {
       name: data.name,
       avatar: data.avatar,
@@ -98,7 +98,7 @@ export const createOrganization = async (data: CreateOrganizationRequest, userId
     },
   });
 
-  return organizer.id;
+  return organization.id;
 };
 
 /**
@@ -106,7 +106,7 @@ export const createOrganization = async (data: CreateOrganizationRequest, userId
  */
 export const updateOrganization = async (data: UpdateOrganizationRequest, userId: number) => {
   // 檢查主辦單位是否存在且用戶有權限修改
-  const existingOrganizer = await prisma.organizer.findFirst({
+  const existingOrganization = await prisma.organization.findFirst({
     where: {
       id: data.id,
       userId: userId,
@@ -114,13 +114,13 @@ export const updateOrganization = async (data: UpdateOrganizationRequest, userId
     },
   });
 
-  if (!existingOrganizer) {
+  if (!existingOrganization) {
     throw new Error("主辦單位不存在或無權限修改");
   }
 
   // 檢查 email 是否已被其他主辦單位使用
-  if (data.email && data.email !== existingOrganizer.email) {
-    const duplicateEmail = await prisma.organizer.findFirst({
+  if (data.email && data.email !== existingOrganization.email) {
+    const duplicateEmail = await prisma.organization.findFirst({
       where: {
         email: data.email,
         id: { not: data.id },
@@ -134,7 +134,7 @@ export const updateOrganization = async (data: UpdateOrganizationRequest, userId
   }
 
   // 更新主辦單位資料
-  await prisma.organizer.update({
+  await prisma.organization.update({
     where: {
       id: data.id,
     },
@@ -159,7 +159,7 @@ export const updateOrganization = async (data: UpdateOrganizationRequest, userId
  */
 export const deleteOrganization = async (data: DeleteOrganizationRequest, userId: number) => {
   // 檢查主辦單位是否存在且用戶有權限修改
-  const existingOrganizer = await prisma.organizer.findFirst({
+  const existingOrganization = await prisma.organization.findFirst({
     where: {
       id: data.id,
       userId: userId,
@@ -167,14 +167,14 @@ export const deleteOrganization = async (data: DeleteOrganizationRequest, userId
     },
   });
 
-  if (!existingOrganizer) {
+  if (!existingOrganization) {
     return false;
   }
 
   // 檢查是否有進行中或未來的活動
   const activeActivities = await prisma.activity.findMany({
     where: {
-      organizerId: data.id,
+      organizationId: data.id,
       OR: [
         // 已發布且尚未結束的活動
         {
@@ -199,7 +199,7 @@ export const deleteOrganization = async (data: DeleteOrganizationRequest, userId
   const orders = await prisma.order.findMany({
     where: {
       activity: {
-        organizerId: data.id,
+        organizationId: data.id,
       },
       status: "paid",
     },
@@ -210,7 +210,7 @@ export const deleteOrganization = async (data: DeleteOrganizationRequest, userId
   }
 
   // 執行軟刪除
-  await prisma.organizer.update({
+  await prisma.organization.update({
     where: { id: data.id },
     data: { deletedAt: new Date() },
   });
