@@ -1,4 +1,3 @@
-import { r } from "@faker-js/faker/dist/airline-BUL6NtOJ";
 import { ActivityStatus, ActivityStep } from "@prisma/client";
 import { InputValidationError } from "../errors/InputValidationError";
 import prisma from "../prisma/client";
