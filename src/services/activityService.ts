@@ -1,3 +1,4 @@
+import { r } from "@faker-js/faker/dist/airline-BUL6NtOJ";
 import { ActivityStatus, ActivityStep } from "@prisma/client";
 import { InputValidationError } from "../errors/InputValidationError";
 import prisma from "../prisma/client";
@@ -183,7 +184,7 @@ export const patchActivityBasicInfo = async (
     },
     data: {
       ...data,
-      tags: data.tags?.join(", ") || "",
+      tags: data.tags?.join(",") || "",
       currentStep: ActivityStep.basic,
     },
     select: {
@@ -251,9 +252,10 @@ export const cancelActivity = async (activityId: ActivityId) => {
 // 編輯活動
 export const editActivity = async (activityId: ActivityId, data: EditActivityBody) => {
   // 檢查categoryId存在
+  const { categoryIds, ...rest } = data;
   const existingCategories = await prisma.category.findMany({
     where: {
-      id: { in: data.categoryIds },
+      id: { in: categoryIds },
     },
     select: {
       id: true,
@@ -261,7 +263,7 @@ export const editActivity = async (activityId: ActivityId, data: EditActivityBod
   });
 
   const existingCategoryIds = existingCategories.map((category) => category.id);
-  const invalidCategoryIds = data.categoryIds.filter((id) => !existingCategoryIds.includes(id));
+  const invalidCategoryIds = categoryIds.filter((id) => !existingCategoryIds.includes(id));
   if (invalidCategoryIds.length > 0) {
     throw new InputValidationError(`無效的Category ID: ${invalidCategoryIds.join(", ")}`);
   }
@@ -271,12 +273,12 @@ export const editActivity = async (activityId: ActivityId, data: EditActivityBod
       id: activityId,
     },
     data: {
-      ...data,
+      ...rest,
       categories: {
         set: [],
-        connect: data.categoryIds.map((id) => ({ id })),
+        connect: categoryIds.map((id) => ({ id })),
       },
-      tags: data.tags?.join(", ") || "",
+      tags: data.tags?.join(",") || "",
     },
     select: {
       id: true,

@@ -268,11 +268,11 @@
  *         startTime:
  *           type: string
  *           format: date
- *           example: 2025-05-01T10:00:00Z
+ *           example: 2026-05-01T10:00:00Z
  *         endTime:
  *           type: string
  *           format: date
- *           example: 2025-05-15T10:00:00Z
+ *           example: 2026-05-15T10:00:00Z
  *         isOnline:
  *           type: boolean
  *           example: true
@@ -293,16 +293,9 @@
  *         notes:
  *           type: string
  *           example: 活動完全免費
- *         categories:
+ *         categoryIds:
  *           type: array
  *           items:
- *             type: object
- *             properties:
- *               id:
- *                 type: number
- *                 example: 1
- *               name:
- *                 type: string
- *                 example: 音樂
- *
+ *             type: number
+ *           example: [1, 2]
  */

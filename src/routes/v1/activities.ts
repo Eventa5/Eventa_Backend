@@ -78,7 +78,7 @@ const router = express.Router();
  *         schema:
  *           type: integer
  *           example: 1
- *       - name: statuts
+ *       - name: status
  *         in: query
  *         description: 活動狀態 draft | published | ended | canceled
  *         required: false
