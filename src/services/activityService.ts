@@ -67,25 +67,14 @@ export const getActivities = async (params: ActivityQueryParams) => {
 
 // 取得單一活動資料
 export const getActivityDetails = async (activityId: number, userId: number) => {
-  // 判斷是否為創辦者
-  const isOrganizer = await prisma.activity.findFirst({
-    where: {
-      id: activityId,
-      organization: {
-        userId,
-      },
-    },
-    select: {
-      id: true,
-    },
-  });
-
   const activityRaw = await prisma.activity.findFirst({
     where: {
       id: activityId,
-      ...(isOrganizer ? {} : { status: ActivityStatus.published }), // 非創辦者只回已發布的活動
     },
     include: {
+      organization: {
+        select: { userId: true },
+      },
       _count: {
         select: {
           activityLike: true,
@@ -109,7 +98,28 @@ export const getActivityDetails = async (activityId: number, userId: number) => 
   });
 
   if (!activityRaw) return null;
-  const { _count, activityLike, orders, ...activity } = activityRaw;
+
+  // 判斷是否為主辦身分
+  const isOrganizer = activityRaw.organization.userId === userId;
+
+  // 非主辦身分, 只回已發布的活動
+  if (!isOrganizer && activityRaw.status !== ActivityStatus.published) return null;
+
+  // 一般使用者瀏覽則更新瀏覽次數
+  if (!isOrganizer) {
+    await prisma.activity.update({
+      where: {
+        id: activityId,
+      },
+      data: {
+        viewCount: {
+          increment: 1,
+        },
+      },
+    });
+  }
+
+  const { _count, activityLike, orders, organization, ...activity } = activityRaw;
 
   return {
     ...activity,
