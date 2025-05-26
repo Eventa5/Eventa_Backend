@@ -8,7 +8,7 @@
  *       type: object
  *       properties:
  *         id:
- *           type: string
+ *           type: number
  *           example: 1
  *         title:
  *           type: string
@@ -39,7 +39,7 @@
  *       type: object
  *       properties:
  *         id:
- *           type: string
+ *           type: number
  *           example: 1
  *         organizationId:
  *           type: number
