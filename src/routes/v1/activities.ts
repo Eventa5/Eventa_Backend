@@ -459,7 +459,45 @@ router.get("/:activityId", optionalAuth, activityController.getActivity); // 取
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/", auth, activityController.createActivity); // 創建活動
-// router.post("/:activityId/favorite", () => {}); // 收藏活動
+
+/**
+ * @swagger
+ * /api/v1/activities/{activityId}/favorite:
+ *   post:
+ *     tags:
+ *       - Activities
+ *     summary: 收藏活動
+ *     description: 使用者登入後，可以收藏活動
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       201:
+ *         description: 活動已加入收藏
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/favoriteActivityResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post("/:activityId/favorite", auth, activityController.favoriteActivity); // 收藏活動
 
 /**
  * @swagger
@@ -768,6 +806,43 @@ router.patch("/:activityId/publish", auth, activityController.patchActivityPubli
  */
 router.patch("/:activityId/cancel", auth, activityController.cancelActivity); // 取消活動
 
-// router.delete("/:activityId/favorite", () => {}); // 取消收藏
+/**
+ * @swagger
+ * /api/v1/activities/{activityId}/favorite:
+ *   delete:
+ *     tags:
+ *       - Activities
+ *     summary: 取消收藏活動
+ *     description: 使用者登入後，可以取消收藏活動
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       201:
+ *         description: 活動已取消收藏
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/favoriteActivityResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.delete("/:activityId/favorite", auth, activityController.unfavoriteActivity); // 取消收藏活動
 
 export default router;

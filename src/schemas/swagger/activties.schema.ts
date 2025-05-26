@@ -298,4 +298,15 @@
  *           items:
  *             type: number
  *           example: [1, 2]
+ *     # 收藏活動回應資料結構
+ *     # -----------------------------------------------
+ *     favoriteActivityResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: 活動已加入收藏 | 活動已取消收藏
+ *         status:
+ *           type: boolean
+ *           example: true
  */

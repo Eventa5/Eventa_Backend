@@ -294,3 +294,57 @@ export const editActivity = async (activityId: ActivityId, data: EditActivityBod
     },
   });
 };
+
+// 收藏活動
+export const favoriteActivity = async (activityId: ActivityId, userId: number) => {
+  // 檢查是否收藏過
+  const isFavorited = await prisma.activityLike.findUnique({
+    where: {
+      activityLikeId: {
+        activityId,
+        userId,
+      },
+    },
+  });
+
+  if (isFavorited) {
+    const error = new Error("已收藏過此活動") as Error & { statusCode: number };
+    error.statusCode = 409;
+    throw error;
+  }
+
+  return prisma.activityLike.create({
+    data: {
+      activityId,
+      userId,
+    },
+  });
+};
+
+// 取消收藏活動
+export const unfavoriteActivity = async (activityId: ActivityId, userId: number) => {
+  // 檢查是否收藏過
+  const isFavorited = await prisma.activityLike.findUnique({
+    where: {
+      activityLikeId: {
+        activityId,
+        userId,
+      },
+    },
+  });
+
+  if (!isFavorited) {
+    const error = new Error("尚未收藏此活動") as Error & { statusCode: number };
+    error.statusCode = 409;
+    throw error;
+  }
+
+  return prisma.activityLike.delete({
+    where: {
+      activityLikeId: {
+        activityId,
+        userId,
+      },
+    },
+  });
+};

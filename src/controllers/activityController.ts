@@ -280,3 +280,59 @@ export const editActivity = async (req: Request, res: Response, next: NextFuncti
     }
   }
 };
+
+// 收藏活動
+export const favoriteActivity = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) {
+      return next({
+        message: "未提供授權令牌",
+        statusCode: 401,
+      });
+    }
+
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
+    const activity = await activityService.getActivityById(activityId);
+    if (!activity) {
+      sendResponse(res, 404, "活動不存在", false);
+      return;
+    }
+
+    await activityService.favoriteActivity(activityId, req.user.id);
+    sendResponse(res, 201, "活動已加入收藏", true);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 取消收藏活動
+export const unfavoriteActivity = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) {
+      return next({
+        message: "未提供授權令牌",
+        statusCode: 401,
+      });
+    }
+
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
+    const activity = await activityService.getActivityById(activityId);
+    if (!activity) {
+      sendResponse(res, 404, "活動不存在", false);
+      return;
+    }
+
+    await activityService.unfavoriteActivity(activityId, req.user.id);
+    sendResponse(res, 200, "活動已取消收藏", true);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
