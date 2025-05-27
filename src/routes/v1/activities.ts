@@ -7,7 +7,52 @@ import * as ticketTypeController from "../../controllers/ticketTypeController";
 
 const router = express.Router();
 
-// router.get("/popular", () => {}); // 取得熱門活動
+/**
+ * @swagger
+ * /api/v1/activities/popular:
+ *   get:
+ *     tags:
+ *       - Activities
+ *     summary: 獲取熱門活動資料
+ *     description: 獲取熱門活動資料
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: limit
+ *         in: query
+ *         description: 每頁資料筆數（預設為 6）
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           example: 6
+ *     responses:
+ *       200:
+ *         description: 成功獲取活動資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ActivitiesResponse'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/PaginationResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get("/popular", activityController.getPopular); // 取得熱門活動
 
 /**
  * @swagger
@@ -138,21 +183,18 @@ router.get("/", activityController.getActivities); // 取得活動資料
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/TicketTypeResponse'
- *
  *       401:
  *         description: 未登入或無效 token
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *
  *       404:
  *         description: 活動不存在
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *
  *       500:
  *         description: 伺服器錯誤，請稍後再試
  *         content:
@@ -413,6 +455,12 @@ router.delete(
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/:activityId", optionalAuth, activityController.getActivity); // 取得特定活動資料
 
@@ -492,6 +540,12 @@ router.post("/", auth, activityController.createActivity); // 創建活動
  *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
  *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
  *         content:
  *           application/json:
  *             schema:
@@ -611,6 +665,12 @@ router.put("/:activityId", auth, activityController.editActivity); // 編輯活�
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch("/:activityId/categories", auth, activityController.patchActivityCategories); // 新增活動 - 活動主題步驟
 
@@ -658,6 +718,12 @@ router.patch("/:activityId/categories", auth, activityController.patchActivityCa
  *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
  *         content:
  *           application/json:
  *             schema:
@@ -713,6 +779,12 @@ router.patch("/:activityId/basic", auth, activityController.patchActivityBasicIn
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch("/:activityId/content", auth, activityController.patchActivityContent); // 新增活動 - 詳細內容步驟
 
@@ -754,6 +826,12 @@ router.patch("/:activityId/content", auth, activityController.patchActivityConte
  *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
  *         content:
  *           application/json:
  *             schema:
@@ -803,6 +881,12 @@ router.patch("/:activityId/publish", auth, activityController.patchActivityPubli
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch("/:activityId/cancel", auth, activityController.cancelActivity); // 取消活動
 
@@ -838,6 +922,12 @@ router.patch("/:activityId/cancel", auth, activityController.cancelActivity); //
  *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
  *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
  *         content:
  *           application/json:
  *             schema:

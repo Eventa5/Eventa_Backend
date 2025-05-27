@@ -176,6 +176,9 @@ export const editActivitySchema = z
     }
   });
 
+// 取得活動資料Query
+export const limitSchema = z.coerce.number().default(6);
+
 // 匯出型別
 export type ActivityId = z.infer<typeof activityIdSchema>;
 export type ActivityQueryParams = z.infer<typeof activityQuerySchema>;
@@ -184,3 +187,4 @@ export type PatchActivityCategoriesBody = z.infer<typeof patchActivityCategories
 export type PatchActivityBasicInfoBody = z.infer<typeof patchActivityBasicInfoSchema>;
 export type PatchActivityContentBody = z.infer<typeof patchActivityContentSchema>;
 export type EditActivityBody = z.infer<typeof editActivitySchema>;
+export type LimitQuery = z.infer<typeof limitSchema>;

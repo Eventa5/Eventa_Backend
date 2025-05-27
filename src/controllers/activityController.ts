@@ -5,6 +5,7 @@ import {
   activityQuerySchema,
   createActivitySchema,
   editActivitySchema,
+  limitSchema,
   patchActivityBasicInfoSchema,
   patchActivityCategoriesSchema,
   patchActivityContentSchema,
@@ -328,6 +329,26 @@ export const unfavoriteActivity = async (req: Request, res: Response, next: Next
 
     await activityService.unfavoriteActivity(activityId, req.user.id);
     sendResponse(res, 200, "活動已取消收藏", true);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 取得熱門活動
+export const getPopular = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const limit = validateInput(limitSchema, req.query.limit);
+    const result = await activityService.getHotActivities(limit);
+    console.log(result);
+    sendResponse(res, 200, "取得熱門活動成功", true, result);
   } catch (error) {
     if (error instanceof InputValidationError) {
       sendResponse(res, 400, error.message, false);

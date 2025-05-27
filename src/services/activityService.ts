@@ -6,6 +6,7 @@ import type {
   ActivityQueryParams,
   CreateActivityBody,
   EditActivityBody,
+  LimitQuery,
   PatchActivityBasicInfoBody,
   PatchActivityCategoriesBody,
   PatchActivityContentBody,
@@ -53,6 +54,12 @@ export const getActivities = async (params: ActivityQueryParams) => {
         startTime: true,
         endTime: true,
         status: true,
+        organization: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy: {
         startTime: "asc",
@@ -347,4 +354,50 @@ export const unfavoriteActivity = async (activityId: ActivityId, userId: number)
       },
     },
   });
+};
+
+// 取得熱門活動
+export const getHotActivities = async (limit: LimitQuery) => {
+  const activities = await prisma.activity.findMany({
+    where: {
+      status: ActivityStatus.published,
+    },
+    orderBy: {
+      viewCount: "desc",
+    },
+    take: limit * 4,
+    select: {
+      id: true,
+      title: true,
+      location: true,
+      cover: true,
+      isOnline: true,
+      startTime: true,
+      endTime: true,
+      organization: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      viewCount: true,
+      _count: {
+        select: {
+          activityLike: true,
+          orders: true,
+        },
+      },
+    },
+  });
+
+  // 加權比重=> viewCount * 1 + activityLike * 3 + orders * 5
+  const sortedActivities = activities
+    .map((activtiy) => ({
+      ...activtiy,
+      score: activtiy.viewCount * 1 + activtiy._count.activityLike * 3 + activtiy._count.orders * 5,
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+
+  return sortedActivities;
 };
