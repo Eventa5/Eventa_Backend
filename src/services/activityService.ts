@@ -374,6 +374,7 @@ export const getHotActivities = async (limit: LimitQuery) => {
       isOnline: true,
       startTime: true,
       endTime: true,
+      status: true,
       organization: {
         select: {
           id: true,

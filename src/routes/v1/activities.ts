@@ -43,8 +43,6 @@ const router = express.Router();
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/ActivitiesResponse'
- *                 pagination:
- *                   $ref: '#/components/schemas/PaginationResponse'
  *       400:
  *         description: 格式錯誤
  *         content:
