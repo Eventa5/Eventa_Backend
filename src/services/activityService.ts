@@ -7,6 +7,7 @@ import type {
   CreateActivityBody,
   EditActivityBody,
   LimitQuery,
+  PagenationQuery,
   PatchActivityBasicInfoBody,
   PatchActivityCategoriesBody,
   PatchActivityContentBody,
@@ -401,4 +402,39 @@ export const getHotActivities = async (limit: LimitQuery) => {
     .slice(0, limit);
 
   return sortedActivities;
+};
+
+// 取得參加者名單
+export const getParticipants = async (activityId: ActivityId, params: PagenationQuery) => {
+  const { page, limit } = params;
+  const offset = paginator.getOffset(page, limit);
+
+  const data = await prisma.ticket.findMany({
+    where: {
+      activityId: activityId,
+    },
+    skip: offset,
+    take: limit,
+    select: {
+      id: true,
+      orderId: true,
+      status: true,
+      assignedName: true,
+      assignedEmail: true,
+      createdAt: true,
+      ticketType: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  const pagination = paginator.getPagination(data.length, page, limit);
+  return { data, pagination };
 };

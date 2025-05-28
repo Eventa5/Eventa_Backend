@@ -6,6 +6,7 @@ import {
   createActivitySchema,
   editActivitySchema,
   limitSchema,
+  paginationQuerySchema,
   patchActivityBasicInfoSchema,
   patchActivityCategoriesSchema,
   patchActivityContentSchema,
@@ -349,6 +350,39 @@ export const getPopular = async (
     const result = await activityService.getHotActivities(limit);
     console.log(result);
     sendResponse(res, 200, "取得熱門活動成功", true, result);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 取得參加者名單
+export const getParticipants = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
+    const activity = await activityService.getActivityById(activityId);
+    if (!activity) {
+      sendResponse(res, 404, "活動不存在", false);
+      return;
+    }
+
+    const isOrganization = req.user?.organizationIds.includes(activity.organizationId);
+    if (!isOrganization) {
+      sendResponse(res, 403, "無權限，非主辦單位成員", false);
+      return;
+    }
+
+    const validatedData = validateInput(paginationQuerySchema, req.query);
+    const { data, pagination } = await activityService.getParticipants(activityId, validatedData);
+
+    sendResponse(res, 200, "請求成功", true, data, pagination);
   } catch (error) {
     if (error instanceof InputValidationError) {
       sendResponse(res, 400, error.message, false);

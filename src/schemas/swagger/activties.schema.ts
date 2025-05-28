@@ -309,4 +309,40 @@
  *         status:
  *           type: boolean
  *           example: true
+ *     # 參加者名單回應
+ *     # -----------------------------------------------
+ *     getPartcipantResponse:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: number
+ *           example: T25052814531482592
+ *         orderId:
+ *           type: string
+ *           example: O25052814531487937
+ *         status:
+ *           type: string
+ *           example: paid
+ *         assignedName:
+ *           type: string
+ *           example: 小明
+ *         assignedEmail:
+ *           type: string
+ *           example: 7lMlA@example.com
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           example: 2023-05-01T10:00:00Z
+ *         ticketType:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: number
+ *               example: 1
+ *             name:
+ *               type: string
+ *               example: 普通票
+ *             price:
+ *               type: number
+ *               example: 100
  */

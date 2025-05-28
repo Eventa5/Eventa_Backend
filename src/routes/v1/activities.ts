@@ -412,7 +412,83 @@ router.delete(
   ticketTypeController.deleteTicketType,
 );
 
-// router.get("/:activityId/participants", () => {}); // 取得活動參加名單
+/**
+ * @swagger
+ * /api/v1/activities/{activityId}/participants:
+ *   get:
+ *     tags:
+ *       - Activities
+ *     summary: 獲取特定活動的參加者名單
+ *     description: 獲取特定活動的參加者名單
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - name: page
+ *         in: query
+ *         description: 當前頁數（預設為 1）
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *       - name: limit
+ *         in: query
+ *         description: 每頁資料筆數（預設為 10）
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *     responses:
+ *       200:
+ *         description: 成功獲取活動資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/getPartcipantResponse'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/PaginationResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get("/:activityId/participants", auth, activityController.getParticipants); // 取得活動參加名單
 
 /**
  * @swagger
@@ -433,20 +509,11 @@ router.delete(
  *           type: integer
  *     responses:
  *       200:
- *         description: 成功獲取活動資料
+ *         description: 請求成功
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: success
- *                 status:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   $ref: '#/components/schemas/ActivityResponse'
+ *               $ref: '#/components/schemas/ActivityResponse'
  *       400:
  *         description: 格式錯誤
  *         content:
