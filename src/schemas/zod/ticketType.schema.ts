@@ -1,4 +1,10 @@
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 import { z } from "zod";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export const ticketTypeIdSchema = z.coerce
   .number({
@@ -35,18 +41,16 @@ export const ticketTypeSchema = z
       })
       .nonnegative({ message: "票種剩餘數量 必須大於或等於 0" }),
     description: z.string().trim().max(255, { message: "票種描述不能超過255個字符" }).optional(),
-    startTime: z.coerce
-      .date({
-        required_error: "開賣時間 為必填欄位",
-        invalid_type_error: "開賣時間 格式錯誤",
-      })
-      .min(new Date(), { message: "開賣時間 為過去時間" }),
-    endTime: z.coerce
-      .date({
-        required_error: "開賣結束時間 為必填欄位",
-        invalid_type_error: "開賣結束時間 格式錯誤",
-      })
-      .min(new Date(), { message: "開賣結束時間 為過去時間" }),
+    startTime: z.coerce.date({
+      required_error: "開賣時間 為必填欄位",
+      invalid_type_error: "開賣時間 格式錯誤",
+    }),
+    // .min(new Date(), { message: "開賣時間 為過去時間" }),
+    endTime: z.coerce.date({
+      required_error: "開賣結束時間 為必填欄位",
+      invalid_type_error: "開賣結束時間 格式錯誤",
+    }),
+    // .min(new Date(), { message: "開賣結束時間 為過去時間" }),
     isActive: z
       .boolean({
         required_error: "是否為啟動中 為必填欄位",
@@ -55,6 +59,10 @@ export const ticketTypeSchema = z
       .default(true),
   })
   .superRefine((val, ctx) => {
+    const now = dayjs().tz("Asia/Taipei");
+    const start = dayjs.tz(val.startTime, "Asia/Taipei");
+    const end = dayjs.tz(val.endTime, "Asia/Taipei");
+
     if (val.remainingQuantity > val.totalQuantity) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -63,7 +71,15 @@ export const ticketTypeSchema = z
       });
     }
 
-    if (val.startTime >= val.endTime) {
+    if (start.isBefore(now)) {
+      ctx.addIssue({
+        path: ["startTime"],
+        code: z.ZodIssueCode.custom,
+        message: "開賣時間不得早於當前時間",
+      });
+    }
+
+    if (end.isBefore(start)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "開賣時間 不可晚於 開賣結束時間，或 開賣結束時間 不可早於 開賣時間",

@@ -89,7 +89,7 @@ export const patchActivityBasicInfoSchema = z
       ctx.addIssue({
         path: ["startTime"],
         code: z.ZodIssueCode.custom,
-        message: "開始時間不得早於今天",
+        message: "開始時間不得早於當前時間",
       });
     }
 
@@ -158,7 +158,7 @@ export const editActivitySchema = z
       ctx.addIssue({
         path: ["startTime"],
         code: z.ZodIssueCode.custom,
-        message: "開始時間不得早於今天",
+        message: "開始時間不得早於當前時間",
       });
     }
 
