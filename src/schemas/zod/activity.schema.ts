@@ -1,4 +1,10 @@
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 import { z } from "zod";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // 活動 id 驗證
 export const activityIdSchema = z.coerce
@@ -75,17 +81,19 @@ export const patchActivityBasicInfoSchema = z
     isOnline: z.boolean(),
   })
   .superRefine((data, ctx) => {
-    const now = new Date();
+    const now = dayjs().tz("Asia/Taipei");
+    const start = dayjs.tz(data.startTime, "Asia/Taipei");
+    const end = dayjs.tz(data.endTime, "Asia/Taipei");
 
-    if (data.startTime < now) {
+    if (start.isBefore(now)) {
       ctx.addIssue({
         path: ["startTime"],
         code: z.ZodIssueCode.custom,
-        message: "開始時間不得早於今天",
+        message: "開始時間不得早於當前時間",
       });
     }
 
-    if (data.endTime < data.startTime) {
+    if (end.isBefore(start)) {
       ctx.addIssue({
         path: ["endTime"],
         code: z.ZodIssueCode.custom,
@@ -142,17 +150,19 @@ export const editActivitySchema = z
     notes: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    const now = new Date();
+    const now = dayjs().tz("Asia/Taipei");
+    const start = dayjs.tz(data.startTime, "Asia/Taipei");
+    const end = dayjs.tz(data.endTime, "Asia/Taipei");
 
-    if (data.startTime < now) {
+    if (start.isBefore(now)) {
       ctx.addIssue({
         path: ["startTime"],
         code: z.ZodIssueCode.custom,
-        message: "開始時間不得早於今天",
+        message: "開始時間不得早於當前時間",
       });
     }
 
-    if (data.endTime < data.startTime) {
+    if (end.isBefore(start)) {
       ctx.addIssue({
         path: ["endTime"],
         code: z.ZodIssueCode.custom,
