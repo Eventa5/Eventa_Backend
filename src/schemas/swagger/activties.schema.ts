@@ -185,11 +185,11 @@
  *         startTime:
  *           type: string
  *           format: date
- *           example: 2025-05-01T10:00:00Z
+ *           example: 2026-05-01T10:00
  *         endTime:
  *           type: string
  *           format: date
- *           example: 2025-05-15T10:00:00Z
+ *           example: 2026-05-15T10:00
  *         tags:
  *           type: array
  *           items:
@@ -268,11 +268,11 @@
  *         startTime:
  *           type: string
  *           format: date
- *           example: 2026-05-01T10:00:00Z
+ *           example: 2026-05-01T10:00
  *         endTime:
  *           type: string
  *           format: date
- *           example: 2026-05-15T10:00:00Z
+ *           example: 2026-05-15T10:00
  *         isOnline:
  *           type: boolean
  *           example: true
