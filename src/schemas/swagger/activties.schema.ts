@@ -30,6 +30,9 @@
  *           type: string
  *           format: date
  *           example: 2025-05-15T10:00:00Z
+ *         status:
+ *           type: string
+ *           example: draft | published | ended | canceled
  *     # 單一活動資料結構
  *     # -----------------------------------------------
  *     ActivityResponse:
@@ -182,11 +185,11 @@
  *         startTime:
  *           type: string
  *           format: date
- *           example: 2025-05-01T10:00:00Z
+ *           example: 2026-05-01T10:00
  *         endTime:
  *           type: string
  *           format: date
- *           example: 2025-05-15T10:00:00Z
+ *           example: 2026-05-15T10:00
  *         tags:
  *           type: array
  *           items:
@@ -265,11 +268,11 @@
  *         startTime:
  *           type: string
  *           format: date
- *           example: 2025-05-01T10:00:00Z
+ *           example: 2026-05-01T10:00
  *         endTime:
  *           type: string
  *           format: date
- *           example: 2025-05-15T10:00:00Z
+ *           example: 2026-05-15T10:00
  *         isOnline:
  *           type: boolean
  *           example: true
@@ -290,5 +293,9 @@
  *         notes:
  *           type: string
  *           example: 活動完全免費
- *
+ *         categoryIds:
+ *           type: array
+ *           items:
+ *             type: number
+ *           example: [1, 2]
  */

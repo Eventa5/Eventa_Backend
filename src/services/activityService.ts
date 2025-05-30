@@ -22,10 +22,11 @@ export const getActivityById = async (activityId: number) => {
 
 // 取得活動資料
 export const getActivities = async (params: ActivityQueryParams) => {
-  const { page, limit, categoryId, location, startTime, endTime, keyword, organizationId } = params;
+  const { page, limit, categoryId, location, startTime, endTime, keyword, organizationId, status } =
+    params;
 
   const where: any = {
-    status: { not: ActivityStatus.draft }, // 排除未發布活動
+    status: status ? status : { in: [ActivityStatus.published, ActivityStatus.ended] }, // 預設查已發布+已結束
   };
   if (categoryId) where.categories = { some: { id: categoryId } };
   if (location) where.location = { contains: location };
@@ -51,6 +52,7 @@ export const getActivities = async (params: ActivityQueryParams) => {
         isOnline: true,
         startTime: true,
         endTime: true,
+        status: true,
       },
       orderBy: {
         startTime: "asc",
@@ -65,10 +67,23 @@ export const getActivities = async (params: ActivityQueryParams) => {
 
 // 取得單一活動資料
 export const getActivityDetails = async (activityId: number, userId: number) => {
+  // 判斷是否為創辦者
+  const isOrganizer = await prisma.activity.findFirst({
+    where: {
+      id: activityId,
+      organization: {
+        userId,
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+
   const activityRaw = await prisma.activity.findFirst({
     where: {
       id: activityId,
-      status: { not: ActivityStatus.draft }, // 排除草稿
+      ...(isOrganizer ? {} : { status: ActivityStatus.published }), // 非創辦者只回已發布的活動
     },
     include: {
       _count: {
@@ -168,7 +183,7 @@ export const patchActivityBasicInfo = async (
     },
     data: {
       ...data,
-      tags: data.tags?.join(", ") || "",
+      tags: data.tags?.join(",") || "",
       currentStep: ActivityStep.basic,
     },
     select: {
@@ -216,6 +231,7 @@ export const patchActivityPublish = async (activityId: ActivityId) => {
 
 // 取消活動
 export const cancelActivity = async (activityId: ActivityId) => {
+  // 更新活動狀態
   return prisma.activity.update({
     where: {
       id: activityId,
@@ -228,17 +244,40 @@ export const cancelActivity = async (activityId: ActivityId) => {
       status: true,
     },
   });
+  // 更新訂單狀態 => status: OrderStatus.canceled
+  // 更新票券狀態 => status: TicketStatus.canceled
 };
 
 // 編輯活動
 export const editActivity = async (activityId: ActivityId, data: EditActivityBody) => {
+  // 檢查categoryId存在
+  const { categoryIds, ...rest } = data;
+  const existingCategories = await prisma.category.findMany({
+    where: {
+      id: { in: categoryIds },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  const existingCategoryIds = existingCategories.map((category) => category.id);
+  const invalidCategoryIds = categoryIds.filter((id) => !existingCategoryIds.includes(id));
+  if (invalidCategoryIds.length > 0) {
+    throw new InputValidationError(`無效的Category ID: ${invalidCategoryIds.join(", ")}`);
+  }
+
   return prisma.activity.update({
     where: {
       id: activityId,
     },
     data: {
-      ...data,
-      tags: data.tags?.join(", ") || "",
+      ...rest,
+      categories: {
+        set: [],
+        connect: categoryIds.map((id) => ({ id })),
+      },
+      tags: data.tags?.join(",") || "",
     },
     select: {
       id: true,
