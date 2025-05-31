@@ -29,7 +29,7 @@
  *         totalItems:
  *           type: number
  *           example: 10
- *         totalPage:
+ *         totalPages:
  *           type: number
  *           example: 2
  *         hasNextPage:
