@@ -1,6 +1,5 @@
 import cors from "cors";
 import dayjs from "dayjs";
-import isLeapYear from "dayjs/plugin/isLeapYear";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import dotenv from "dotenv";
@@ -12,7 +11,6 @@ dayjs().format();
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
-dayjs.extend(isLeapYear);
 
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
