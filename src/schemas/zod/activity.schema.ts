@@ -186,6 +186,15 @@ export const editActivitySchema = z
     }
   });
 
+// Limit Query
+export const limitSchema = z.coerce.number().default(6);
+
+// PaginationQuery
+export const paginationQuerySchema = z.object({
+  limit: z.coerce.number().default(10),
+  page: z.coerce.number().default(1),
+});
+
 // 匯出型別
 export type ActivityId = z.infer<typeof activityIdSchema>;
 export type ActivityQueryParams = z.infer<typeof activityQuerySchema>;
@@ -194,3 +203,5 @@ export type PatchActivityCategoriesBody = z.infer<typeof patchActivityCategories
 export type PatchActivityBasicInfoBody = z.infer<typeof patchActivityBasicInfoSchema>;
 export type PatchActivityContentBody = z.infer<typeof patchActivityContentSchema>;
 export type EditActivityBody = z.infer<typeof editActivitySchema>;
+export type LimitQuery = z.infer<typeof limitSchema>;
+export type PagenationQuery = z.infer<typeof paginationQuerySchema>;

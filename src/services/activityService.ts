@@ -6,6 +6,8 @@ import type {
   ActivityQueryParams,
   CreateActivityBody,
   EditActivityBody,
+  LimitQuery,
+  PagenationQuery,
   PatchActivityBasicInfoBody,
   PatchActivityCategoriesBody,
   PatchActivityContentBody,
@@ -53,6 +55,12 @@ export const getActivities = async (params: ActivityQueryParams) => {
         startTime: true,
         endTime: true,
         status: true,
+        organization: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy: {
         startTime: "asc",
@@ -67,25 +75,14 @@ export const getActivities = async (params: ActivityQueryParams) => {
 
 // 取得單一活動資料
 export const getActivityDetails = async (activityId: number, userId: number) => {
-  // 判斷是否為創辦者
-  const isOrganizer = await prisma.activity.findFirst({
-    where: {
-      id: activityId,
-      organization: {
-        userId,
-      },
-    },
-    select: {
-      id: true,
-    },
-  });
-
   const activityRaw = await prisma.activity.findFirst({
     where: {
       id: activityId,
-      ...(isOrganizer ? {} : { status: ActivityStatus.published }), // 非創辦者只回已發布的活動
     },
     include: {
+      organization: {
+        select: { userId: true },
+      },
       _count: {
         select: {
           activityLike: true,
@@ -109,7 +106,28 @@ export const getActivityDetails = async (activityId: number, userId: number) => 
   });
 
   if (!activityRaw) return null;
-  const { _count, activityLike, orders, ...activity } = activityRaw;
+
+  // 判斷是否為主辦身分
+  const isOrganizer = activityRaw.organization.userId === userId;
+
+  // 非主辦身分, 只回已發布的活動
+  if (!isOrganizer && activityRaw.status !== ActivityStatus.published) return null;
+
+  // 一般使用者瀏覽則更新瀏覽次數
+  if (!isOrganizer) {
+    await prisma.activity.update({
+      where: {
+        id: activityId,
+      },
+      data: {
+        viewCount: {
+          increment: 1,
+        },
+      },
+    });
+  }
+
+  const { _count, activityLike, orders, organization, ...activity } = activityRaw;
 
   return {
     ...activity,
@@ -283,4 +301,140 @@ export const editActivity = async (activityId: ActivityId, data: EditActivityBod
       id: true,
     },
   });
+};
+
+// 收藏活動
+export const favoriteActivity = async (activityId: ActivityId, userId: number) => {
+  // 檢查是否收藏過
+  const isFavorited = await prisma.activityLike.findUnique({
+    where: {
+      activityLikeId: {
+        activityId,
+        userId,
+      },
+    },
+  });
+
+  if (isFavorited) {
+    const error = new Error("已收藏過此活動") as Error & { statusCode: number };
+    error.statusCode = 409;
+    throw error;
+  }
+
+  return prisma.activityLike.create({
+    data: {
+      activityId,
+      userId,
+    },
+  });
+};
+
+// 取消收藏活動
+export const unfavoriteActivity = async (activityId: ActivityId, userId: number) => {
+  // 檢查是否收藏過
+  const isFavorited = await prisma.activityLike.findUnique({
+    where: {
+      activityLikeId: {
+        activityId,
+        userId,
+      },
+    },
+  });
+
+  if (!isFavorited) {
+    const error = new Error("尚未收藏此活動") as Error & { statusCode: number };
+    error.statusCode = 409;
+    throw error;
+  }
+
+  return prisma.activityLike.delete({
+    where: {
+      activityLikeId: {
+        activityId,
+        userId,
+      },
+    },
+  });
+};
+
+// 取得熱門活動
+export const getHotActivities = async (limit: LimitQuery) => {
+  const activities = await prisma.activity.findMany({
+    where: {
+      status: ActivityStatus.published,
+    },
+    orderBy: {
+      viewCount: "desc",
+    },
+    take: limit * 4,
+    select: {
+      id: true,
+      title: true,
+      location: true,
+      cover: true,
+      isOnline: true,
+      startTime: true,
+      endTime: true,
+      status: true,
+      organization: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      viewCount: true,
+      _count: {
+        select: {
+          activityLike: true,
+          orders: true,
+        },
+      },
+    },
+  });
+
+  // 加權比重=> viewCount * 1 + activityLike * 3 + orders * 5
+  const sortedActivities = activities
+    .map((activtiy) => ({
+      ...activtiy,
+      score: activtiy.viewCount * 1 + activtiy._count.activityLike * 3 + activtiy._count.orders * 5,
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+
+  return sortedActivities;
+};
+
+// 取得參加者名單
+export const getParticipants = async (activityId: ActivityId, params: PagenationQuery) => {
+  const { page, limit } = params;
+  const offset = paginator.getOffset(page, limit);
+
+  const data = await prisma.ticket.findMany({
+    where: {
+      activityId: activityId,
+    },
+    skip: offset,
+    take: limit,
+    select: {
+      id: true,
+      orderId: true,
+      status: true,
+      assignedName: true,
+      assignedEmail: true,
+      createdAt: true,
+      ticketType: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  const pagination = paginator.getPagination(data.length, page, limit);
+  return { data, pagination };
 };
