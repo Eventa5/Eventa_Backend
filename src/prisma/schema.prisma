@@ -199,7 +199,7 @@ model Order {
   invoiceCarrier             String?
   invoiceType                InvoiceType @default(b2c)
   tickets                    Ticket[]
-  payments                   Payment[]
+  payment                    Payment?
   refunds                    Refund[]
   orderItems                 OrderItem[]
 
@@ -267,7 +267,7 @@ model OrderItem {
 model Payment {
   id         Int       @id @default(autoincrement())
   order      Order     @relation(fields: [orderId], references: [id])
-  orderId    String
+  orderId    String    @unique
   method     String?
   tradeId    String?
   rawData    Json?
@@ -275,7 +275,7 @@ model Payment {
   paidAt     DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime? @updatedAt
-  refund     Refund?
+  refunds    Refund[]
 
   @@map("payments")
 }
@@ -285,7 +285,7 @@ model Refund {
   order        Order      @relation(fields: [orderId], references: [id])
   orderId      String
   payment      Payment    @relation(fields: [paymentId], references: [id])
-  paymentId    Int        @unique
+  paymentId    Int
   ticketType   TicketType @relation(fields: [ticketTypeId], references: [id])
   ticketTypeId Int
   amount       Int
