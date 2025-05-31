@@ -1,9 +1,18 @@
 import cors from "cors";
+import dayjs from "dayjs";
+import isLeapYear from "dayjs/plugin/isLeapYear";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 import dotenv from "dotenv";
 import express, { type Express, type Request, type Response } from "express";
 import { errorHandler, multerErrorHandler } from "./middlewares/errorHandler";
 import routes from "./routes";
 import { setupTokenCleanupTask } from "./utils/scheduler";
+dayjs().format();
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(isLeapYear);
 
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
