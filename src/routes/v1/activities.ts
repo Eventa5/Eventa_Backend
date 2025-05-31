@@ -2,7 +2,7 @@ import express from "express";
 import * as activityController from "../../controllers/activityController";
 import * as ticketTypeController from "../../controllers/ticketTypeController";
 import { auth, optionalAuth } from "../../middlewares/auth";
-import { uploadSingle } from "../../middlewares/multer";
+import { upload } from "../../middlewares/multer";
 
 const router = express.Router();
 
@@ -672,12 +672,7 @@ router.post("/:activityId/favorite", auth, activityController.favoriteActivity);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post(
-  "/:activityId/cover",
-  auth,
-  uploadSingle.single("cover"),
-  activityController.uploadCover,
-);
+router.post("/:activityId/cover", auth, upload.single("cover"), activityController.uploadCover);
 
 /**
  * @swagger
