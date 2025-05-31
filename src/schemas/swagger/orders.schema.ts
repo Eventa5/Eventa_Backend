@@ -3,9 +3,58 @@
  * components:
  *   schemas:
  *     # -----------------------------------------------
- *     # 訂單結構
+ *     # 查詢訂單回傳結構
  *     # -----------------------------------------------
  *     OrderResponse:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: 訂單 ID
+ *           example: 00000001745575851770
+ *         status:
+ *           type: string
+ *           description: 訂單狀態
+ *           example: paid | pending | expired | canceled
+ *         paidAt:
+ *           type: string
+ *           format: date
+ *           description: 訂單支付時間，格式為 ISO 8601
+ *           example: 2025-05-01T10:00:00Z
+ *         paidExpiredAt:
+ *           type: string
+ *           format: date
+ *           description: 訂單支付過期時間，格式為 ISO 8601
+ *           example: 2025-05-01T10:10:00Z
+ *         paymentMethod:
+ *           type: string
+ *           description: 支付方式
+ *           example: "credit_card"
+ *         activity:
+ *           type: object
+ *           properties:
+ *             title:
+ *               type: string
+ *               description: 活動標題
+ *               example: 藝術市集：創意手作與在地文創展覽
+ *             location:
+ *               type: string
+ *               description: 活動地點
+ *               example: 台北市
+ *             startTime:
+ *               type: string
+ *               format: date
+ *               description: 活動開始時間，格式為 ISO 8601
+ *               example: 2025-05-01T10:00:00Z
+ *             endTime:
+ *               type: string
+ *               format: date
+ *               description: 活動結束時間，格式為 ISO 8601
+ *               example: 2025-05-01T18:00:00Z
+ *     # -----------------------------------------------
+ *     # 創建訂單回傳結構
+ *     # -----------------------------------------------
+ *     CreateOrderResponse:
  *       type: object
  *       properties:
  *         id:
@@ -38,7 +87,7 @@
  *     # -----------------------------------------------
  *     # 訂單建立結構
  *     # -----------------------------------------------
- *     OrderRequest:
+ *     CreateOrderRequest:
  *       type: object
  *       properties:
  *         activityId:
