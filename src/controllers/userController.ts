@@ -9,8 +9,8 @@ import {
   updateProfileSchema,
 } from "../schemas/zod/user.schema";
 import * as userService from "../services/userService";
+import { uploadToCloudinary } from "../utils/cloudinary";
 import { sendGoogleLoginEmail } from "../utils/emailClient";
-import { uploadToImgur } from "../utils/imgurClient";
 import { sendResponse } from "../utils/sendResponse";
 import { validateInput } from "../utils/validateInput";
 
@@ -268,7 +268,8 @@ export const uploadAvatar = async (
   }
 
   try {
-    const imageUrl = await uploadToImgur(avatar.buffer, avatar.originalname);
+    const imageUrl = await uploadToCloudinary(avatar.buffer, avatar.originalname, "avatars");
+
     await userService.uploadUserAvatar(userId, imageUrl);
 
     // 清除buffer
