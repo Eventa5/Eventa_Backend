@@ -26,10 +26,13 @@
  *           format: date
  *           description: 訂單支付過期時間，格式為 ISO 8601
  *           example: 2025-05-01T10:10:00Z
- *         paymentMethod:
- *           type: string
- *           description: 支付方式
- *           example: "credit_card"
+ *         payment:
+ *           type: object
+ *           properties:
+ *             method:
+ *               type: string
+ *               description: 支付方式
+ *               example: "信用卡"
  *         activity:
  *           type: object
  *           properties:

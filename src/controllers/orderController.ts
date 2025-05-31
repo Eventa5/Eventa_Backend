@@ -2,7 +2,7 @@ import { ActivityStatus } from "@prisma/client";
 import type { NextFunction, Request, Response } from "express";
 
 import { InputValidationError } from "../errors/InputValidationError";
-import { createOrderSchema } from "../schemas/zod/order.schema";
+import { createOrderSchema, getOrdersSchema } from "../schemas/zod/order.schema";
 import { validateInput } from "../utils/validateInput";
 
 import * as activityService from "../services/activityService";
@@ -111,6 +111,37 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
           invoiceType,
         },
       },
+    });
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      next({
+        message: error.message,
+        statusCode: 400,
+      });
+    } else {
+      next(error);
+    }
+  }
+};
+
+export const getOrders = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return next({
+      message: "未提供授權令牌",
+      statusCode: 401,
+    });
+  }
+  const userId = req.user.id;
+
+  try {
+    const validatedQuery = validateInput(getOrdersSchema, req.query);
+    const { orders, pagination } = await orderService.getOrdersByUserId(userId, validatedQuery);
+
+    res.status(200).json({
+      message: "請求成功",
+      status: true,
+      data: orders,
+      pagination,
     });
   } catch (error) {
     if (error instanceof InputValidationError) {

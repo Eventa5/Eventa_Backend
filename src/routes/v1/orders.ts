@@ -85,7 +85,7 @@ router.post("/", auth, orderController.createOrder);
  *           example: paid | pending | expired | canceled
  *           description: 如果沒有提供，則返回所有狀態的訂單
  *       - in: query
- *         name: name
+ *         name: title
  *         required: false
  *         schema:
  *           type: string

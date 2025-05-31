@@ -1,8 +1,9 @@
 import { z } from "zod";
 
-import { InvoiceType } from "@prisma/client";
+import { InvoiceType, OrderStatus } from "@prisma/client";
 
 const { b2b, b2c } = InvoiceType;
+const { paid, pending, expired, canceled } = OrderStatus;
 
 export const createOrderSchema = z.object({
   activityId: z.coerce
@@ -73,5 +74,49 @@ export const createOrderSchema = z.object({
     .nullish(),
 });
 
+export const getOrdersSchema = z
+  .object({
+    page: z.coerce
+      .number({
+        invalid_type_error: "頁碼 必須為數字",
+      })
+      .min(1, "頁碼 必須大於 0")
+      .default(1),
+    limit: z.coerce
+      .number({
+        invalid_type_error: "每頁顯示數量 必須為數字",
+      })
+      .min(1, "每頁顯示數量 必須大於 0")
+      .max(100, "每頁顯示數量 不能超過 100")
+      .default(8),
+    status: z.enum([paid, pending, expired, canceled]).nullish(),
+    title: z.coerce.string().trim().nullish(),
+    from: z.coerce.date().nullish(),
+    to: z.coerce.date().nullish(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.from && !val.to) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "如果提供了 from，則 to 也必須提供",
+      });
+    }
+
+    if (!val.from && val.to) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "如果提供了 to，則 from 也必須提供",
+      });
+    }
+
+    if (val.from && val.to && val.from >= val.to) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "from 必須小於 to",
+      });
+    }
+  });
+
 // 匯出型別
 export type CreateOrderSchema = z.infer<typeof createOrderSchema>;
+export type OrderQuerySchema = z.infer<typeof getOrdersSchema>;

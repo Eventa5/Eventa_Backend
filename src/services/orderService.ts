@@ -79,17 +79,68 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
 };
 
 export const getOrdersByUserId = async (userId: number, queries: OrderQuerySchema) => {
-  const { page, limit, status, name, from, to } = queries;
-
+  const { page, limit, status, title, from, to } = queries;
   const offset = paginator.getOffset(page, limit);
+  const where: Record<string, any> = {
+    userId,
+  };
 
-  const orders = await prisma.order.findMany({
-    where: {
-      userId,
-    },
-    skip: offset,
-    take: limit,
-  });
+  if (status) {
+    where.status = status;
+  }
 
-  return orders;
+  if (title) {
+    where.activity = {
+      title: {
+        contains: title,
+        mode: "insensitive",
+      },
+    };
+  }
+
+  if (from && to) {
+    where.createdAt = {
+      gte: dayjs(from).toDate(),
+      lte: dayjs(to).toDate(),
+    };
+  }
+
+  const [orders, totalItems] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      select: {
+        id: true,
+        status: true,
+        paidAt: true,
+        paidExpiredAt: true,
+        createdAt: true,
+        activity: {
+          select: {
+            id: true,
+            title: true,
+            cover: true,
+            isOnline: true,
+          },
+        },
+        payment: {
+          select: {
+            method: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      skip: offset,
+      take: limit,
+    }),
+    prisma.order.count({ where }),
+  ]);
+
+  const pagination = paginator.getPagination(totalItems, page, limit);
+
+  return {
+    orders,
+    pagination,
+  };
 };
