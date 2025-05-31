@@ -217,3 +217,24 @@ export const deleteOrganization = async (data: DeleteOrganizationRequest, userId
 
   return true;
 };
+
+export const updateOrganizationImages = async (
+  organizationId: number,
+  data: {
+    avatarUrl?: string;
+    coverUrl?: string;
+  },
+) => {
+  return await prisma.organization.update({
+    where: { id: organizationId },
+    data: {
+      ...(data.avatarUrl && { avatar: data.avatarUrl }),
+      ...(data.coverUrl && { cover: data.coverUrl }),
+    },
+    select: {
+      id: true,
+      avatar: true,
+      cover: true,
+    },
+  });
+};

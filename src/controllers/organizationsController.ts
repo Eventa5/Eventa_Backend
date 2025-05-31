@@ -7,6 +7,7 @@ import {
   updateOrganizationSchema,
 } from "../schemas/zod/organizations.schema";
 import * as organizationsService from "../services/organizations.service";
+import { uploadToCloudinary } from "../utils/cloudinary";
 import { sendResponse } from "../utils/sendResponse";
 import { validateInput } from "../utils/validateInput";
 
@@ -136,6 +137,64 @@ export const deleteOrganization = async (req: Request, res: Response, next: Next
 
     sendResponse(res, 200, "主辦單位刪除成功", true);
   } catch (error: any) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 編輯主圖和封面圖
+export const updateOrganizationImages = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const organizationId = Number(req.params.organizationId);
+    const user = req.user;
+
+    // 驗證使用者是否有權限更新這個組織
+    const isOrganization = user?.organizationIds.includes(organizationId);
+    if (!isOrganization) {
+      sendResponse(res, 403, "無權限，非主辦單位成員", false);
+      return;
+    }
+
+    const files = req.files as {
+      avatar?: Express.Multer.File[];
+      cover?: Express.Multer.File[];
+    };
+
+    const avatar = files?.avatar?.[0];
+    const cover = files?.cover?.[0];
+
+    if (!avatar && !cover) {
+      sendResponse(res, 400, "請至少上傳一張圖片（avatar 或 cover）", false);
+      return;
+    }
+
+    const updateData: Partial<{ avatarUrl: string; coverUrl: string }> = {};
+
+    if (avatar) {
+      const avatarUrl = await uploadToCloudinary(avatar.buffer, avatar.originalname, "avatars");
+      updateData.avatarUrl = avatarUrl;
+    }
+
+    if (cover) {
+      const coverUrl = await uploadToCloudinary(cover.buffer, cover.originalname, "covers");
+      updateData.coverUrl = coverUrl;
+    }
+
+    await organizationsService.updateOrganizationImages(organizationId, updateData);
+
+    // 清掉 buffer（可選）
+    if (avatar) avatar.buffer = Buffer.alloc(0);
+    if (cover) cover.buffer = Buffer.alloc(0);
+
+    sendResponse(res, 200, "圖片上傳成功", true, updateData);
+  } catch (error) {
     if (error instanceof InputValidationError) {
       sendResponse(res, 400, error.message, false);
     } else {

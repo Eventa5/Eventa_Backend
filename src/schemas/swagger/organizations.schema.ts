@@ -161,4 +161,34 @@
  *         status:
  *           type: boolean
  *           example: true
- */
+ *     # 編輯主辦單位圖片
+ *     # -----------------------------------------------
+ *     UploadOrganizationImageRequest:
+ *       type: object
+ *       properties:
+ *         avatar:
+ *           type: string
+ *           format: binary
+ *           description: 主辦單位主圖，僅接受 image/*
+ *         cover:
+ *           type: string
+ *           format: binary
+ *           description: 主辦單位封面照片，僅接受 image/*
+ *     UploadOrganizationImageResponse:
+ *       type: object
+ *       properties:
+ *         status:
+ *           type: boolean
+ *         message:
+ *           type: string
+ *         data:
+ *           type: object
+ *           properties:
+ *             avatar:
+ *               type: string
+ *               example: http://example.com/avatar.jpg
+ *             cover:
+ *               type: string
+ *               example: http://example.com/cover.jpg
+
+*/

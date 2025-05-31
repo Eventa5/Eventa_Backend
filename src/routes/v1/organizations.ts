@@ -5,8 +5,10 @@ import {
   getOrganizationById,
   getUserOrganizations,
   updateOrganization,
+  updateOrganizationImages,
 } from "../../controllers/organizationsController";
 import { auth } from "../../middlewares/auth";
+import { upload } from "../../middlewares/multer";
 
 const router = express.Router();
 
@@ -126,6 +128,65 @@ router.get("/:organizationId", auth, getOrganizationById);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/", auth, createOrganization);
+
+/**
+ * @swagger
+ * /api/v1/organizations/{organizationId}/images:
+ *   post:
+ *     tags:
+ *       - Organizations
+ *     summary: 編輯主辦圖片
+ *     description: 編輯主辦主圖及封面照片，照片大小限制4MB內
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: organizationId
+ *         in: path
+ *         description: 主辦 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             $ref: '#/components/schemas/UploadOrganizationImageRequest'
+ *     responses:
+ *       200:
+ *         description: 上傳成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UploadOrganizationImageResponse'
+ *       400:
+ *         description: 錯誤的請求，例如沒有圖片、圖片上傳失敗等
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未授權
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post(
+  "/:organizationId/images",
+  auth,
+  upload.fields([
+    { name: "avatar", maxCount: 1 },
+    { name: "cover", maxCount: 1 },
+  ]),
+  updateOrganizationImages,
+);
 
 /**
  * @swagger

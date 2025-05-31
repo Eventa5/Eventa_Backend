@@ -1,10 +1,5 @@
 import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
 import { z } from "zod";
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 export const ticketTypeIdSchema = z.coerce
   .number({
@@ -62,7 +57,6 @@ export const ticketTypeSchema = z
     const now = dayjs().tz("Asia/Taipei");
     const start = dayjs.tz(val.startTime, "Asia/Taipei");
     const end = dayjs.tz(val.endTime, "Asia/Taipei");
-
     if (val.remainingQuantity > val.totalQuantity) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

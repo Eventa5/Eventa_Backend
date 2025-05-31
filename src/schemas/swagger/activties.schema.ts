@@ -345,4 +345,22 @@
  *             price:
  *               type: number
  *               example: 100
+ *     UploadCoverRequest:
+ *       type: object
+ *       properties:
+ *         cover:
+ *           type: string
+ *           format: binary
+ *           description: 使用者上傳的圖片檔案，僅接受 image/*
+ *
+ *     UploadCoverResponse:
+ *       type: object
+ *       properties:
+ *         status:
+ *           type: boolean
+ *         message:
+ *           type: string
+ *         data:
+ *           type: string
+ *           example: http://example.com/cover.jpg
  */
