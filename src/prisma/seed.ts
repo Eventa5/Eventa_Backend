@@ -3,6 +3,7 @@ import { seedActivities } from "./seeds/activitySeed";
 import { seedCategories } from "./seeds/categorySeed";
 import { seedCurrencies } from "./seeds/currencySeed";
 import { seedLocales } from "./seeds/localeSeed";
+import { seedOrders } from "./seeds/orderSeed";
 import { seedOrganizations } from "./seeds/organizationSeed";
 import { seedTicketTypes } from "./seeds/ticketTypeSeed";
 import { seedUsers } from "./seeds/userSeed";
@@ -19,6 +20,7 @@ async function main() {
     await seedOrganizations();
     await seedActivities();
     await seedTicketTypes();
+    await seedOrders();
   }
 }
 

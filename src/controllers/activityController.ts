@@ -5,6 +5,8 @@ import {
   activityQuerySchema,
   createActivitySchema,
   editActivitySchema,
+  limitSchema,
+  paginationQuerySchema,
   patchActivityBasicInfoSchema,
   patchActivityCategoriesSchema,
   patchActivityContentSchema,
@@ -272,6 +274,115 @@ export const editActivity = async (req: Request, res: Response, next: NextFuncti
     });
     const result = await activityService.editActivity(activityId, data);
     sendResponse(res, 200, "活動編輯成功", true, result);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 收藏活動
+export const favoriteActivity = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) {
+      return next({
+        message: "未提供授權令牌",
+        statusCode: 401,
+      });
+    }
+
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
+    const activity = await activityService.getActivityById(activityId);
+    if (!activity) {
+      sendResponse(res, 404, "活動不存在", false);
+      return;
+    }
+
+    await activityService.favoriteActivity(activityId, req.user.id);
+    sendResponse(res, 201, "活動已加入收藏", true);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 取消收藏活動
+export const unfavoriteActivity = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) {
+      return next({
+        message: "未提供授權令牌",
+        statusCode: 401,
+      });
+    }
+
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
+    const activity = await activityService.getActivityById(activityId);
+    if (!activity) {
+      sendResponse(res, 404, "活動不存在", false);
+      return;
+    }
+
+    await activityService.unfavoriteActivity(activityId, req.user.id);
+    sendResponse(res, 200, "活動已取消收藏", true);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 取得熱門活動
+export const getPopular = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const limit = validateInput(limitSchema, req.query.limit);
+    const result = await activityService.getHotActivities(limit);
+    console.log(result);
+    sendResponse(res, 200, "取得熱門活動成功", true, result);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 取得參加者名單
+export const getParticipants = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
+    const activity = await activityService.getActivityById(activityId);
+    if (!activity) {
+      sendResponse(res, 404, "活動不存在", false);
+      return;
+    }
+
+    const isOrganization = req.user?.organizationIds.includes(activity.organizationId);
+    if (!isOrganization) {
+      sendResponse(res, 403, "無權限，非主辦單位成員", false);
+      return;
+    }
+
+    const validatedData = validateInput(paginationQuerySchema, req.query);
+    const { data, pagination } = await activityService.getParticipants(activityId, validatedData);
+
+    sendResponse(res, 200, "請求成功", true, data, pagination);
   } catch (error) {
     if (error instanceof InputValidationError) {
       sendResponse(res, 400, error.message, false);
