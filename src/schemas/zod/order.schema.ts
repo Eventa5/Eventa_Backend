@@ -71,6 +71,23 @@ export const createOrderSchema = z.object({
         invalid_type_error: `發票類型 必須為 ${b2b} 或 ${b2c}`,
       }),
     })
+    .superRefine((val, ctx) => {
+      if (val.invoiceType === b2b) {
+        if (!val.invoiceTaxId) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "B2B 發票類型必須提供統一編號",
+          });
+        }
+
+        if (val.invoiceCarrier) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "B2B 發票類型不應提供手機載具",
+          });
+        }
+      }
+    })
     .nullish(),
 });
 
