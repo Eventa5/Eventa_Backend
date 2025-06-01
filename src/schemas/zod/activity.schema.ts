@@ -1,11 +1,5 @@
 import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
 import { z } from "zod";
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
 // 活動 id 驗證
 export const activityIdSchema = z.coerce
   .number({

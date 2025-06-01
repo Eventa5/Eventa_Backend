@@ -13,6 +13,7 @@ import {
 } from "../schemas/zod/activity.schema";
 import * as activityService from "../services/activityService";
 import { getTicketTypesByActivityId } from "../services/ticketTypeService";
+import { uploadToCloudinary } from "../utils/cloudinary";
 import { sendResponse } from "../utils/sendResponse";
 import { validateInput } from "../utils/validateInput";
 
@@ -348,7 +349,6 @@ export const getPopular = async (
   try {
     const limit = validateInput(limitSchema, req.query.limit);
     const result = await activityService.getHotActivities(limit);
-    console.log(result);
     sendResponse(res, 200, "取得熱門活動成功", true, result);
   } catch (error) {
     if (error instanceof InputValidationError) {
@@ -383,6 +383,50 @@ export const getParticipants = async (
     const { data, pagination } = await activityService.getParticipants(activityId, validatedData);
 
     sendResponse(res, 200, "請求成功", true, data, pagination);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 上傳活動封面
+export const uploadCover = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  const cover = req.file;
+  const activityId = validateInput(activityIdSchema, req.params.activityId);
+  const activity = await activityService.getActivityById(activityId);
+  if (!activity) {
+    sendResponse(res, 404, "活動不存在", false);
+    return;
+  }
+
+  const isOrganization = req.user?.organizationIds.includes(activity.organizationId);
+  if (!isOrganization) {
+    sendResponse(res, 403, "無權限，非主辦單位成員", false);
+    return;
+  }
+
+  if (!cover) {
+    sendResponse(res, 400, "未上傳檔案", false);
+    return;
+  }
+
+  try {
+    const imageUrl = await uploadToCloudinary(cover.buffer, cover.originalname, "covers");
+    await activityService.uploadActivityCover(activityId, imageUrl);
+
+    // 清除buffer
+    if (req.file) {
+      (req.file.buffer as unknown as Buffer | null) = null;
+    }
+
+    sendResponse(res, 200, "上傳成功", true, imageUrl);
   } catch (error) {
     if (error instanceof InputValidationError) {
       sendResponse(res, 400, error.message, false);
