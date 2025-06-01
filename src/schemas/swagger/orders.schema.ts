@@ -103,7 +103,7 @@
  *           items:
  *             type: object
  *             properties:
- *               ticketTypeId:
+ *               id:
  *                 type: integer
  *                 description: 欲購買的其中或唯一票券的票種 ID
  *                 example: 1

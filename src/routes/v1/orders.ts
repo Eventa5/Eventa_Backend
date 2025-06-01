@@ -15,10 +15,13 @@ const router = express.Router();
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *       $ref: '#/components/requestBodies/CreateOrderRequest'
- *
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateOrderRequest'
  *     responses:
- *       200:
+ *       201:
  *         description: 訂單創建成功
  *         content:
  *           application/json:
