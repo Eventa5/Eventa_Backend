@@ -1,4 +1,3 @@
-import { ac } from "@faker-js/faker/dist/airline-BUL6NtOJ";
 import type { NextFunction, Request, Response } from "express";
 import { InputValidationError } from "../errors/InputValidationError";
 import {
