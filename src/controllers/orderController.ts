@@ -1,4 +1,4 @@
-import { ActivityStatus } from "@prisma/client";
+import { ActivityStatus, Prisma } from "@prisma/client";
 import type { NextFunction, Request, Response } from "express";
 
 import { InputValidationError } from "../errors/InputValidationError";
@@ -38,7 +38,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       });
     }
 
-    let totalAmount = 0;
+    let totalAmount = new Prisma.Decimal(0);
     const ticketTypeMap = new Map(ticketTypes.map((type) => [type.id, type]));
     const seenTicketIds = new Set();
 
@@ -67,10 +67,11 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       }
 
       ticket.refundDeadline = ticketType.saleEndAt || ticketType.endTime;
-      totalAmount += ticket.quantity * ticketType.price;
+      const ticketPrice = new Prisma.Decimal(ticketType.price).times(ticket.quantity);
+      totalAmount = totalAmount.plus(ticketPrice);
     }
 
-    if (totalAmount !== paidAmount) {
+    if (!totalAmount.equals(paidAmount)) {
       return next({
         message: "訂單金額與支付金額不相同，無法創建訂單",
         statusCode: 400,
