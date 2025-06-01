@@ -1,5 +1,11 @@
 type IdPrefix = "O" | "T";
 import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+dayjs().format();
 
 export const generateId = (type: IdPrefix): string => {
   const time = dayjs().tz("Asia/Taipei").format("YYMMDDHHmmss");
