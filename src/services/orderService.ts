@@ -68,7 +68,7 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
 
     await Promise.all(
       tickets.map(({ id, quantity }) =>
-        prisma.ticketType.update({
+        tx.ticketType.update({
           where: { id },
           data: {
             remainingQuantity: {
