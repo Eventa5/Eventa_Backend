@@ -440,9 +440,9 @@ export const getParticipants = async (activityId: ActivityId, params: Pagenation
 };
 
 // 編輯活動主圖
-export const uploadActivityCover = async (activtiyId: number, cover: string) => {
+export const uploadActivityCover = async (activityId: number, cover: string) => {
   return await prisma.activity.update({
-    where: { id: activtiyId },
+    where: { id: activityId },
     data: { cover },
   });
 };
