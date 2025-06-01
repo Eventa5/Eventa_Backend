@@ -92,7 +92,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       invoiceType,
     } = await orderService.createOrder(req.user.id, validatedData);
 
-    res.status(200).json({
+    res.status(201).json({
       message: "訂單創建成功",
       status: true,
       data: {
