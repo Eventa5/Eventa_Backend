@@ -79,7 +79,7 @@ router.post("/", auth, orderController.createOrder);
  *         required: false
  *         schema:
  *           type: integer
- *           example: 8，最小為 1，最多為 8
+ *           example: 8，最小為 1，最多為 100
  *       - in: query
  *         name: status
  *         required: false
