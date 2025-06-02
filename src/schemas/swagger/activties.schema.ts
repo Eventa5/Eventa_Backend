@@ -311,7 +311,7 @@
  *           example: true
  *     # 參加者名單回應
  *     # -----------------------------------------------
- *     getPartcipantResponse:
+ *     getParticipantResponse:
  *       type: object
  *       properties:
  *         id:
