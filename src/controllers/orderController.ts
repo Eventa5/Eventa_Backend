@@ -155,3 +155,71 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
     }
   }
 };
+
+export const getOrderDetail = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return next({
+      message: "未提供授權令牌",
+      statusCode: 401,
+    });
+  }
+
+  const { id: userId } = req.user;
+  const { orderId } = req.params;
+  if (!orderId) {
+    return next({
+      message: "缺少訂單 ID",
+      statusCode: 400,
+    });
+  }
+
+  try {
+    const order = await orderService.getOrderDetail(userId, orderId);
+    if (!order) {
+      return next({
+        message: "訂單不存在",
+        statusCode: 404,
+      });
+    }
+
+    const tickets = order.tickets.map(
+      ({ assignedUser, assignedName, assignedEmail, ticketType, ...restData }) => {
+        if (!assignedUser) {
+          return {
+            ...restData,
+            assignedUserId: null,
+            assignedName,
+            assignedEmail,
+            ticketType,
+          };
+        }
+
+        return {
+          ...restData,
+          assignedUserId: assignedUser.id,
+          assignedName: assignedUser.name,
+          assignedEmail: assignedUser.email,
+          ticketType,
+        };
+      },
+    );
+
+    res.status(200).json({
+      message: "請求成功",
+      status: true,
+      data: {
+        ...order,
+        tickets,
+      },
+    });
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      next({
+        message: error.message,
+        statusCode: 400,
+      });
+    } else {
+      next(error);
+    }
+  }
+};

@@ -149,3 +149,80 @@ export const getOrdersByUserId = async (userId: number, queries: OrderQuerySchem
     pagination,
   };
 };
+
+export const getOrderDetail = async (userId: number, orderId: string) => {
+  return prisma.order.findFirst({
+    where: {
+      id: orderId,
+      userId,
+    },
+    select: {
+      id: true,
+      paidAt: true,
+      paidExpiredAt: true,
+      status: true,
+      invoiceAddress: true,
+      invoiceReceiverName: true,
+      invoiceReceiverEmail: true,
+      invoiceReceiverPhoneNumber: true,
+      invoiceTitle: true,
+      invoiceTaxId: true,
+      invoiceCarrier: true,
+      invoiceType: true,
+      createdAt: true,
+      user: {
+        select: {
+          name: true,
+          displayName: true,
+          email: true,
+          phoneNumber: true,
+          gender: true,
+        },
+      },
+      activity: {
+        select: {
+          title: true,
+          tags: true,
+          categories: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          endTime: true,
+        },
+      },
+      payment: {
+        select: {
+          method: true,
+          paidAmount: true,
+        },
+      },
+      tickets: {
+        select: {
+          id: true,
+          status: true,
+          assignedUser: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          assignedName: true,
+          assignedEmail: true,
+          refundDeadline: true,
+          ticketType: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              startTime: true,
+              endTime: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
