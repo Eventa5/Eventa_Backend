@@ -177,9 +177,18 @@ router.get("/", activityController.getActivities); // 取得活動資料
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/TicketTypeResponse'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/TicketTypeResponse'
  *       401:
  *         description: 未登入或無效 token
  *         content:
@@ -512,7 +521,16 @@ router.get("/:activityId/participants", auth, activityController.getParticipants
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ActivityResponse'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 編輯成功
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/ActivityResponse'
  *       400:
  *         description: 格式錯誤
  *         content:

@@ -269,7 +269,6 @@ export const uploadAvatar = async (
 
   try {
     const imageUrl = await uploadToCloudinary(avatar.buffer, avatar.originalname, "avatars");
-
     await userService.uploadUserAvatar(userId, imageUrl);
 
     // 清除buffer
