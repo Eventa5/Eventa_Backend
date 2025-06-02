@@ -1,8 +1,12 @@
-import { ActivityStatus, Prisma } from "@prisma/client";
+import { ActivityStatus, OrderStatus, Prisma } from "@prisma/client";
 import type { NextFunction, Request, Response } from "express";
 
 import { InputValidationError } from "../errors/InputValidationError";
-import { createOrderSchema, getOrdersSchema } from "../schemas/zod/order.schema";
+import {
+  createOrderSchema,
+  getOrdersSchema,
+  updateOrderStatusSchema,
+} from "../schemas/zod/order.schema";
 import { validateInput } from "../utils/validateInput";
 
 import * as activityService from "../services/activityService";
@@ -10,6 +14,7 @@ import * as orderService from "../services/orderService";
 import * as ticketTypeService from "../services/ticketTypeService";
 
 const { published } = ActivityStatus;
+const { pending } = OrderStatus;
 
 export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
@@ -136,7 +141,7 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
 
   try {
     const validatedQuery = validateInput(getOrdersSchema, req.query);
-    const { orders, pagination } = await orderService.getOrdersByUserId(userId, validatedQuery);
+    const { orders, pagination } = await orderService.getOrders(userId, validatedQuery);
 
     res.status(200).json({
       message: "請求成功",
@@ -211,6 +216,58 @@ export const getOrderDetail = async (req: Request, res: Response, next: NextFunc
         ...order,
         tickets,
       },
+    });
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      next({
+        message: error.message,
+        statusCode: 400,
+      });
+    } else {
+      next(error);
+    }
+  }
+};
+
+export const updateOrderStatus = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return next({
+      message: "未提供授權令牌",
+      statusCode: 401,
+    });
+  }
+
+  const { id: userId } = req.user;
+  const { orderId } = req.params;
+  if (!orderId) {
+    return next({
+      message: "缺少訂單 id",
+      statusCode: 400,
+    });
+  }
+
+  try {
+    const { status } = validateInput(updateOrderStatusSchema, req.body);
+    const order = await orderService.getOrder(userId, orderId);
+    if (!order) {
+      return next({
+        message: "訂單不存在",
+        statusCode: 404,
+      });
+    }
+
+    if (order.status !== pending) {
+      return next({
+        message: "只能更新未付款的訂單",
+        statusCode: 403,
+      });
+    }
+
+    await orderService.updateOrderStatus(order, status);
+
+    res.status(200).json({
+      message: "更新成功",
+      status: true,
     });
   } catch (error) {
     if (error instanceof InputValidationError) {

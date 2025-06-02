@@ -63,7 +63,7 @@ export const createOrderSchema = z.object({
         .nullish(),
       invoiceType: z.enum([b2b, b2c], {
         required_error: "發票類型 為必要欄位",
-        invalid_type_error: `發票類型 必須為 ${b2b} 或 ${b2c}`,
+        message: `發票類型 必須為 ${b2b} 或 ${b2c}`,
       }),
     })
     .superRefine((val, ctx) => {
@@ -139,6 +139,13 @@ export const getOrdersSchema = z
       });
     }
   });
+
+export const updateOrderStatusSchema = z.object({
+  status: z.enum([expired, canceled], {
+    required_error: "必要欄位",
+    message: `必須為 ${expired} 或 ${canceled}`,
+  }),
+});
 
 // 匯出型別
 export type CreateOrderSchema = z.infer<typeof createOrderSchema>;

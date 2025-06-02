@@ -1,10 +1,12 @@
-import { TicketStatus } from "@prisma/client";
+import { OrderStatus, TicketStatus } from "@prisma/client";
 import dayjs from "dayjs";
 import prisma from "../prisma/client";
 
 import type { CreateOrderSchema, OrderQuerySchema } from "../schemas/zod/order.schema";
 import { generateId } from "../utils/idGenerator";
 import * as paginator from "../utils/paginator";
+
+const { pending, expired, canceled } = OrderStatus;
 
 export const createOrder = async (userId: number, data: CreateOrderSchema) => {
   const { activityId, tickets, paidAmount, invoice } = data;
@@ -83,7 +85,7 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
   });
 };
 
-export const getOrdersByUserId = async (userId: number, queries: OrderQuerySchema) => {
+export const getOrders = async (userId: number, queries: OrderQuerySchema) => {
   const { page, limit, status, title, from, to } = queries;
   const offset = paginator.getOffset(page, limit);
   const where: Record<string, any> = {
@@ -224,5 +226,72 @@ export const getOrderDetail = async (userId: number, orderId: string) => {
         },
       },
     },
+  });
+};
+
+export const getOrder = async (userId: number, orderId: string) => {
+  return prisma.order.findFirst({
+    where: {
+      id: orderId,
+      userId,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+};
+
+export const updateOrderStatus = async (
+  order: { id: string; status: OrderStatus },
+  status: OrderStatus,
+) => {
+  if (order.status !== pending) {
+    throw new Error("只能更新未付款的訂單");
+  }
+
+  if (status === canceled || status === expired) {
+    return prisma.$transaction(async (tx) => {
+      await tx.ticket.updateMany({
+        where: { orderId: order.id },
+        data: {
+          status: TicketStatus.canceled,
+          assignedUserId: null,
+          assignedName: null,
+          assignedEmail: null,
+        },
+      });
+
+      const orderItem = await tx.orderItem.findMany({
+        where: { orderId: order.id },
+        select: {
+          ticketTypeId: true,
+          quantity: true,
+        },
+      });
+
+      await Promise.all(
+        orderItem.map(({ ticketTypeId, quantity }) =>
+          tx.ticketType.update({
+            where: { id: ticketTypeId },
+            data: {
+              remainingQuantity: {
+                increment: quantity,
+              },
+            },
+          }),
+        ),
+      );
+
+      await tx.order.update({
+        where: { id: order.id },
+        data: { status },
+      });
+    });
+  }
+
+  return prisma.order.update({
+    where: { id: order.id },
+    data: { status },
   });
 };

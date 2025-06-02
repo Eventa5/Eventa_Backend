@@ -197,4 +197,72 @@ router.get("/", auth, orderController.getOrders);
  */
 router.get("/:orderId", auth, orderController.getOrderDetail);
 
+/**
+ * @swagger
+ * /api/v1/orders/{orderId}:
+ *   patch:
+ *     tags:
+ *       - Orders
+ *     summary: 更新訂單狀態
+ *     description: 可以用來更新訂單的狀態為已過期或是已取消
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "O25053115453487373"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: "canceled" | "expired"
+ *     responses:
+ *       200:
+ *         description: 訂單狀態更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 更新成功
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *       400:
+ *         description: 缺少訂單 id
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未提供授權令牌
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 只能更新未付款的訂單
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 訂單不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.patch("/:orderId", auth, orderController.updateOrderStatus);
+
 export default router;
