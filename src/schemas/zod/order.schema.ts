@@ -46,15 +46,10 @@ export const createOrderSchema = z.object({
     .nullish(),
   invoice: z
     .object({
-      invoiceName: z
-        .string({
-          required_error: "發票名稱 為必要欄位",
-          invalid_type_error: "發票名稱 必須為字串",
-        })
-        .trim(),
       invoiceAddress: z.string().trim().nullish(),
       invoiceReceiverName: z.string().trim().nullish(),
       invoiceReceiverPhoneNumber: z.string().trim().nullish(),
+      invoiceReceiverEmail: z.string().trim().email("發票收件者電子郵件格式不正確").nullish(),
       invoiceTaxId: z
         .string()
         .trim()
@@ -86,6 +81,17 @@ export const createOrderSchema = z.object({
             message: "B2B 發票類型不應提供手機載具",
           });
         }
+      }
+
+      if (
+        !val.invoiceReceiverEmail ||
+        !val.invoiceReceiverName ||
+        !val.invoiceReceiverPhoneNumber
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "發票收件者電子郵件、名稱和電話號碼至少需要提供一項",
+        });
       }
     })
     .nullish(),

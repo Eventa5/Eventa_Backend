@@ -26,13 +26,6 @@
  *           format: date
  *           description: 訂單支付過期時間，格式為 ISO 8601
  *           example: 2025-05-01T10:10:00Z
- *         payment:
- *           type: object
- *           properties:
- *             method:
- *               type: string
- *               description: 支付方式
- *               example: "信用卡"
  *         activity:
  *           type: object
  *           properties:
@@ -54,6 +47,13 @@
  *               format: date
  *               description: 活動結束時間，格式為 ISO 8601
  *               example: 2025-05-01T18:00:00Z
+ *         payment:
+ *           type: object
+ *           properties:
+ *             method:
+ *               type: string
+ *               description: 支付方式
+ *               example: "信用卡"
  *     # -----------------------------------------------
  *     # 創建訂單回傳結構
  *     # -----------------------------------------------
@@ -85,8 +85,48 @@
  *           description: 訂單創建時間，格式為 ISO 8601
  *           example: 2025-05-01T10:00:00Z
  *         invoice:
- *           $ref: '#/components/schemas/InvoiceResponse'
- *
+ *           type: object
+ *           description: 發票資訊
+ *           properties:
+ *             invoiceAddress:
+ *               type: string
+ *               description: 發票地址
+ *               nullable: true
+ *               example: 台北市信義區松山路100號
+ *             invoiceReceiverName:
+ *               type: string
+ *               description: 發票收件者名稱
+ *               nullable: true
+ *               example: 六角股份有限公司
+ *             invoiceReceiverPhoneNumber:
+ *               type: string
+ *               description: 發票收件者電話號碼
+ *               nullable: true
+ *               example: 0212346789
+ *             invoiceReceiverEmail:
+ *               type: string
+ *               description: 發票收件者電子郵件
+ *               nullable: true
+ *               example: example@example.com
+ *             invoiceTaxId:
+ *               type: string
+ *               description: 發票統一編號，長度需為 8 位數
+ *               nullable: true
+ *               example: 12345678
+ *             invoiceTitle:
+ *               type: string
+ *               description: 發票抬頭
+ *               nullable: true
+ *               example: 六角股份有限公司
+ *             invoiceCarrier:
+ *               type: string
+ *               description: 發票載具
+ *               nullable: true
+ *               example: /A2123DD
+ *             invoiceType:
+ *               type: string
+ *               description: 發票類型
+ *               example: b2b | b2c
  *     # -----------------------------------------------
  *     # 訂單建立結構
  *     # -----------------------------------------------
@@ -121,7 +161,48 @@
  *           nullable: true
  *           example: 1
  *         invoice:
- *           $ref: '#/components/schemas/InvoiceRequest'
+ *           type: object
+ *           description: 發票資訊
+ *           properties:
+ *             invoiceAddress:
+ *               type: string
+ *               description: 常用發票發票地址
+ *               nullable: true
+ *               example: 台北市信義區松山路100號
+ *             invoiceReceiverName:
+ *               type: string
+ *               description: 常用發票收件者名稱
+ *               nullable: true
+ *               example: 六角股份有限公司
+ *             invoiceReceiverPhoneNumber:
+ *               type: string
+ *               description: 常用發票收件者電話號碼
+ *               nullable: true
+ *               example: 0212346789
+ *             invoiceReceiverEmail:
+ *               type: string
+ *               description: 常用發票收件者電子郵件
+ *               nullable: true
+ *               example: example@example.com
+ *             invoiceTaxId:
+ *               type: string
+ *               description: 常用發票統一編號，長度需為 8 位數
+ *               nullable: true
+ *               example: 12345678
+ *             invoiceTitle:
+ *               type: string
+ *               description: 常用發票抬頭
+ *               nullable: true
+ *               example: 六角股份有限公司
+ *             invoiceCarrier:
+ *               type: string
+ *               description: 常用發票載具
+ *               nullable: true
+ *               example: /A2123DD
+ *             invoiceType:
+ *               type: string
+ *               description: 常用發票類型，b2b 為企業發票，b2c 為個人發票
+ *               example: b2b | b2c
  *       required:
  *         - activityId
  *         - tickets

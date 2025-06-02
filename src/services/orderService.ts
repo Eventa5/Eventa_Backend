@@ -7,7 +7,7 @@ import { generateId } from "../utils/idGenerator";
 import * as paginator from "../utils/paginator";
 
 export const createOrder = async (userId: number, data: CreateOrderSchema) => {
-  const { activityId, tickets, paidAmount, invoice = {} } = data;
+  const { activityId, tickets, paidAmount, invoice } = data;
   const orderId = generateId("O");
 
   return prisma.$transaction(async (tx) => {
