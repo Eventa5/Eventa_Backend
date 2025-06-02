@@ -1,9 +1,8 @@
 import express from "express";
-
-import { auth, optionalAuth } from "../../middlewares/auth";
-
 import * as activityController from "../../controllers/activityController";
 import * as ticketTypeController from "../../controllers/ticketTypeController";
+import { auth, optionalAuth } from "../../middlewares/auth";
+import { upload } from "../../middlewares/multer";
 
 const router = express.Router();
 
@@ -178,9 +177,18 @@ router.get("/", activityController.getActivities); // 取得活動資料
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/TicketTypeResponse'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/TicketTypeResponse'
  *       401:
  *         description: 未登入或無效 token
  *         content:
@@ -513,7 +521,16 @@ router.get("/:activityId/participants", auth, activityController.getParticipants
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ActivityResponse'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 編輯成功
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/ActivityResponse'
  *       400:
  *         description: 格式錯誤
  *         content:
@@ -617,6 +634,63 @@ router.post("/", auth, activityController.createActivity); // 創建活動
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/:activityId/favorite", auth, activityController.favoriteActivity); // 收藏活動
+
+/**
+ * @swagger
+ * /api/v1/activities/{activityId}/cover:
+ *   post:
+ *     tags:
+ *       - Activities
+ *     summary: 編輯活動主圖
+ *     description: 編輯活動主圖，照片大小限制4MB內
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             $ref: '#/components/schemas/UploadCoverRequest'
+ *     responses:
+ *       200:
+ *         description: 上傳成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UploadCoverResponse'
+ *       400:
+ *         description: 錯誤的請求，例如沒有圖片、圖片上傳失敗等
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未授權
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post("/:activityId/cover", auth, upload.single("cover"), activityController.uploadCover);
 
 /**
  * @swagger

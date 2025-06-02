@@ -252,4 +252,7 @@
  *          type: boolean
  *        message:
  *          type: string
+ *        data:
+ *          type: string
+ *          example: http://example.com/avatar.jpg
  */

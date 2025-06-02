@@ -7,21 +7,37 @@ const router = express.Router();
  * @swagger
  * /api/v1/currencies:
  *   get:
- *     summary: Get all currencies
- *     tags: [Currencies]
+ *     summary: 取得所有幣別清單
+ *     tags:
+ *       - Currencies
  *     responses:
  *       200:
- *         description: A list of currencies
+ *         description: 請求成功
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                $ref: '#/components/schemas/CurrencyResponse'
- *
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/CurrencyResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *   post:
- *     summary: Create a new currency
- *     tags: [Currencies]
+ *     summary: 新增幣別
+ *     tags:
+ *       - Currencies
  *     requestBody:
  *       required: true
  *       content:
@@ -30,11 +46,20 @@ const router = express.Router();
  *            $ref: '#/components/schemas/CreateCurrencyRequest'
  *     responses:
  *       201:
- *         description: The created currency
+ *         description: 建立成功
  *         content:
  *           application/json:
  *             schema:
- *              $ref: '#/components/schemas/CurrencyResponse'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/CurrencyResponse'
  *       400:
  *         description: Bad request
  *         content:

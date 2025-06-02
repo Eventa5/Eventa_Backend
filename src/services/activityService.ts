@@ -438,3 +438,11 @@ export const getParticipants = async (activityId: ActivityId, params: Pagenation
   const pagination = paginator.getPagination(data.length, page, limit);
   return { data, pagination };
 };
+
+// 編輯活動主圖
+export const uploadActivityCover = async (activityId: number, cover: string) => {
+  return await prisma.activity.update({
+    where: { id: activityId },
+    data: { cover },
+  });
+};

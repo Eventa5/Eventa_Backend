@@ -11,7 +11,7 @@ import {
   uploadAvatar,
 } from "../../controllers/userController";
 import { auth } from "../../middlewares/auth";
-import { uploadUserAvatar } from "../../middlewares/multer";
+import { upload } from "../../middlewares/multer";
 
 const router = express.Router();
 
@@ -289,6 +289,6 @@ router.put("/profile", auth, updateProfile);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/profile/avatar", auth, uploadUserAvatar.single("avatar"), uploadAvatar);
+router.post("/profile/avatar", auth, upload.single("avatar"), uploadAvatar);
 
 export default router;
