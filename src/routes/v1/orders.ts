@@ -223,7 +223,7 @@ router.get("/:orderId", auth, orderController.getOrderDetail);
  *             properties:
  *               status:
  *                 type: string
- *                 enum: "canceled" | "expired"
+ *                 enum: canceled | expired
  *     responses:
  *       200:
  *         description: 訂單狀態更新成功
@@ -251,7 +251,7 @@ router.get("/:orderId", auth, orderController.getOrderDetail);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
- *         description: 只能更新未付款的訂單
+ *         description: 「只能更新未付款的訂單」、「訂單過期時間未到，無法更新為過期狀態」
  *         content:
  *           application/json:
  *             schema:

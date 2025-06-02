@@ -238,6 +238,7 @@ export const getOrder = async (userId: number, orderId: string) => {
     select: {
       id: true,
       status: true,
+      paidExpiredAt: true,
     },
   });
 };

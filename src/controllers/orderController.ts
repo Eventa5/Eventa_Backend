@@ -1,4 +1,5 @@
 import { ActivityStatus, OrderStatus, Prisma } from "@prisma/client";
+import dayjs from "dayjs";
 import type { NextFunction, Request, Response } from "express";
 
 import { InputValidationError } from "../errors/InputValidationError";
@@ -14,7 +15,7 @@ import * as orderService from "../services/orderService";
 import * as ticketTypeService from "../services/ticketTypeService";
 
 const { published } = ActivityStatus;
-const { pending } = OrderStatus;
+const { pending, expired } = OrderStatus;
 
 export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
@@ -259,6 +260,14 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
     if (order.status !== pending) {
       return next({
         message: "只能更新未付款的訂單",
+        statusCode: 403,
+      });
+    }
+
+    const now = dayjs();
+    if (status === expired && dayjs(order.paidExpiredAt).isAfter(now)) {
+      return next({
+        message: "訂單過期時間未到，無法更新為過期狀態",
         statusCode: 403,
       });
     }
