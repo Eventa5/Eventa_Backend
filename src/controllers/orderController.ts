@@ -3,11 +3,7 @@ import dayjs from "dayjs";
 import type { NextFunction, Request, Response } from "express";
 
 import { InputValidationError } from "../errors/InputValidationError";
-import {
-  createOrderSchema,
-  getOrdersSchema,
-  updateOrderStatusSchema,
-} from "../schemas/zod/order.schema";
+import { createOrderSchema, getOrdersSchema } from "../schemas/zod/order.schema";
 import { validateInput } from "../utils/validateInput";
 
 import * as activityService from "../services/activityService";
@@ -15,7 +11,7 @@ import * as orderService from "../services/orderService";
 import * as ticketTypeService from "../services/ticketTypeService";
 
 const { published } = ActivityStatus;
-const { pending, expired } = OrderStatus;
+const { pending } = OrderStatus;
 
 export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
@@ -170,17 +166,10 @@ export const getOrderDetail = async (req: Request, res: Response, next: NextFunc
     });
   }
 
-  const { id: userId } = req.user;
-  const { orderId } = req.params;
-  if (!orderId) {
-    return next({
-      message: "缺少訂單 ID",
-      statusCode: 400,
-    });
-  }
+  const userId = req.user.id;
 
   try {
-    const order = await orderService.getOrderDetail(userId, orderId);
+    const order = await orderService.getOrderDetail(userId, req.params.orderId);
     if (!order) {
       return next({
         message: "訂單不存在",
@@ -230,7 +219,7 @@ export const getOrderDetail = async (req: Request, res: Response, next: NextFunc
   }
 };
 
-export const updateOrderStatus = async (req: Request, res: Response, next: NextFunction) => {
+export const cancelOrder = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
     return next({
       message: "未提供授權令牌",
@@ -238,18 +227,10 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
     });
   }
 
-  const { id: userId } = req.user;
-  const { orderId } = req.params;
-  if (!orderId) {
-    return next({
-      message: "缺少訂單 id",
-      statusCode: 400,
-    });
-  }
+  const userId = req.user.id;
 
   try {
-    const { status } = validateInput(updateOrderStatusSchema, req.body);
-    const order = await orderService.getOrder(userId, orderId);
+    const order = await orderService.getOrder(userId, req.params.orderId);
     if (!order) {
       return next({
         message: "訂單不存在",
@@ -259,33 +240,18 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
 
     if (order.status !== pending) {
       return next({
-        message: "只能更新未付款的訂單",
-        statusCode: 403,
+        message: "只能取消未付款的訂單",
+        statusCode: 409,
       });
     }
 
-    const now = dayjs();
-    if (status === expired && dayjs(order.paidExpiredAt).isAfter(now)) {
-      return next({
-        message: "訂單過期時間未到，無法更新為過期狀態",
-        statusCode: 403,
-      });
-    }
-
-    await orderService.updateOrderStatus(order, status);
+    await orderService.cancelOrder(order.id);
 
     res.status(200).json({
-      message: "更新成功",
+      message: "取消成功",
       status: true,
     });
   } catch (error) {
-    if (error instanceof InputValidationError) {
-      next({
-        message: error.message,
-        statusCode: 400,
-      });
-    } else {
-      next(error);
-    }
+    next(error);
   }
 };

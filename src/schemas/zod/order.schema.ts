@@ -140,13 +140,6 @@ export const getOrdersSchema = z
     }
   });
 
-export const updateOrderStatusSchema = z.object({
-  status: z.enum([expired, canceled], {
-    required_error: "必要欄位",
-    message: `必須為 ${expired} 或 ${canceled}`,
-  }),
-});
-
 // 匯出型別
 export type CreateOrderSchema = z.infer<typeof createOrderSchema>;
 export type OrderQuerySchema = z.infer<typeof getOrdersSchema>;

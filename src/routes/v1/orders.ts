@@ -199,12 +199,12 @@ router.get("/:orderId", auth, orderController.getOrderDetail);
 
 /**
  * @swagger
- * /api/v1/orders/{orderId}:
+ * /api/v1/orders/{orderId}/cancel:
  *   patch:
  *     tags:
  *       - Orders
- *     summary: 更新訂單狀態
- *     description: 可以用來更新訂單的狀態為已過期或是已取消
+ *     summary: 取消訂單
+ *     description: 用來手動取消訂單
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -214,19 +214,9 @@ router.get("/:orderId", auth, orderController.getOrderDetail);
  *         schema:
  *           type: string
  *           example: "O25053115453487373"
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               status:
- *                 type: string
- *                 enum: canceled | expired
  *     responses:
  *       200:
- *         description: 訂單狀態更新成功
+ *         description: 取消成功
  *         content:
  *           application/json:
  *             schema:
@@ -234,7 +224,7 @@ router.get("/:orderId", auth, orderController.getOrderDetail);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: 更新成功
+ *                   example: 取消成功
  *                 status:
  *                   type: boolean
  *                   example: true
@@ -250,8 +240,8 @@ router.get("/:orderId", auth, orderController.getOrderDetail);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *       403:
- *         description: 「只能更新未付款的訂單」、「訂單過期時間未到，無法更新為過期狀態」
+ *       409:
+ *         description: 只能取消未付款的訂單
  *         content:
  *           application/json:
  *             schema:
@@ -263,6 +253,6 @@ router.get("/:orderId", auth, orderController.getOrderDetail);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.patch("/:orderId", auth, orderController.updateOrderStatus);
+router.patch("/:orderId/cancel", auth, orderController.cancelOrder);
 
 export default router;

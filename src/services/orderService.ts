@@ -6,8 +6,6 @@ import type { CreateOrderSchema, OrderQuerySchema } from "../schemas/zod/order.s
 import { generateId } from "../utils/idGenerator";
 import * as paginator from "../utils/paginator";
 
-const { pending, expired, canceled } = OrderStatus;
-
 export const createOrder = async (userId: number, data: CreateOrderSchema) => {
   const { activityId, tickets, paidAmount, invoice } = data;
   const orderId = generateId("O");
@@ -238,61 +236,40 @@ export const getOrder = async (userId: number, orderId: string) => {
     select: {
       id: true,
       status: true,
-      paidExpiredAt: true,
     },
   });
 };
 
-export const updateOrderStatus = async (
-  order: { id: string; status: OrderStatus },
-  status: OrderStatus,
-) => {
-  if (order.status !== pending) {
-    throw new Error("只能更新未付款的訂單");
-  }
-
-  if (status === canceled || status === expired) {
-    return prisma.$transaction(async (tx) => {
-      await tx.ticket.updateMany({
-        where: { orderId: order.id },
-        data: {
-          status: TicketStatus.canceled,
-          assignedUserId: null,
-          assignedName: null,
-          assignedEmail: null,
-        },
-      });
-
-      const orderItem = await tx.orderItem.findMany({
-        where: { orderId: order.id },
-        select: {
-          ticketTypeId: true,
-          quantity: true,
-        },
-      });
-
-      await Promise.all(
-        orderItem.map(({ ticketTypeId, quantity }) =>
-          tx.ticketType.update({
-            where: { id: ticketTypeId },
-            data: {
-              remainingQuantity: {
-                increment: quantity,
-              },
-            },
-          }),
-        ),
-      );
-
-      await tx.order.update({
-        where: { id: order.id },
-        data: { status },
-      });
+export const cancelOrder = async (orderId: string) =>
+  prisma.$transaction(async (tx) => {
+    await tx.ticket.updateMany({
+      where: { orderId },
+      data: { status: TicketStatus.canceled },
     });
-  }
 
-  return prisma.order.update({
-    where: { id: order.id },
-    data: { status },
+    const orderItem = await tx.orderItem.findMany({
+      where: { orderId },
+      select: {
+        ticketTypeId: true,
+        quantity: true,
+      },
+    });
+
+    await Promise.all(
+      orderItem.map(({ ticketTypeId, quantity }) =>
+        tx.ticketType.update({
+          where: { id: ticketTypeId },
+          data: {
+            remainingQuantity: {
+              increment: quantity,
+            },
+          },
+        }),
+      ),
+    );
+
+    await tx.order.update({
+      where: { id: orderId },
+      data: { status: OrderStatus.canceled },
+    });
   });
-};
