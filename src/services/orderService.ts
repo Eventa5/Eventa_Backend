@@ -1,4 +1,4 @@
-import { TicketStatus } from "@prisma/client";
+import { OrderStatus, TicketStatus } from "@prisma/client";
 import dayjs from "dayjs";
 import prisma from "../prisma/client";
 
@@ -83,7 +83,7 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
   });
 };
 
-export const getOrdersByUserId = async (userId: number, queries: OrderQuerySchema) => {
+export const getOrders = async (userId: number, queries: OrderQuerySchema) => {
   const { page, limit, status, title, from, to } = queries;
   const offset = paginator.getOffset(page, limit);
   const where: Record<string, any> = {
@@ -149,3 +149,127 @@ export const getOrdersByUserId = async (userId: number, queries: OrderQuerySchem
     pagination,
   };
 };
+
+export const getOrderDetail = async (userId: number, orderId: string) => {
+  return prisma.order.findFirst({
+    where: {
+      id: orderId,
+      userId,
+    },
+    select: {
+      id: true,
+      paidAt: true,
+      paidExpiredAt: true,
+      status: true,
+      invoiceAddress: true,
+      invoiceReceiverName: true,
+      invoiceReceiverEmail: true,
+      invoiceReceiverPhoneNumber: true,
+      invoiceTitle: true,
+      invoiceTaxId: true,
+      invoiceCarrier: true,
+      invoiceType: true,
+      createdAt: true,
+      user: {
+        select: {
+          name: true,
+          displayName: true,
+          email: true,
+          phoneNumber: true,
+          gender: true,
+        },
+      },
+      activity: {
+        select: {
+          title: true,
+          tags: true,
+          categories: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          endTime: true,
+        },
+      },
+      payment: {
+        select: {
+          method: true,
+          paidAmount: true,
+        },
+      },
+      tickets: {
+        select: {
+          id: true,
+          status: true,
+          assignedUser: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          assignedName: true,
+          assignedEmail: true,
+          refundDeadline: true,
+          ticketType: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              startTime: true,
+              endTime: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
+
+export const getOrder = async (userId: number, orderId: string) => {
+  return prisma.order.findFirst({
+    where: {
+      id: orderId,
+      userId,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+};
+
+export const cancelOrder = async (orderId: string) =>
+  prisma.$transaction(async (tx) => {
+    await tx.ticket.updateMany({
+      where: { orderId },
+      data: { status: TicketStatus.canceled },
+    });
+
+    const orderItem = await tx.orderItem.findMany({
+      where: { orderId },
+      select: {
+        ticketTypeId: true,
+        quantity: true,
+      },
+    });
+
+    await Promise.all(
+      orderItem.map(({ ticketTypeId, quantity }) =>
+        tx.ticketType.update({
+          where: { id: ticketTypeId },
+          data: {
+            remainingQuantity: {
+              increment: quantity,
+            },
+          },
+        }),
+      ),
+    );
+
+    await tx.order.update({
+      where: { id: orderId },
+      data: { status: OrderStatus.canceled },
+    });
+  });

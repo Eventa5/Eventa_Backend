@@ -1,4 +1,4 @@
-import { ActivityStatus, Prisma } from "@prisma/client";
+import { ActivityStatus, OrderStatus, Prisma } from "@prisma/client";
 import type { NextFunction, Request, Response } from "express";
 
 import { InputValidationError } from "../errors/InputValidationError";
@@ -10,6 +10,7 @@ import * as orderService from "../services/orderService";
 import * as ticketTypeService from "../services/ticketTypeService";
 
 const { published } = ActivityStatus;
+const { pending } = OrderStatus;
 
 export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
@@ -136,7 +137,7 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
 
   try {
     const validatedQuery = validateInput(getOrdersSchema, req.query);
-    const { orders, pagination } = await orderService.getOrdersByUserId(userId, validatedQuery);
+    const { orders, pagination } = await orderService.getOrders(userId, validatedQuery);
 
     res.status(200).json({
       message: "請求成功",
@@ -153,5 +154,103 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
     } else {
       next(error);
     }
+  }
+};
+
+export const getOrderDetail = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return next({
+      message: "未提供授權令牌",
+      statusCode: 401,
+    });
+  }
+
+  const userId = req.user.id;
+
+  try {
+    const order = await orderService.getOrderDetail(userId, req.params.orderId);
+    if (!order) {
+      return next({
+        message: "訂單不存在",
+        statusCode: 404,
+      });
+    }
+
+    const tickets = order.tickets.map(
+      ({ assignedUser, assignedName, assignedEmail, ticketType, ...restData }) => {
+        if (!assignedUser) {
+          return {
+            ...restData,
+            assignedUserId: null,
+            assignedName,
+            assignedEmail,
+            ticketType,
+          };
+        }
+
+        return {
+          ...restData,
+          assignedUserId: assignedUser.id,
+          assignedName: assignedUser.name,
+          assignedEmail: assignedUser.email,
+          ticketType,
+        };
+      },
+    );
+
+    res.status(200).json({
+      message: "請求成功",
+      status: true,
+      data: {
+        ...order,
+        tickets,
+      },
+    });
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      next({
+        message: error.message,
+        statusCode: 400,
+      });
+    } else {
+      next(error);
+    }
+  }
+};
+
+export const cancelOrder = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return next({
+      message: "未提供授權令牌",
+      statusCode: 401,
+    });
+  }
+
+  const userId = req.user.id;
+
+  try {
+    const order = await orderService.getOrder(userId, req.params.orderId);
+    if (!order) {
+      return next({
+        message: "訂單不存在",
+        statusCode: 404,
+      });
+    }
+
+    if (order.status !== pending) {
+      return next({
+        message: "只能取消未付款的訂單",
+        statusCode: 409,
+      });
+    }
+
+    await orderService.cancelOrder(order.id);
+
+    res.status(200).json({
+      message: "取消成功",
+      status: true,
+    });
+  } catch (error) {
+    next(error);
   }
 };
