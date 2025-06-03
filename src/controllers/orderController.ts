@@ -1,5 +1,4 @@
 import { ActivityStatus, OrderStatus, Prisma } from "@prisma/client";
-import dayjs from "dayjs";
 import type { NextFunction, Request, Response } from "express";
 
 import { InputValidationError } from "../errors/InputValidationError";
