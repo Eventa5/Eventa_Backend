@@ -758,6 +758,72 @@ router.put("/:activityId", auth, activityController.editActivity); // 編輯活�
 
 /**
  * @swagger
+ * /api/v1/activities/{activityId}/type:
+ *   patch:
+ *     tags:
+ *       - Activities
+ *     summary: 編輯活動形式
+ *     description: 設定活動形式，線上或線下
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *            type: object
+ *            required:
+ *              - isOnline
+ *            properties:
+ *              isOnline:
+ *                type: boolean
+ *                example: true
+ *              livestreamUrl:
+ *                type: string
+ *                example: https://activity.com/livestream
+ *     responses:
+ *       200:
+ *         description: 編輯成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PatchActivityTypeResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.patch("/:activityId/type", auth, activityController.patchActivityType); // 編輯活動形式
+
+/**
+ * @swagger
  * /api/v1/activities/{activityId}/categories:
  *   patch:
  *     tags:
