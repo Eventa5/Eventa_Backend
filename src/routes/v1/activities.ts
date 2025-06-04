@@ -468,7 +468,7 @@ router.delete(
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/getPartcipantResponse'
+ *                     $ref: '#/components/schemas/getParticipantResponse'
  *                 pagination:
  *                   $ref: '#/components/schemas/PaginationResponse'
  *       400:
