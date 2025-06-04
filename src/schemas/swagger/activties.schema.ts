@@ -154,6 +154,24 @@
  *             currentStep:
  *               type: string
  *               example: activityType | categories | basic | content
+ *     PatchActivityTypeResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: 活動形式編輯成功
+ *         status:
+ *           type: boolean
+ *           example: true
+ *         data:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: number
+ *               example: 1
+ *             currentStep:
+ *               type: string
+ *               example: activityType | categories | basic | content
  *     # 新增活動步驟 - 設定主題資料結構
  *     # -----------------------------------------------
  *     PatchActivityCategoriesRequest:
