@@ -189,6 +189,15 @@ export const paginationQuerySchema = z.object({
   page: z.coerce.number().default(1),
 });
 
+export const statisticsPeriodSchema = z.object({
+  statisticsPeriod: z
+    .enum(["d", "w"], {
+      errorMap: () => ({ message: "查詢值須為 d 或 w" }),
+    })
+    .default("d")
+    .optional(),
+});
+
 // 匯出型別
 export type ActivityId = z.infer<typeof activityIdSchema>;
 export type ActivityQueryParams = z.infer<typeof activityQuerySchema>;
@@ -199,3 +208,4 @@ export type PatchActivityContentBody = z.infer<typeof patchActivityContentSchema
 export type EditActivityBody = z.infer<typeof editActivitySchema>;
 export type LimitQuery = z.infer<typeof limitSchema>;
 export type PagenationQuery = z.infer<typeof paginationQuerySchema>;
+export type StatisticsPeriodQuery = z.infer<typeof statisticsPeriodSchema>;

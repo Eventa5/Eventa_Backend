@@ -26,7 +26,23 @@ const router = express.Router();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/PatchActivityStatusResponse'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 報到成功
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: T25060120101319526
+ *                     status:
+ *                       type: string
+ *                       example: used
  *       400:
  *         description: 格式錯誤
  *         content:

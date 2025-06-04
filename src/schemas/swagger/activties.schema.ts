@@ -363,4 +363,40 @@
  *         data:
  *           type: string
  *           example: http://example.com/cover.jpg
+ *     # 活動收入資料結構
+ *     # -----------------------------------------------
+ *     getIncomeResponse:
+ *       type: object
+ *       properties:
+ *         ticketType:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: number
+ *                 example: 1
+ *               name:
+ *                 type: string
+ *                 example: 普通票
+ *               price:
+ *                 type: number
+ *                 example: 100
+ *               totalQuantity:
+ *                 type: number
+ *                 example: 50
+ *               remainingQuantity:
+ *                 type: number
+ *                 example: 50
+ *         incomes:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 example: 2025/05/01
+ *               amount:
+ *                 type: number
+ *                 example: 500
  */

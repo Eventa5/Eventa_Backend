@@ -1,4 +1,5 @@
-import { ActivityStatus, ActivityStep } from "@prisma/client";
+import { ActivityStatus, ActivityStep, TicketStatus } from "@prisma/client";
+import dayjs from "dayjs";
 import { InputValidationError } from "../errors/InputValidationError";
 import prisma from "../prisma/client";
 import type {
@@ -11,8 +12,10 @@ import type {
   PatchActivityBasicInfoBody,
   PatchActivityCategoriesBody,
   PatchActivityContentBody,
+  StatisticsPeriodQuery,
 } from "../schemas/zod/activity.schema";
 import * as paginator from "../utils/paginator";
+
 //
 export const getActivityById = async (activityId: number) => {
   return prisma.activity.findUnique({
@@ -440,9 +443,68 @@ export const getParticipants = async (activityId: ActivityId, params: Pagenation
 };
 
 // 編輯活動主圖
-export const uploadActivityCover = async (activityId: number, cover: string) => {
+export const uploadActivityCover = async (activityId: ActivityId, cover: string) => {
   return await prisma.activity.update({
     where: { id: activityId },
     data: { cover },
   });
+};
+
+export const getIncome = async (activityId: ActivityId, data: StatisticsPeriodQuery) => {
+  // 取得活動票種
+  const ticketTypes = await prisma.ticketType.findMany({
+    where: { activityId },
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      totalQuantity: true,
+      remainingQuantity: true,
+    },
+  });
+
+  // 取得已售票券
+  const soldTickets = await prisma.ticket.findMany({
+    where: {
+      activityId,
+      status: { not: TicketStatus.canceled },
+    },
+    select: {
+      ticketTypeId: true,
+      order: {
+        select: {
+          createdAt: true,
+        },
+      },
+    },
+  });
+
+  // 計算收入
+  const incomeMap: Record<string, number> = {};
+
+  for (const ticket of soldTickets) {
+    const ticketType = ticketTypes.find((tt) => tt.id === ticket.ticketTypeId);
+
+    if (!ticketType) continue;
+    const dateKey =
+      data.statisticsPeriod === "w"
+        ? dayjs(ticket.order.createdAt).startOf("week").format("YYYY/MM/DD")
+        : dayjs(ticket.order.createdAt).format("YYYY/MM/DD");
+
+    incomeMap[dateKey] = (incomeMap[dateKey] || 0) + ticketType.price;
+  }
+
+  const incomes = Object.entries(incomeMap)
+    .sort((a, b) => (dayjs(b[0]).isAfter(dayjs(a[0])) ? 1 : -1))
+    .map(([date, amount]) => ({ date, amount }));
+  return {
+    ticketType: ticketTypes.map((tt) => ({
+      id: tt.id,
+      name: tt.name,
+      price: tt.price,
+      totalQuantity: tt.totalQuantity,
+      remainingQuantity: tt.remainingQuantity,
+    })),
+    incomes,
+  };
 };
