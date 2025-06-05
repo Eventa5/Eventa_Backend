@@ -112,7 +112,7 @@
  *         userStatus:
  *           type: object
  *           properties:
- *             isFavorited:
+ *             isFavorite:
  *               type: boolean
  *               example: true
  *             isRegistered:
@@ -395,7 +395,8 @@
  *             properties:
  *               date:
  *                 type: string
- *                 example: 2025/05/01
+ *                 example: 2025-05-01
+ *                 format: date
  *               amount:
  *                 type: number
  *                 example: 500

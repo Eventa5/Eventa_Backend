@@ -1,4 +1,4 @@
-import { ActivityStatus, ActivityStep, TicketStatus } from "@prisma/client";
+import { ActivityStatus, ActivityStep, OrderStatus, TicketStatus } from "@prisma/client";
 import dayjs from "dayjs";
 import { InputValidationError } from "../errors/InputValidationError";
 import prisma from "../prisma/client";
@@ -8,7 +8,7 @@ import type {
   CreateActivityBody,
   EditActivityBody,
   LimitQuery,
-  PagenationQuery,
+  PaginationQuery,
   PatchActivityBasicInfoBody,
   PatchActivityCategoriesBody,
   PatchActivityContentBody,
@@ -137,7 +137,7 @@ export const getActivityDetails = async (activityId: number, userId: number) => 
     tags: activity.tags?.split(",") || [],
     likeCount: _count.activityLike,
     userStatus: {
-      isFavorited: activityLike.length > 0,
+      isFavorite: activityLike.length > 0,
       isRegistered: orders.length > 0,
     },
   };
@@ -309,7 +309,7 @@ export const editActivity = async (activityId: ActivityId, data: EditActivityBod
 // 收藏活動
 export const favoriteActivity = async (activityId: ActivityId, userId: number) => {
   // 檢查是否收藏過
-  const isFavorited = await prisma.activityLike.findUnique({
+  const isFavorite = await prisma.activityLike.findUnique({
     where: {
       activityLikeId: {
         activityId,
@@ -318,7 +318,7 @@ export const favoriteActivity = async (activityId: ActivityId, userId: number) =
     },
   });
 
-  if (isFavorited) {
+  if (isFavorite) {
     const error = new Error("已收藏過此活動") as Error & { statusCode: number };
     error.statusCode = 409;
     throw error;
@@ -335,7 +335,7 @@ export const favoriteActivity = async (activityId: ActivityId, userId: number) =
 // 取消收藏活動
 export const unfavoriteActivity = async (activityId: ActivityId, userId: number) => {
   // 檢查是否收藏過
-  const isFavorited = await prisma.activityLike.findUnique({
+  const isFavorite = await prisma.activityLike.findUnique({
     where: {
       activityLikeId: {
         activityId,
@@ -344,7 +344,7 @@ export const unfavoriteActivity = async (activityId: ActivityId, userId: number)
     },
   });
 
-  if (!isFavorited) {
+  if (!isFavorite) {
     const error = new Error("尚未收藏此活動") as Error & { statusCode: number };
     error.statusCode = 409;
     throw error;
@@ -397,9 +397,9 @@ export const getHotActivities = async (limit: LimitQuery) => {
 
   // 加權比重=> viewCount * 1 + activityLike * 3 + orders * 5
   const sortedActivities = activities
-    .map((activtiy) => ({
-      ...activtiy,
-      score: activtiy.viewCount * 1 + activtiy._count.activityLike * 3 + activtiy._count.orders * 5,
+    .map((activity) => ({
+      ...activity,
+      score: activity.viewCount * 1 + activity._count.activityLike * 3 + activity._count.orders * 5,
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
@@ -408,7 +408,7 @@ export const getHotActivities = async (limit: LimitQuery) => {
 };
 
 // 取得參加者名單
-export const getParticipants = async (activityId: ActivityId, params: PagenationQuery) => {
+export const getParticipants = async (activityId: ActivityId, params: PaginationQuery) => {
   const { page, limit } = params;
   const offset = paginator.getOffset(page, limit);
 
@@ -463,17 +463,16 @@ export const getIncome = async (activityId: ActivityId, data: StatisticsPeriodQu
     },
   });
 
-  // 取得已售票券
-  const soldTickets = await prisma.ticket.findMany({
+  const paidOrders = await prisma.order.findMany({
     where: {
       activityId,
-      status: { not: TicketStatus.canceled },
+      status: OrderStatus.paid,
     },
     select: {
-      ticketTypeId: true,
-      order: {
+      createdAt: true,
+      payment: {
         select: {
-          createdAt: true,
+          paidAmount: true,
         },
       },
     },
@@ -482,16 +481,14 @@ export const getIncome = async (activityId: ActivityId, data: StatisticsPeriodQu
   // 計算收入
   const incomeMap: Record<string, number> = {};
 
-  for (const ticket of soldTickets) {
-    const ticketType = ticketTypes.find((tt) => tt.id === ticket.ticketTypeId);
+  for (const order of paidOrders) {
+    if (!order.payment) continue;
 
-    if (!ticketType) continue;
     const dateKey =
       data.statisticsPeriod === "w"
-        ? dayjs(ticket.order.createdAt).startOf("week").format("YYYY/MM/DD")
-        : dayjs(ticket.order.createdAt).format("YYYY/MM/DD");
-
-    incomeMap[dateKey] = (incomeMap[dateKey] || 0) + ticketType.price;
+        ? dayjs(order.createdAt).startOf("week").format("YYYY-MM-DD")
+        : dayjs(order.createdAt).format("YYYY-MM-DD");
+    incomeMap[dateKey] = (incomeMap[dateKey] || 0) + order.payment.paidAmount;
   }
 
   const incomes = Object.entries(incomeMap)
