@@ -505,3 +505,14 @@ export const getIncome = async (activityId: ActivityId, data: StatisticsPeriodQu
     incomes,
   };
 };
+
+export const patchActivityType = async (activityId: number, data: CreateActivityBody) => {
+  return await prisma.activity.update({
+    where: { id: activityId },
+    data: { isOnline: data.isOnline, livestreamUrl: data.livestreamUrl },
+    select: {
+      id: true,
+      currentStep: true,
+    },
+  });
+};
