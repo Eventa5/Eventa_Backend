@@ -56,7 +56,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
- *         description: 非票券持有人，無權限報到
+ *         description: 非主辦單位，無權限報到
  *         content:
  *           application/json:
  *             schema:
@@ -68,7 +68,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       409:
- *         description: 票券狀態錯誤，無法報到
+ *         description: 票券狀態非assigned，無法報到
  *         content:
  *           application/json:
  *             schema:
