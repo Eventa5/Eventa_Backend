@@ -134,7 +134,7 @@ export const getActivityDetails = async (activityId: number, userId: number) => 
     tags: activity.tags?.split(",") || [],
     likeCount: _count.activityLike,
     userStatus: {
-      isFavorited: activityLike.length > 0,
+      isFavorite: activityLike.length > 0,
       isRegistered: orders.length > 0,
     },
   };
@@ -306,7 +306,7 @@ export const editActivity = async (activityId: ActivityId, data: EditActivityBod
 // 收藏活動
 export const favoriteActivity = async (activityId: ActivityId, userId: number) => {
   // 檢查是否收藏過
-  const isFavorited = await prisma.activityLike.findUnique({
+  const isFavorite = await prisma.activityLike.findUnique({
     where: {
       activityLikeId: {
         activityId,
@@ -315,7 +315,7 @@ export const favoriteActivity = async (activityId: ActivityId, userId: number) =
     },
   });
 
-  if (isFavorited) {
+  if (isFavorite) {
     const error = new Error("已收藏過此活動") as Error & { statusCode: number };
     error.statusCode = 409;
     throw error;
@@ -332,7 +332,7 @@ export const favoriteActivity = async (activityId: ActivityId, userId: number) =
 // 取消收藏活動
 export const unfavoriteActivity = async (activityId: ActivityId, userId: number) => {
   // 檢查是否收藏過
-  const isFavorited = await prisma.activityLike.findUnique({
+  const isFavorite = await prisma.activityLike.findUnique({
     where: {
       activityLikeId: {
         activityId,
@@ -341,7 +341,7 @@ export const unfavoriteActivity = async (activityId: ActivityId, userId: number)
     },
   });
 
-  if (!isFavorited) {
+  if (!isFavorite) {
     const error = new Error("尚未收藏此活動") as Error & { statusCode: number };
     error.statusCode = 409;
     throw error;
