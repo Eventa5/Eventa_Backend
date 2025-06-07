@@ -87,6 +87,10 @@
  *         livestreamUrl:
  *           type: string
  *           example: https://activity.com/livestream
+ *         currentStep:
+ *           type: string
+ *           description: 活動設置目前的狀態
+ *           example: activityType | categories | basic | content
  *         createdAt:
  *           type: string
  *           format: date-time
