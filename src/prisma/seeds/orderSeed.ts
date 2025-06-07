@@ -24,6 +24,8 @@ export const seedOrders = async () => {
             id: generateId("T"),
             ticketTypeId: 1,
             activityId: 1,
+            status: "assigned",
+            assignedUserId: 2,
             assignedName: "王大明",
             assignedEmail: "test@test.com",
             qrCodeToken: "exampleToken123",
