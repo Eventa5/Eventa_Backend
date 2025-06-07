@@ -14,7 +14,6 @@ export const patchTicketUsed = async (req: Request, res: Response, next: NextFun
       sendResponse(res, 404, "票券不存在", false);
       return;
     }
-    console.log(ticket);
 
     if (ticket.status !== TicketStatus.assigned) {
       sendResponse(res, 409, "票券狀態錯誤，無法報到", false);
@@ -23,7 +22,7 @@ export const patchTicketUsed = async (req: Request, res: Response, next: NextFun
 
     // 需為主辦單位才可驗票
     if (!req.user?.organizationIds.includes(ticket.activity.organizationId)) {
-      sendResponse(res, 403, "無權使用此票券", false);
+      sendResponse(res, 403, "非主辦單位，無權限報到", false);
       return;
     }
 

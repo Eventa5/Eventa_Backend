@@ -1,4 +1,4 @@
-import { ActivityStatus, ActivityStep, OrderStatus, TicketStatus } from "@prisma/client";
+import { ActivityStatus, ActivityStep, OrderStatus, Prisma, TicketStatus } from "@prisma/client";
 import dayjs from "dayjs";
 import { InputValidationError } from "../errors/InputValidationError";
 import prisma from "../prisma/client";
@@ -477,23 +477,38 @@ export const getIncome = async (activityId: ActivityId, data: StatisticsPeriodQu
       },
     },
   });
+  // 初始化近五天或五週的日期 key
+  const incomeMap: Record<string, Prisma.Decimal> = {};
+  const now = dayjs();
 
-  // 計算收入
-  const incomeMap: Record<string, number> = {};
+  for (let i = 0; i < 5; i++) {
+    const key =
+      data.statisticsPeriod === "w"
+        ? now.subtract(i, "week").startOf("week").format("YYYY-MM-DD")
+        : now.subtract(i, "day").format("YYYY-MM-DD");
+    incomeMap[key] = new Prisma.Decimal(0);
+  }
 
+  // 加總付款收入
   for (const order of paidOrders) {
     if (!order.payment) continue;
 
-    const dateKey =
+    const orderDateKey =
       data.statisticsPeriod === "w"
         ? dayjs(order.createdAt).startOf("week").format("YYYY-MM-DD")
         : dayjs(order.createdAt).format("YYYY-MM-DD");
-    incomeMap[dateKey] = (incomeMap[dateKey] || 0) + order.payment.paidAmount;
+
+    if (orderDateKey in incomeMap) {
+      incomeMap[orderDateKey] = incomeMap[orderDateKey].add(
+        new Prisma.Decimal(order.payment.paidAmount),
+      );
+    }
   }
 
   const incomes = Object.entries(incomeMap)
-    .sort((a, b) => (dayjs(b[0]).isAfter(dayjs(a[0])) ? 1 : -1))
+    .sort((a, b) => (dayjs(b[0]).isAfter(dayjs(a[0])) ? -1 : 1))
     .map(([date, amount]) => ({ date, amount }));
+
   return {
     ticketType: ticketTypes.map((tt) => ({
       id: tt.id,
@@ -504,6 +519,33 @@ export const getIncome = async (activityId: ActivityId, data: StatisticsPeriodQu
     })),
     incomes,
   };
+
+  // // 計算收入
+  // const incomeMap: Record<string, number> = {};
+
+  // for (const order of paidOrders) {
+  //   if (!order.payment) continue;
+
+  //   const dateKey =
+  //     data.statisticsPeriod === "w"
+  //       ? dayjs(order.createdAt).startOf("week").format("YYYY-MM-DD")
+  //       : dayjs(order.createdAt).format("YYYY-MM-DD");
+  //   incomeMap[dateKey] = (incomeMap[dateKey] || 0) + order.payment.paidAmount;
+  // }
+
+  // const incomes = Object.entries(incomeMap)
+  //   .sort((a, b) => (dayjs(b[0]).isAfter(dayjs(a[0])) ? 1 : -1))
+  //   .map(([date, amount]) => ({ date, amount }));
+  // return {
+  //   ticketType: ticketTypes.map((tt) => ({
+  //     id: tt.id,
+  //     name: tt.name,
+  //     price: tt.price,
+  //     totalQuantity: tt.totalQuantity,
+  //     remainingQuantity: tt.remainingQuantity,
+  //   })),
+  //   incomes,
+  // };
 };
 
 export const patchActivityType = async (activityId: number, data: CreateActivityBody) => {
