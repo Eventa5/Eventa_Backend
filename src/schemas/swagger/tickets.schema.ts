@@ -119,7 +119,13 @@
  *             location:
  *               type: string
  *               description: 活動地點
+ *               nullable: true
  *               example: 大安森林公園
+ *             livestreamUrl:
+ *               type: string
+ *               description: 活動直播連結
+ *               nullable: true
+ *               example: https://example.com/livestream
  *             startTime:
  *               type: string
  *               format: date

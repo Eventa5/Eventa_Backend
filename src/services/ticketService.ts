@@ -47,6 +47,7 @@ export const getTicketDetailsByTicketId = async (ticketId: string) => {
           notes: true,
           descriptionMd: true,
           location: true,
+          livestreamUrl: true,
           startTime: true,
           endTime: true,
           organization: {
