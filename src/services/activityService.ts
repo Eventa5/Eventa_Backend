@@ -452,7 +452,7 @@ export const uploadActivityCover = async (activityId: ActivityId, cover: string)
 
 export const getIncome = async (activityId: ActivityId, data: StatisticsPeriodQuery) => {
   // 取得活動票種
-  const ticketTypes = await prisma.ticketType.findMany({
+  const ticketTypesRaw = await prisma.ticketType.findMany({
     where: { activityId },
     select: {
       id: true,
@@ -461,7 +461,15 @@ export const getIncome = async (activityId: ActivityId, data: StatisticsPeriodQu
       totalQuantity: true,
       remainingQuantity: true,
     },
+    orderBy: {
+      id: "asc",
+    },
   });
+
+  const totalRemainingQuantity = ticketTypesRaw.reduce(
+    (total, type) => total.add(new Prisma.Decimal(type.remainingQuantity)),
+    new Prisma.Decimal(0),
+  );
 
   const paidOrders = await prisma.order.findMany({
     where: {
@@ -475,8 +483,42 @@ export const getIncome = async (activityId: ActivityId, data: StatisticsPeriodQu
           paidAmount: true,
         },
       },
+      tickets: {
+        select: {
+          ticketTypeId: true,
+        },
+      },
     },
   });
+
+  const totalIncome = paidOrders.reduce((total, order) => {
+    return order.payment ? total.add(new Prisma.Decimal(order.payment.paidAmount)) : total;
+  }, new Prisma.Decimal(0));
+  const totalRegisteredQuantity = paidOrders.reduce(
+    (total, order) => total.add(new Prisma.Decimal(order.tickets.length)),
+    new Prisma.Decimal(0),
+  );
+
+  // 計算票種小計
+  const ticketTypes = ticketTypesRaw.map((type) => {
+    let subtotalIncome = new Prisma.Decimal(0);
+    let soldCount = new Prisma.Decimal(0);
+    for (const order of paidOrders) {
+      for (const ticket of order.tickets) {
+        if (ticket.ticketTypeId === type.id) {
+          subtotalIncome = subtotalIncome.add(new Prisma.Decimal(type.price));
+          soldCount = soldCount.add(new Prisma.Decimal(1));
+        }
+      }
+    }
+
+    return {
+      ...type,
+      subtotalIncome: subtotalIncome.toNumber(),
+      soldCount: soldCount.toNumber(),
+    };
+  });
+
   // 初始化近五天或五週的日期 key
   const incomeMap: Record<string, Prisma.Decimal> = {};
   const now = dayjs();
@@ -507,45 +549,15 @@ export const getIncome = async (activityId: ActivityId, data: StatisticsPeriodQu
 
   const incomes = Object.entries(incomeMap)
     .sort((a, b) => (dayjs(b[0]).isAfter(dayjs(a[0])) ? -1 : 1))
-    .map(([date, amount]) => ({ date, amount }));
+    .map(([date, amount]) => ({ date, amount: amount.toNumber() }));
 
   return {
-    ticketType: ticketTypes.map((tt) => ({
-      id: tt.id,
-      name: tt.name,
-      price: tt.price,
-      totalQuantity: tt.totalQuantity,
-      remainingQuantity: tt.remainingQuantity,
-    })),
+    ticketTypes,
+    totalRemainingQuantity: totalRemainingQuantity.toNumber(),
+    totalIncome: totalIncome.toNumber(),
+    totalRegisteredQuantity: totalRegisteredQuantity.toNumber(),
     incomes,
   };
-
-  // // 計算收入
-  // const incomeMap: Record<string, number> = {};
-
-  // for (const order of paidOrders) {
-  //   if (!order.payment) continue;
-
-  //   const dateKey =
-  //     data.statisticsPeriod === "w"
-  //       ? dayjs(order.createdAt).startOf("week").format("YYYY-MM-DD")
-  //       : dayjs(order.createdAt).format("YYYY-MM-DD");
-  //   incomeMap[dateKey] = (incomeMap[dateKey] || 0) + order.payment.paidAmount;
-  // }
-
-  // const incomes = Object.entries(incomeMap)
-  //   .sort((a, b) => (dayjs(b[0]).isAfter(dayjs(a[0])) ? 1 : -1))
-  //   .map(([date, amount]) => ({ date, amount }));
-  // return {
-  //   ticketType: ticketTypes.map((tt) => ({
-  //     id: tt.id,
-  //     name: tt.name,
-  //     price: tt.price,
-  //     totalQuantity: tt.totalQuantity,
-  //     remainingQuantity: tt.remainingQuantity,
-  //   })),
-  //   incomes,
-  // };
 };
 
 export const patchActivityType = async (activityId: number, data: CreateActivityBody) => {

@@ -390,7 +390,7 @@
  *     getIncomeResponse:
  *       type: object
  *       properties:
- *         ticketType:
+ *         ticketTypes:
  *           type: array
  *           items:
  *             type: object
@@ -410,6 +410,21 @@
  *               remainingQuantity:
  *                 type: number
  *                 example: 50
+ *               subtotalIncome:
+ *                 type: number
+ *                 example: 500
+ *               soldCount:
+ *                 type: number
+ *                 example: 10
+ *         totalRemainingQuantity:
+ *           type: number
+ *           example: 40
+ *         totalIncome:
+ *           type: number
+ *           example: 500
+ *         totalRegisteredQuantity:
+ *           type: number
+ *           example: 10
  *         incomes:
  *           type: array
  *           items:

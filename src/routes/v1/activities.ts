@@ -505,7 +505,7 @@ router.get("/:activityId/participants", auth, activityController.getParticipants
  *     tags:
  *       - Activities
  *     summary: 獲取特定活動的收入
- *     description: 獲取特定活動的收入
+ *     description: 獲取特定活動的收入，包含總收入、總報名人數、總剩餘可售票券、票種收入小計、票種報名人數小計、近五次區間收入
  *     security:
  *       - bearerAuth: []
  *     parameters:
