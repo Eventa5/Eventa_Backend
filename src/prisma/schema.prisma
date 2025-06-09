@@ -214,7 +214,7 @@ model Ticket {
   activityId     Int
   order          Order        @relation(fields: [orderId], references: [id])
   orderId        String
-  qrCodeToken    String       @unique
+  qrCodeToken    String
   checkInAt      DateTime?
   status         TicketStatus @default(unassigned)
   assignedUser   User?        @relation(fields: [assignedUserId], references: [id])
