@@ -27,3 +27,70 @@ export const patchTicketUsed = async (ticketId: TicketId) => {
     },
   });
 };
+
+export const getTicketDetailsByTicketId = async (ticketId: string) => {
+  return prisma.ticket.findUnique({
+    where: {
+      id: ticketId,
+    },
+    select: {
+      id: true,
+      status: true,
+      assignedUser: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      assignedName: true,
+      assignedEmail: true,
+      refundDeadline: true,
+      qrCodeToken: true,
+      ticketType: {
+        select: {
+          name: true,
+          price: true,
+          startTime: true,
+          endTime: true,
+        },
+      },
+      order: {
+        select: {
+          id: true,
+          status: true,
+          paidAt: true,
+          payment: {
+            select: {
+              method: true,
+            },
+          },
+        },
+      },
+      activity: {
+        select: {
+          id: true,
+          title: true,
+          summary: true,
+          notes: true,
+          descriptionMd: true,
+          location: true,
+          livestreamUrl: true,
+          startTime: true,
+          endTime: true,
+          organization: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phoneNumber: true,
+              countryCode: true,
+              ext: true,
+              officialSiteUrl: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
