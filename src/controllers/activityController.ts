@@ -10,6 +10,7 @@ import {
   patchActivityBasicInfoSchema,
   patchActivityCategoriesSchema,
   patchActivityContentSchema,
+  statisticsPeriodSchema,
 } from "../schemas/zod/activity.schema";
 import * as activityService from "../services/activityService";
 import { getTicketTypesByActivityId } from "../services/ticketTypeService";
@@ -427,6 +428,33 @@ export const uploadCover = async (
     }
 
     sendResponse(res, 200, "上傳成功", true, imageUrl);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
+
+// 取得收入狀況
+export const getIncome = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
+    const activity = await activityService.getActivityById(activityId);
+    if (!activity) {
+      sendResponse(res, 404, "活動不存在", false);
+      return;
+    }
+
+    const isOrganization = req.user?.organizationIds.includes(activity.organizationId);
+    if (!isOrganization) {
+      sendResponse(res, 403, "無權限，非主辦單位成員", false);
+      return;
+    }
+    const validatedData = validateInput(statisticsPeriodSchema, req.query);
+    const result = await activityService.getIncome(activityId, validatedData);
+    sendResponse(res, 200, "請求成功", true, result);
   } catch (error) {
     if (error instanceof InputValidationError) {
       sendResponse(res, 400, error.message, false);

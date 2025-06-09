@@ -1,4 +1,5 @@
-import { ActivityStatus, ActivityStep } from "@prisma/client";
+import { ActivityStatus, ActivityStep, OrderStatus, Prisma, TicketStatus } from "@prisma/client";
+import dayjs from "dayjs";
 import { InputValidationError } from "../errors/InputValidationError";
 import prisma from "../prisma/client";
 import type {
@@ -7,12 +8,14 @@ import type {
   CreateActivityBody,
   EditActivityBody,
   LimitQuery,
-  PagenationQuery,
+  PaginationQuery,
   PatchActivityBasicInfoBody,
   PatchActivityCategoriesBody,
   PatchActivityContentBody,
+  StatisticsPeriodQuery,
 } from "../schemas/zod/activity.schema";
 import * as paginator from "../utils/paginator";
+
 //
 export const getActivityById = async (activityId: number) => {
   return prisma.activity.findUnique({
@@ -394,9 +397,9 @@ export const getHotActivities = async (limit: LimitQuery) => {
 
   // 加權比重=> viewCount * 1 + activityLike * 3 + orders * 5
   const sortedActivities = activities
-    .map((activtiy) => ({
-      ...activtiy,
-      score: activtiy.viewCount * 1 + activtiy._count.activityLike * 3 + activtiy._count.orders * 5,
+    .map((activity) => ({
+      ...activity,
+      score: activity.viewCount * 1 + activity._count.activityLike * 3 + activity._count.orders * 5,
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
@@ -405,7 +408,7 @@ export const getHotActivities = async (limit: LimitQuery) => {
 };
 
 // 取得參加者名單
-export const getParticipants = async (activityId: ActivityId, params: PagenationQuery) => {
+export const getParticipants = async (activityId: ActivityId, params: PaginationQuery) => {
   const { page, limit } = params;
   const offset = paginator.getOffset(page, limit);
 
@@ -440,11 +443,121 @@ export const getParticipants = async (activityId: ActivityId, params: Pagenation
 };
 
 // 編輯活動主圖
-export const uploadActivityCover = async (activityId: number, cover: string) => {
+export const uploadActivityCover = async (activityId: ActivityId, cover: string) => {
   return await prisma.activity.update({
     where: { id: activityId },
     data: { cover },
   });
+};
+
+export const getIncome = async (activityId: ActivityId, data: StatisticsPeriodQuery) => {
+  // 取得活動票種
+  const ticketTypesRaw = await prisma.ticketType.findMany({
+    where: { activityId },
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      totalQuantity: true,
+      remainingQuantity: true,
+    },
+    orderBy: {
+      id: "asc",
+    },
+  });
+
+  const totalRemainingQuantity = ticketTypesRaw.reduce(
+    (total, type) => total.add(new Prisma.Decimal(type.remainingQuantity)),
+    new Prisma.Decimal(0),
+  );
+
+  const paidOrders = await prisma.order.findMany({
+    where: {
+      activityId,
+      status: OrderStatus.paid,
+    },
+    select: {
+      createdAt: true,
+      payment: {
+        select: {
+          paidAmount: true,
+        },
+      },
+      tickets: {
+        select: {
+          ticketTypeId: true,
+        },
+      },
+    },
+  });
+
+  const totalIncome = paidOrders.reduce((total, order) => {
+    return order.payment ? total.add(new Prisma.Decimal(order.payment.paidAmount)) : total;
+  }, new Prisma.Decimal(0));
+  const totalRegisteredQuantity = paidOrders.reduce(
+    (total, order) => total.add(new Prisma.Decimal(order.tickets.length)),
+    new Prisma.Decimal(0),
+  );
+
+  // 計算票種小計
+  const ticketTypes = ticketTypesRaw.map((type) => {
+    let subtotalIncome = new Prisma.Decimal(0);
+    let soldCount = new Prisma.Decimal(0);
+    for (const order of paidOrders) {
+      for (const ticket of order.tickets) {
+        if (ticket.ticketTypeId === type.id) {
+          subtotalIncome = subtotalIncome.add(new Prisma.Decimal(type.price));
+          soldCount = soldCount.add(new Prisma.Decimal(1));
+        }
+      }
+    }
+
+    return {
+      ...type,
+      subtotalIncome: subtotalIncome.toNumber(),
+      soldCount: soldCount.toNumber(),
+    };
+  });
+
+  // 初始化近五天或五週的日期 key
+  const incomeMap: Record<string, Prisma.Decimal> = {};
+  const now = dayjs();
+
+  for (let i = 0; i < 5; i++) {
+    const key =
+      data.statisticsPeriod === "w"
+        ? now.subtract(i, "week").startOf("week").format("YYYY-MM-DD")
+        : now.subtract(i, "day").format("YYYY-MM-DD");
+    incomeMap[key] = new Prisma.Decimal(0);
+  }
+
+  // 加總付款收入
+  for (const order of paidOrders) {
+    if (!order.payment) continue;
+
+    const orderDateKey =
+      data.statisticsPeriod === "w"
+        ? dayjs(order.createdAt).startOf("week").format("YYYY-MM-DD")
+        : dayjs(order.createdAt).format("YYYY-MM-DD");
+
+    if (orderDateKey in incomeMap) {
+      incomeMap[orderDateKey] = incomeMap[orderDateKey].add(
+        new Prisma.Decimal(order.payment.paidAmount),
+      );
+    }
+  }
+
+  const incomes = Object.entries(incomeMap)
+    .sort((a, b) => (dayjs(b[0]).isAfter(dayjs(a[0])) ? -1 : 1))
+    .map(([date, amount]) => ({ date, amount: amount.toNumber() }));
+
+  return {
+    ticketTypes,
+    totalRemainingQuantity: totalRemainingQuantity.toNumber(),
+    totalIncome: totalIncome.toNumber(),
+    totalRegisteredQuantity: totalRegisteredQuantity.toNumber(),
+    incomes,
+  };
 };
 
 export const patchActivityType = async (activityId: number, data: CreateActivityBody) => {
