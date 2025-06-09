@@ -11,6 +11,14 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
   const orderId = generateId("O");
 
   return prisma.$transaction(async (tx) => {
+    const activity = await tx.activity.findUnique({
+      where: { id: activityId },
+      select: {
+        isOnline: true,
+        livestreamUrl: true,
+      },
+    });
+
     const order = await tx.order.create({
       data: {
         id: orderId,
@@ -32,7 +40,8 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
 
             return {
               id: ticketId,
-              qrCodeToken: `${ticketId}-${TicketStatus.unassigned}`,
+              qrCodeToken:
+                activity?.isOnline && activity?.livestreamUrl ? activity.livestreamUrl : "",
               refundDeadline: refundDeadline || dayjs().add(7, "day").toDate(),
               ticketType: {
                 connect: {
