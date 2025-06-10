@@ -26,11 +26,11 @@ const router = express.Router();
  *           example: 6
  *       - name: recent
  *         in: query
- *         description: 是否只顯示最近強檔活動
+ *         description: 0:顯示一般熱門活動，1:顯示最近強檔活動
  *         required: false
  *         schema:
- *           type: boolean
- *           example: true
+ *           type: string
+ *           example: 0
  *     responses:
  *       200:
  *         description: 請求成功

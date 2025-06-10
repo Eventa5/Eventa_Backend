@@ -197,10 +197,7 @@ export const statisticsPeriodSchema = z.object({
     .default("d"),
 });
 
-export const recentQuerySchema = z.preprocess(
-  (val) => val === "true", // 僅 "true" 才為 true
-  z.boolean().default(false),
-);
+export const recentQuerySchema = z.coerce.number().default(0);
 
 // 匯出型別
 export type ActivityId = z.infer<typeof activityIdSchema>;
