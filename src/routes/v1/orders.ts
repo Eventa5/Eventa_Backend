@@ -145,6 +145,16 @@ router.get("/", auth, orderController.getOrders);
 
 /**
  * @swagger
+ * /api/v1/orders/return:
+ *   post:
+ *     tags:
+ *       - Orders
+ *     summary: 處理 ECPay 回傳的訂單資訊
+ */
+router.post("/return", orderController.returnECPay);
+
+/**
+ * @swagger
  * /api/v1/orders/{orderId}:
  *   get:
  *     tags:

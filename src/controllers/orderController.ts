@@ -84,9 +84,6 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     }
 
     const {
-      id,
-      paidExpiredAt,
-      createdAt,
       invoiceAddress,
       invoiceTitle,
       invoiceTaxId,
@@ -95,17 +92,14 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       invoiceReceiverEmail,
       invoiceCarrier,
       invoiceType,
+      ...restData
     } = await orderService.createOrder(req.user.id, validatedData);
 
     res.status(201).json({
       message: "訂單創建成功",
       status: true,
       data: {
-        id,
-        activityId,
-        paidExpiredAt,
-        paidAmount,
-        createdAt,
+        ...restData,
         invoice: {
           invoiceAddress,
           invoiceTitle,
@@ -291,6 +285,21 @@ export const checkoutOrder = async (req: Request, res: Response, next: NextFunct
     const html = orderService.generateCheckoutHtml(order);
 
     res.status(200).send(html);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const returnECPay = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { CheckMacValue, ...restData } = req.body;
+    const isValid = orderService.checkIsMacValueValid(CheckMacValue, restData);
+
+    if (isValid) {
+      await orderService.updateOrderPayment(restData);
+    }
+
+    res.send(isValid ? "1|OK" : "0|CheckMacValueError");
   } catch (error) {
     next(error);
   }

@@ -10,6 +10,7 @@ import type {
 } from "../schemas/zod/order.schema";
 import { generateId } from "../utils/idGenerator";
 import * as paginator from "../utils/paginator";
+import { PaymentTypes } from "../utils/paymentTypes";
 
 const ECPayPaymentOptions: Options = {
   OperationMode: "Test",
@@ -88,6 +89,41 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
           },
         },
         ...invoice,
+      },
+      select: {
+        id: true,
+        paidExpiredAt: true,
+        createdAt: true,
+        invoiceAddress: true,
+        invoiceTitle: true,
+        invoiceTaxId: true,
+        invoiceReceiverName: true,
+        invoiceReceiverPhoneNumber: true,
+        invoiceReceiverEmail: true,
+        invoiceCarrier: true,
+        invoiceType: true,
+        activity: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        orderItems: {
+          select: {
+            ticketType: {
+              select: {
+                name: true,
+                price: true,
+              },
+            },
+            quantity: true,
+          },
+        },
+        payment: {
+          select: {
+            paidAmount: true,
+          },
+        },
       },
     });
 
@@ -294,6 +330,9 @@ export const getOrder = async (userId: number, orderId: string) => {
       user: {
         select: {
           id: true,
+          email: true,
+          name: true,
+          displayName: true,
         },
       },
     },
@@ -352,10 +391,64 @@ export const generateCheckoutHtml = (order: OrderForGenerateCheckoutHtml) => {
     ItemName,
     ReturnURL: `${process.env.EVENTA_BACKEND_URL}/orders/return`,
     OrderResultURL: `${process.env.EVENTA_FRONTEND_URL}/events/${order.activity.id}/checkout/result?orderId=${order.id}`,
+    CustomField1: order.user.id.toString(),
+    CustomField2: order.user.displayName || order.user.name || "-",
+    CustomField3: order.user.email,
   };
 
   const create = new ecpay_payment(ECPayPaymentOptions);
   const html = create.payment_client.aio_check_out_all(base_param);
 
   return html;
+};
+
+export const checkIsMacValueValid = (checkMacValue: string, data: Record<string, any>) => {
+  const create = new ecpay_payment(ECPayPaymentOptions);
+  const checkValue = create.payment_client.helper.gen_chk_mac_value(data);
+
+  return checkMacValue === checkValue;
+};
+
+export const updateOrderPayment = async (rawData: Record<string, string>) => {
+  const {
+    MerchantTradeNo,
+    PaymentType,
+    TradeNo,
+    PaymentDate,
+    CustomField1,
+    CustomField2,
+    CustomField3,
+  } = rawData;
+  const orderId = MerchantTradeNo.split("").splice(MerchantTradeNo.indexOf("O")).join("");
+  const paidAt = PaymentDate || dayjs().utc().format("YYYY-MM-DD HH:mm:ss");
+  const userId = Number.parseInt(CustomField1, 10);
+  const userName = CustomField2;
+  const userEmail = CustomField3;
+
+  await prisma.payment.update({
+    where: { orderId },
+    data: {
+      method: PaymentTypes[PaymentType],
+      tradeId: TradeNo,
+      rawData: JSON.stringify(rawData),
+      paidAt,
+      order: {
+        update: {
+          status: OrderStatus.paid,
+          paidAt,
+          tickets: {
+            updateMany: {
+              where: { orderId },
+              data: {
+                status: TicketStatus.assigned,
+                assignedUserId: userId,
+                assignedEmail: userEmail,
+                assignedName: userName,
+              },
+            },
+          },
+        },
+      },
+    },
+  });
 };
