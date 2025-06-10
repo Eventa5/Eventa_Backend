@@ -2,7 +2,11 @@ import { ActivityStatus, OrderStatus, Prisma } from "@prisma/client";
 import type { NextFunction, Request, Response } from "express";
 
 import { InputValidationError } from "../errors/InputValidationError";
-import { createOrderSchema, getOrdersSchema } from "../schemas/zod/order.schema";
+import {
+  type OrderForGenerateCheckoutHtml,
+  createOrderSchema,
+  getOrdersSchema,
+} from "../schemas/zod/order.schema";
 import { validateInput } from "../utils/validateInput";
 
 import * as activityService from "../services/activityService";
@@ -250,6 +254,43 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
       message: "取消成功",
       status: true,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const checkoutOrder = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return next({
+      message: "未提供授權令牌",
+      statusCode: 401,
+    });
+  }
+
+  const userId = req.user.id;
+
+  try {
+    const order = (await orderService.getOrder(
+      userId,
+      req.params.orderId,
+    )) as OrderForGenerateCheckoutHtml;
+    if (!order) {
+      return next({
+        message: "訂單不存在",
+        statusCode: 404,
+      });
+    }
+
+    if (order.status !== pending) {
+      return next({
+        message: "只能結帳未付款的訂單",
+        statusCode: 409,
+      });
+    }
+
+    const html = orderService.generateCheckoutHtml(order);
+
+    res.status(200).send(html);
   } catch (error) {
     next(error);
   }

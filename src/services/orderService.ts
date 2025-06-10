@@ -1,10 +1,26 @@
 import { OrderStatus, TicketStatus } from "@prisma/client";
 import dayjs from "dayjs";
+import ecpay_payment, { type Options } from "ecpay_aio_nodejs";
 import prisma from "../prisma/client";
 
-import type { CreateOrderSchema, OrderQuerySchema } from "../schemas/zod/order.schema";
+import type {
+  CreateOrderSchema,
+  OrderForGenerateCheckoutHtml,
+  OrderQuerySchema,
+} from "../schemas/zod/order.schema";
 import { generateId } from "../utils/idGenerator";
 import * as paginator from "../utils/paginator";
+
+const ECPayPaymentOptions: Options = {
+  OperationMode: "Test",
+  MercProfile: {
+    MerchantID: process.env.ECPAY_MERCHANT_ID || "",
+    HashKey: process.env.ECPAY_HASH_KEY || "",
+    HashIV: process.env.ECPAY_HASH_IV || "",
+  },
+  IgnorePayment: [],
+  IsProjectContractor: false,
+};
 
 export const createOrder = async (userId: number, data: CreateOrderSchema) => {
   const { activityId, tickets, paidAmount, invoice } = data;
@@ -245,6 +261,40 @@ export const getOrder = async (userId: number, orderId: string) => {
     select: {
       id: true,
       status: true,
+      invoiceAddress: true,
+      invoiceTitle: true,
+      invoiceTaxId: true,
+      invoiceReceiverName: true,
+      invoiceReceiverPhoneNumber: true,
+      invoiceReceiverEmail: true,
+      invoiceCarrier: true,
+      invoiceType: true,
+      activity: {
+        select: {
+          title: true,
+        },
+      },
+      orderItems: {
+        select: {
+          ticketType: {
+            select: {
+              name: true,
+              price: true,
+            },
+          },
+          quantity: true,
+        },
+      },
+      payment: {
+        select: {
+          paidAmount: true,
+        },
+      },
+      user: {
+        select: {
+          id: true,
+        },
+      },
     },
   });
 };
@@ -282,3 +332,29 @@ export const cancelOrder = async (orderId: string) =>
       data: { status: OrderStatus.canceled },
     });
   });
+
+export const generateCheckoutHtml = (order: OrderForGenerateCheckoutHtml) => {
+  const MerchantTradeNo = order.id.padStart(20, "0");
+  const MerchantTradeDate = dayjs().utc().format("YYYY/MM/DD HH:mm:ss");
+  const TotalAmount = order.payment.paidAmount.toString();
+  const ItemName = order.orderItems
+    .map(({ ticketType: { name }, quantity }) => {
+      return `${name} x ${quantity}`;
+    })
+    .join("#");
+
+  const base_param = {
+    MerchantTradeNo,
+    MerchantTradeDate,
+    TotalAmount,
+    TradeDesc: `${order.id} 訂單付款資訊`,
+    ItemName,
+    ReturnURL: `${process.env.HOST_URL}/orders/return`,
+    ClientBackURL: `${process.env.CLIENT_BACK_URL}`,
+  };
+
+  const create = new ecpay_payment(ECPayPaymentOptions);
+  const html = create.payment_client.aio_check_out_all(base_param);
+
+  return html;
+};
