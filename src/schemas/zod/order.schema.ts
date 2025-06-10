@@ -166,7 +166,7 @@ export type OrderForGenerateCheckoutHtml = Pick<
   | "invoiceCarrier"
   | "invoiceType"
 > & {
-  activity: Pick<Activity, "title">;
+  activity: Pick<Activity, "id" | "title">;
   orderItems: Array<{ ticketType: { name: string; price: number }; quantity: number }>;
   payment: Pick<Payment, "paidAmount">;
   user: Pick<User, "id">;

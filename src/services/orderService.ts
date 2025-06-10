@@ -271,6 +271,7 @@ export const getOrder = async (userId: number, orderId: string) => {
       invoiceType: true,
       activity: {
         select: {
+          id: true,
           title: true,
         },
       },
@@ -349,8 +350,8 @@ export const generateCheckoutHtml = (order: OrderForGenerateCheckoutHtml) => {
     TotalAmount,
     TradeDesc: `${order.id} 訂單付款資訊`,
     ItemName,
-    ReturnURL: `${process.env.HOST_URL}/orders/return`,
-    ClientBackURL: `${process.env.CLIENT_BACK_URL}`,
+    ReturnURL: `${process.env.EVENTA_BACKEND_URL}/orders/return`,
+    OrderResultURL: `${process.env.EVENTA_FRONTEND_URL}/events/${order.activity.id}/checkout/result?orderId=${order.id}`,
   };
 
   const create = new ecpay_payment(ECPayPaymentOptions);
