@@ -1,3 +1,4 @@
+import { start } from "node:repl";
 import { ActivityStatus, ActivityStep, OrderStatus, Prisma, TicketStatus } from "@prisma/client";
 import dayjs from "dayjs";
 import { InputValidationError } from "../errors/InputValidationError";
@@ -595,4 +596,61 @@ export const patchActivityType = async (activityId: number, data: CreateActivity
       currentStep: true,
     },
   });
+};
+
+// 取得報到人數
+export const getCheckedInResult = async (activityId: ActivityId) => {
+  const activity = await prisma.activity.findUnique({
+    where: {
+      id: activityId,
+    },
+    select: {
+      isOnline: true,
+      status: true,
+      startTime: true,
+      endTime: true,
+      ticketTypes: {
+        select: {
+          name: true,
+          totalQuantity: true,
+        },
+      },
+    },
+  });
+  if (!activity) return null;
+
+  // 計算票數
+  const groupedTickets = await prisma.ticket.groupBy({
+    by: ["status"],
+    where: {
+      activityId,
+    },
+    _count: {
+      status: true,
+    },
+  });
+  const statusMap = Object.fromEntries(
+    groupedTickets.map(({ status, _count }) => [status, _count.status]),
+  );
+  const checkedInCount = statusMap.used ?? 0;
+  const soldCount = groupedTickets.reduce(
+    (sum, g) => sum.plus(g._count.status),
+    new Prisma.Decimal(0),
+  );
+  const totalTicketQuantity = activity.ticketTypes.reduce(
+    (sum, type) => sum.plus(type.totalQuantity),
+    new Prisma.Decimal(0),
+  );
+
+  const data = {
+    isOnline: activity.isOnline,
+    status: activity.status,
+    startTime: activity.startTime,
+    endTime: activity.endTime,
+    checkedInCount: checkedInCount,
+    soldCount: soldCount.toNumber(),
+    totalTicketQuantity: totalTicketQuantity.toNumber(),
+  };
+
+  return data;
 };
