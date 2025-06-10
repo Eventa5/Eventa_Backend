@@ -12,6 +12,7 @@ import type {
   PatchActivityBasicInfoBody,
   PatchActivityCategoriesBody,
   PatchActivityContentBody,
+  RecentQuery,
   StatisticsPeriodQuery,
 } from "../schemas/zod/activity.schema";
 import * as paginator from "../utils/paginator";
@@ -361,10 +362,16 @@ export const unfavoriteActivity = async (activityId: ActivityId, userId: number)
 };
 
 // 取得熱門活動
-export const getHotActivities = async (limit: LimitQuery) => {
+export const getHotActivities = async (limit: LimitQuery, recent: RecentQuery) => {
+  const now = dayjs();
   const activities = await prisma.activity.findMany({
     where: {
       status: ActivityStatus.published,
+      ...(recent && {
+        startTime: {
+          gte: now.toDate(),
+        },
+      }),
     },
     orderBy: {
       viewCount: "desc",
@@ -397,10 +404,21 @@ export const getHotActivities = async (limit: LimitQuery) => {
 
   // 加權比重=> viewCount * 1 + activityLike * 3 + orders * 5
   const sortedActivities = activities
-    .map((activity) => ({
-      ...activity,
-      score: activity.viewCount * 1 + activity._count.activityLike * 3 + activity._count.orders * 5,
-    }))
+    .map((activity) => {
+      const baseScore = new Prisma.Decimal(
+        activity.viewCount * 1 + activity._count.activityLike * 3 + activity._count.orders * 5,
+      );
+
+      // 日期權重，距離當天越近權重越高，最多 2 倍
+      const D = (n: number | string) => new Prisma.Decimal(n);
+      const daysToNow = new Prisma.Decimal(dayjs(activity.startTime).diff(now, "day"));
+      const dateWeight = recent ? Prisma.Decimal.max(D(0.5), D(2).sub(daysToNow.mul(0.1))) : D(1);
+
+      return {
+        ...activity,
+        score: baseScore.mul(dateWeight).toNumber(),
+      };
+    })
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 
@@ -491,12 +509,20 @@ export const getIncome = async (activityId: ActivityId, data: StatisticsPeriodQu
     },
   });
 
-  const totalIncome = paidOrders.reduce((total, order) => {
-    return order.payment ? total.add(new Prisma.Decimal(order.payment.paidAmount)) : total;
-  }, new Prisma.Decimal(0));
-  const totalRegisteredQuantity = paidOrders.reduce(
-    (total, order) => total.add(new Prisma.Decimal(order.tickets.length)),
-    new Prisma.Decimal(0),
+  const { totalIncome, totalRegisteredQuantity } = paidOrders.reduce(
+    (total, order) => {
+      if (order.payment) {
+        total.totalIncome = total.totalIncome.add(new Prisma.Decimal(order.payment.paidAmount));
+      }
+      total.totalRegisteredQuantity = total.totalRegisteredQuantity.add(
+        new Prisma.Decimal(order.tickets.length),
+      );
+      return total;
+    },
+    {
+      totalIncome: new Prisma.Decimal(0),
+      totalRegisteredQuantity: new Prisma.Decimal(0),
+    },
   );
 
   // 計算票種小計
