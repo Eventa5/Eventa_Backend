@@ -197,6 +197,11 @@ export const statisticsPeriodSchema = z.object({
     .default("d"),
 });
 
+export const recentQuerySchema = z.preprocess(
+  (val) => val === "true", // 僅 "true" 才為 true
+  z.boolean().default(false),
+);
+
 // 匯出型別
 export type ActivityId = z.infer<typeof activityIdSchema>;
 export type ActivityQueryParams = z.infer<typeof activityQuerySchema>;
@@ -208,3 +213,4 @@ export type EditActivityBody = z.infer<typeof editActivitySchema>;
 export type LimitQuery = z.infer<typeof limitSchema>;
 export type PaginationQuery = z.infer<typeof paginationQuerySchema>;
 export type StatisticsPeriodQuery = z.infer<typeof statisticsPeriodSchema>;
+export type RecentQuery = z.infer<typeof recentQuerySchema>;

@@ -10,6 +10,7 @@ import {
   patchActivityBasicInfoSchema,
   patchActivityCategoriesSchema,
   patchActivityContentSchema,
+  recentQuerySchema,
   statisticsPeriodSchema,
 } from "../schemas/zod/activity.schema";
 import * as activityService from "../services/activityService";
@@ -349,8 +350,9 @@ export const getPopular = async (
 ): Promise<void> => {
   try {
     const limit = validateInput(limitSchema, req.query.limit);
-    const result = await activityService.getHotActivities(limit);
-    sendResponse(res, 200, "取得熱門活動成功", true, result);
+    const recent = validateInput(recentQuerySchema, req.query.recent);
+    const result = await activityService.getHotActivities(limit, recent);
+    sendResponse(res, 200, "請求成功", true, result);
   } catch (error) {
     if (error instanceof InputValidationError) {
       sendResponse(res, 400, error.message, false);

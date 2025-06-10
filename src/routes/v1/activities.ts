@@ -24,9 +24,16 @@ const router = express.Router();
  *         schema:
  *           type: integer
  *           example: 6
+ *       - name: recent
+ *         in: query
+ *         description: 是否只顯示最近強檔活動
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *           example: true
  *     responses:
  *       200:
- *         description: 成功獲取活動資料
+ *         description: 請求成功
  *         content:
  *           application/json:
  *             schema:
