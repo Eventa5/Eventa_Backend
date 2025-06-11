@@ -23,6 +23,8 @@ const ECPayPaymentOptions: Options = {
   IsProjectContractor: false,
 };
 
+const CorrectRtnCode = "1";
+
 export const createOrder = async (userId: number, data: CreateOrderSchema) => {
   const { activityId, tickets, paidAmount, invoice } = data;
   const orderId = generateId("O");
@@ -382,7 +384,7 @@ export const cancelOrder = async (orderId: string) =>
     });
   });
 
-export const generateCheckoutHtml = (order: OrderForGenerateCheckoutHtml) => {
+export const generateCheckoutHtml = async (order: OrderForGenerateCheckoutHtml) => {
   const MerchantTradeNo = order.id.padStart(20, "0");
   const MerchantTradeDate = dayjs().utc().format("YYYY/MM/DD HH:mm:ss");
   const TotalAmount = order.payment.paidAmount.toString();
@@ -405,6 +407,13 @@ export const generateCheckoutHtml = (order: OrderForGenerateCheckoutHtml) => {
     CustomField3: order.user.email,
   };
 
+  await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      status: OrderStatus.processing,
+    },
+  });
+
   const create = new ecpay_payment(ECPayPaymentOptions);
   const html = create.payment_client.aio_check_out_all(base_param);
 
@@ -424,6 +433,7 @@ export const updateOrderPayment = async (rawData: Record<string, string>) => {
     PaymentType,
     TradeNo,
     PaymentDate,
+    RtnCode,
     CustomField1,
     CustomField2,
     CustomField3,
@@ -434,14 +444,27 @@ export const updateOrderPayment = async (rawData: Record<string, string>) => {
   const userName = CustomField2;
   const userEmail = CustomField3;
 
-  await prisma.payment.update({
-    where: { orderId },
-    data: {
+  await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: {
+        status: true,
+      },
+    });
+
+    if (!order || order.status !== OrderStatus.processing) {
+      throw new Error("訂單錯誤，或是訂單不是「付款中」，無法更新");
+    }
+
+    const data: Record<string, string | number | Date | object> = {
       method: PaymentTypes[PaymentType],
-      tradeId: TradeNo,
       rawData: JSON.stringify(rawData),
+      tradeId: TradeNo,
       paidAt,
-      order: {
+    };
+
+    if (RtnCode === CorrectRtnCode) {
+      data.order = {
         update: {
           status: OrderStatus.paid,
           paidAt,
@@ -457,7 +480,19 @@ export const updateOrderPayment = async (rawData: Record<string, string>) => {
             },
           },
         },
-      },
-    },
+      };
+    } else {
+      data.order = {
+        update: {
+          status: OrderStatus.failed,
+          paidAt,
+        },
+      };
+    }
+
+    await tx.payment.update({
+      where: { orderId },
+      data,
+    });
   });
 };

@@ -11,10 +11,13 @@ import { validateInput } from "../utils/validateInput";
 
 import * as activityService from "../services/activityService";
 import * as orderService from "../services/orderService";
+import * as paymentService from "../services/paymentService";
 import * as ticketTypeService from "../services/ticketTypeService";
 
 const { published } = ActivityStatus;
 const { pending } = OrderStatus;
+
+const CorrectRtnCode = "1";
 
 export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
@@ -300,6 +303,54 @@ export const returnECPay = async (req: Request, res: Response, next: NextFunctio
     }
 
     res.send(isValid ? "1|OK" : "0|CheckMacValueError");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCheckoutResult = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return next({
+      message: "未提供授權令牌",
+      statusCode: 401,
+    });
+  }
+
+  try {
+    const { orderId } = req.params;
+    const payment = await paymentService.getCheckoutResult(orderId);
+
+    if (!payment) {
+      return next({
+        message: "訂單不存在",
+        statusCode: 404,
+      });
+    }
+
+    if (!payment.rawData) {
+      return next({
+        message: "此訂單尚未進行結帳",
+        statusCode: 409,
+      });
+    }
+
+    if (typeof payment.rawData !== "string") {
+      return next({
+        message: "付款資料格式錯誤，請聯繫管理員",
+        statusCode: 400,
+      });
+    }
+
+    const { RtnCode, RtnMsg } = JSON.parse(payment.rawData);
+
+    res.status(200).json({
+      message: "請求成功",
+      status: true,
+      data: {
+        result: RtnCode === CorrectRtnCode,
+        resultMessage: RtnMsg,
+      },
+    });
   } catch (error) {
     next(error);
   }
