@@ -438,7 +438,7 @@ export const updateOrderPayment = async (rawData: Record<string, string>) => {
     CustomField2,
     CustomField3,
   } = rawData;
-  const orderId = MerchantTradeNo.split("").splice(MerchantTradeNo.indexOf("O")).join("");
+  const orderId = MerchantTradeNo.slice(MerchantTradeNo.indexOf("O"));
   const paidAt = PaymentDate || dayjs().utc().format("YYYY-MM-DD HH:mm:ss");
   const userId = Number.parseInt(CustomField1, 10);
   const userName = CustomField2;
