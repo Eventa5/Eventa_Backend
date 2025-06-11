@@ -359,3 +359,18 @@ export const generateCheckoutHtml = (order: OrderForGenerateCheckoutHtml) => {
 
   return html;
 };
+
+export const cancelExpiredOrders = async () => {
+  const now = new Date();
+  await prisma.order.updateMany({
+    where: {
+      paidExpiredAt: {
+        lte: now,
+      },
+      status: OrderStatus.pending,
+    },
+    data: {
+      status: OrderStatus.canceled,
+    },
+  });
+};

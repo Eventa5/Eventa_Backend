@@ -701,3 +701,19 @@ export const getCheckedInResult = async (activityId: ActivityId) => {
 
   return data;
 };
+
+// 更新已過期活動狀態
+export const updateExpiredActivities = async () => {
+  const now = new Date();
+  await prisma.activity.updateMany({
+    where: {
+      endTime: {
+        lte: now,
+      },
+      status: ActivityStatus.published, // 只更新已發布的活動
+    },
+    data: {
+      status: ActivityStatus.ended,
+    },
+  });
+};

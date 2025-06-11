@@ -94,3 +94,20 @@ export const getTicketDetailsByTicketId = async (ticketId: string) => {
     },
   });
 };
+
+export const updateExpiredTicket = async () => {
+  const now = new Date();
+  return await prisma.ticket.updateMany({
+    where: {
+      status: {
+        notIn: [TicketStatus.canceled, TicketStatus.used, TicketStatus.overdue],
+      },
+      ticketType: {
+        is: {
+          endTime: { lte: now },
+        },
+      },
+    },
+    data: { status: TicketStatus.overdue },
+  });
+};

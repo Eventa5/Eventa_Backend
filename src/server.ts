@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import express, { type Express, type Request, type Response } from "express";
 import { errorHandler, multerErrorHandler } from "./middlewares/errorHandler";
 import routes from "./routes";
-import { setupTokenCleanupTask } from "./utils/scheduler";
+import { setupSchedulers } from "./utils/scheduler";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -40,7 +40,7 @@ app.use(multerErrorHandler);
 app.use(errorHandler);
 
 // 設置定時任務
-setupTokenCleanupTask();
+setupSchedulers();
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://127.0.0.1:${PORT}`);
