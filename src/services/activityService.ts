@@ -1,4 +1,3 @@
-import { start } from "node:repl";
 import { ActivityStatus, ActivityStep, OrderStatus, Prisma, TicketStatus } from "@prisma/client";
 import dayjs from "dayjs";
 import { InputValidationError } from "../errors/InputValidationError";
@@ -16,9 +15,9 @@ import type {
   RecentQuery,
   StatisticsPeriodQuery,
 } from "../schemas/zod/activity.schema";
+import { sendActivityCancelEmail } from "../utils/emailClient";
 import * as paginator from "../utils/paginator";
 
-//
 export const getActivityById = async (activityId: number) => {
   return prisma.activity.findUnique({
     where: {
@@ -254,21 +253,69 @@ export const patchActivityPublish = async (activityId: ActivityId) => {
 
 // 取消活動
 export const cancelActivity = async (activityId: ActivityId) => {
-  // 更新活動狀態
-  return prisma.activity.update({
-    where: {
-      id: activityId,
-    },
-    data: {
-      status: ActivityStatus.canceled,
-    },
-    select: {
-      id: true,
-      status: true,
-    },
+  return prisma.$transaction(async (tx) => {
+    // 改變活動狀態
+    const activity = await tx.activity.update({
+      where: {
+        id: activityId,
+      },
+      data: { status: ActivityStatus.canceled },
+      select: {
+        id: true,
+        status: true,
+        title: true,
+      },
+    });
+
+    // 找訂單ID
+    const orders = await tx.order.findMany({
+      where: {
+        activityId,
+      },
+      select: {
+        id: true,
+        user: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    const orderIds = orders.map((order) => order.id);
+    if (orderIds.length === 0) return activity;
+
+    // 更新訂單狀態
+    await tx.order.updateMany({
+      where: { id: { in: orderIds } },
+      data: { status: OrderStatus.canceled },
+    });
+
+    // 更新票券狀態
+    await tx.ticket.updateMany({
+      where: { orderId: { in: orderIds } },
+      data: { status: TicketStatus.canceled },
+    });
+
+    // 票種庫存恢復
+    await tx.$executeRaw`
+      UPDATE "ticket_types"
+      SET "remainingQuantity" = "totalQuantity"
+      WHERE "activityId" = ${activityId}
+    `;
+
+    // 發送活動取消通知信
+    for (const order of orders) {
+      sendActivityCancelEmail(
+        order.user.email,
+        order.user.name || "",
+        activity.title || `活動ID: ${activityId}`,
+      );
+    }
+
+    return activity;
   });
-  // 更新訂單狀態 => status: OrderStatus.canceled
-  // 更新票券狀態 => status: TicketStatus.canceled
 };
 
 // 編輯活動

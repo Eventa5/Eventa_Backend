@@ -75,3 +75,34 @@ export const sendGoogleLoginEmail = async (email: string, name: string): Promise
     return false;
   }
 };
+
+// 活動取消通知
+export const sendActivityCancelEmail = async (
+  email: string,
+  name: string,
+  activityTitle: string,
+): Promise<boolean> => {
+  try {
+    const mailOptions = {
+      from: `Eventa <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Eventa - 活動取消通知",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>活動取消通知</h2>
+          <p>您好 ${name}，</p>
+          <p>您所報名參加的活動 <strong>${activityTitle}</strong> 已被取消。</p>
+          <p>若您已付款，請聯繫客服處理退款作業。</p>
+          <p>謝謝您的支持與理解。</p>
+          <p>Eventa 團隊</p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("發送活動取消通知郵件失敗:", error);
+    return false;
+  }
+};
