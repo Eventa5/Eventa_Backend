@@ -1,6 +1,13 @@
 import { z } from "zod";
 
-import { InvoiceType, OrderStatus } from "@prisma/client";
+import {
+  type Activity,
+  InvoiceType,
+  type Order,
+  OrderStatus,
+  type Payment,
+  type User,
+} from "@prisma/client";
 
 const { b2b, b2c } = InvoiceType;
 const { paid, pending, expired, canceled } = OrderStatus;
@@ -143,3 +150,24 @@ export const getOrdersSchema = z
 // 匯出型別
 export type CreateOrderSchema = z.infer<typeof createOrderSchema>;
 export type OrderQuerySchema = z.infer<typeof getOrdersSchema>;
+export type OrderForGenerateCheckoutHtml = Pick<
+  Order,
+  | "id"
+  | "status"
+  | "paidAt"
+  | "paidExpiredAt"
+  | "createdAt"
+  | "invoiceAddress"
+  | "invoiceReceiverName"
+  | "invoiceReceiverEmail"
+  | "invoiceReceiverPhoneNumber"
+  | "invoiceTitle"
+  | "invoiceTaxId"
+  | "invoiceCarrier"
+  | "invoiceType"
+> & {
+  activity: Pick<Activity, "id" | "title">;
+  orderItems: Array<{ ticketType: { name: string; price: number }; quantity: number }>;
+  payment: Pick<Payment, "paidAmount">;
+  user: Pick<User, "id">;
+};

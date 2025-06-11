@@ -255,4 +255,50 @@ router.get("/:orderId", auth, orderController.getOrderDetail);
  */
 router.patch("/:orderId/cancel", auth, orderController.cancelOrder);
 
+/**
+ * @swagger
+ * /api/v1/orders/{orderId}/checkout:
+ *   post:
+ *     tags:
+ *       - Orders
+ *     summary: 結帳訂單
+ *     description: 用來結帳訂單
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "O25053115453487373"
+ *     responses:
+ *       200:
+ *         description: 回傳 html 的 form 表單，前端需要在原頁開啟來提交
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ *               example: "<form>...</form>"
+ *       401:
+ *         description: 未提供授權令牌
+ *         content:
+ *           application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 訂單不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: 只能結帳未付款的訂單
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post("/:orderId/checkout", auth, orderController.checkoutOrder);
+
 export default router;
