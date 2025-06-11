@@ -149,7 +149,7 @@ router.get("/", auth, orderController.getOrders);
  *   post:
  *     tags:
  *       - Orders
- *     summary: 處理 ECPay 回傳的訂單資訊
+ *     summary: 後端來接受 ECPay 回傳的訂單資訊
  */
 router.post("/return", orderController.returnECPay);
 
