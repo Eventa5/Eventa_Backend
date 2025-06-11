@@ -271,6 +271,7 @@ export const cancelActivity = async (activityId: ActivityId) => {
     const orders = await tx.order.findMany({
       where: {
         activityId,
+        status: { in: [OrderStatus.pending, OrderStatus.paid] },
       },
       select: {
         id: true,
@@ -294,7 +295,10 @@ export const cancelActivity = async (activityId: ActivityId) => {
 
     // 更新票券狀態
     await tx.ticket.updateMany({
-      where: { orderId: { in: orderIds } },
+      where: {
+        orderId: { in: orderIds },
+        status: { in: [TicketStatus.unassigned, TicketStatus.assigned] },
+      },
       data: { status: TicketStatus.canceled },
     });
 
@@ -671,6 +675,7 @@ export const getCheckedInResult = async (activityId: ActivityId) => {
     by: ["status"],
     where: {
       activityId,
+      status: { notIn: [TicketStatus.canceled, TicketStatus.overdue] },
     },
     _count: {
       status: true,
@@ -681,7 +686,7 @@ export const getCheckedInResult = async (activityId: ActivityId) => {
   );
   const checkedInCount = statusMap.used ?? 0;
   const soldCount = groupedTickets.reduce(
-    (sum, g) => sum.plus(g._count.status),
+    (sum, groupedTicket) => sum.plus(groupedTicket._count.status),
     new Prisma.Decimal(0),
   );
   const totalTicketQuantity = activity.ticketTypes.reduce(

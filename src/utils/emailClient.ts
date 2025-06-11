@@ -92,7 +92,7 @@ export const sendActivityCancelEmail = async (
           <h2>活動取消通知</h2>
           <p>您好 ${name}，</p>
           <p>您所報名參加的活動 <strong>${activityTitle}</strong> 已被取消。</p>
-          <p>若您已付款，請聯繫客服處理退款作業。</p>
+          <p>若您已付款，請留意退款信件，若未收到，再請聯繫客服處理。</p>
           <p>謝謝您的支持與理解。</p>
           <p>Eventa 團隊</p>
         </div>
