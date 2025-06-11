@@ -437,4 +437,39 @@
  *               amount:
  *                 type: number
  *                 example: 500
+ *     # 活動詳細報到資料結構
+ *     # -----------------------------------------------
+ *     getCheckedInResponse:
+ *       type: object
+ *       properties:
+ *         isOnline:
+ *           type: boolean
+ *           description: 是否為線上活動
+ *           example: true
+ *         status:
+ *           type: string
+ *           description: 活動當前狀態
+ *           example: published
+ *         startTime:
+ *           type: string
+ *           description: 活動開始時間
+ *           example: 2025-05-01T10:00:00Z
+ *           format: date
+ *         endTime:
+ *           type: string
+ *           description: 活動結束時間
+ *           example: 2025-05-01T18:00:00Z
+ *           format: date
+ *         checkedInCount:
+ *           type: number
+ *           description: 已報到人數
+ *           example: 5
+ *         soldCount:
+ *           type: number
+ *           description: 已售票張數
+ *           example: 10
+ *         totalTicketQuantity:
+ *           type: number
+ *           description: 總票數
+ *           example: 15
  */

@@ -492,3 +492,29 @@ export const patchActivityType = async (req: Request, res: Response, next: NextF
     }
   }
 };
+
+// 取得報到人數
+export const getCheckedInResult = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const activityId = validateInput(activityIdSchema, req.params.activityId);
+    const activity = await activityService.getActivityById(activityId);
+    if (!activity) {
+      sendResponse(res, 404, "活動不存在", false);
+      return;
+    }
+
+    const isOrganization = req.user?.organizationIds.includes(activity.organizationId);
+    if (!isOrganization) {
+      sendResponse(res, 403, "無權限，非主辦單位成員", false);
+      return;
+    }
+    const result = await activityService.getCheckedInResult(activityId);
+    sendResponse(res, 200, "請求成功", true, result);
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      sendResponse(res, 400, error.message, false);
+    } else {
+      next(error);
+    }
+  }
+};
