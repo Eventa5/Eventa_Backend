@@ -15,9 +15,9 @@ import type {
   RecentQuery,
   StatisticsPeriodQuery,
 } from "../schemas/zod/activity.schema";
+import { sendActivityCancelEmail } from "../utils/emailClient";
 import * as paginator from "../utils/paginator";
 
-//
 export const getActivityById = async (activityId: number) => {
   return prisma.activity.findUnique({
     where: {
@@ -253,21 +253,69 @@ export const patchActivityPublish = async (activityId: ActivityId) => {
 
 // 取消活動
 export const cancelActivity = async (activityId: ActivityId) => {
-  // 更新活動狀態
-  return prisma.activity.update({
-    where: {
-      id: activityId,
-    },
-    data: {
-      status: ActivityStatus.canceled,
-    },
-    select: {
-      id: true,
-      status: true,
-    },
+  return prisma.$transaction(async (tx) => {
+    // 改變活動狀態
+    const activity = await tx.activity.update({
+      where: {
+        id: activityId,
+      },
+      data: { status: ActivityStatus.canceled },
+      select: {
+        id: true,
+        status: true,
+        title: true,
+      },
+    });
+
+    // 找訂單ID
+    const orders = await tx.order.findMany({
+      where: {
+        activityId,
+      },
+      select: {
+        id: true,
+        user: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    const orderIds = orders.map((order) => order.id);
+    if (orderIds.length === 0) return activity;
+
+    // 更新訂單狀態
+    await tx.order.updateMany({
+      where: { id: { in: orderIds } },
+      data: { status: OrderStatus.canceled },
+    });
+
+    // 更新票券狀態
+    await tx.ticket.updateMany({
+      where: { orderId: { in: orderIds } },
+      data: { status: TicketStatus.canceled },
+    });
+
+    // 票種庫存恢復
+    await tx.$executeRaw`
+      UPDATE "ticket_types"
+      SET "remainingQuantity" = "totalQuantity"
+      WHERE "activityId" = ${activityId}
+    `;
+
+    // 發送活動取消通知信
+    for (const order of orders) {
+      sendActivityCancelEmail(
+        order.user.email,
+        order.user.name || "",
+        activity.title || `活動ID: ${activityId}`,
+      );
+    }
+
+    return activity;
   });
-  // 更新訂單狀態 => status: OrderStatus.canceled
-  // 更新票券狀態 => status: TicketStatus.canceled
 };
 
 // 編輯活動
@@ -595,4 +643,61 @@ export const patchActivityType = async (activityId: number, data: CreateActivity
       currentStep: true,
     },
   });
+};
+
+// 取得報到人數
+export const getCheckedInResult = async (activityId: ActivityId) => {
+  const activity = await prisma.activity.findUnique({
+    where: {
+      id: activityId,
+    },
+    select: {
+      isOnline: true,
+      status: true,
+      startTime: true,
+      endTime: true,
+      ticketTypes: {
+        select: {
+          name: true,
+          totalQuantity: true,
+        },
+      },
+    },
+  });
+  if (!activity) return null;
+
+  // 計算票數
+  const groupedTickets = await prisma.ticket.groupBy({
+    by: ["status"],
+    where: {
+      activityId,
+    },
+    _count: {
+      status: true,
+    },
+  });
+  const statusMap = Object.fromEntries(
+    groupedTickets.map(({ status, _count }) => [status, _count.status]),
+  );
+  const checkedInCount = statusMap.used ?? 0;
+  const soldCount = groupedTickets.reduce(
+    (sum, g) => sum.plus(g._count.status),
+    new Prisma.Decimal(0),
+  );
+  const totalTicketQuantity = activity.ticketTypes.reduce(
+    (sum, type) => sum.plus(type.totalQuantity),
+    new Prisma.Decimal(0),
+  );
+
+  const data = {
+    isOnline: activity.isOnline,
+    status: activity.status,
+    startTime: activity.startTime,
+    endTime: activity.endTime,
+    checkedInCount: checkedInCount,
+    soldCount: soldCount.toNumber(),
+    totalTicketQuantity: totalTicketQuantity.toNumber(),
+  };
+
+  return data;
 };

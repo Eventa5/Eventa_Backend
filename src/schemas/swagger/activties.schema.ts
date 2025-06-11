@@ -437,4 +437,32 @@
  *               amount:
  *                 type: number
  *                 example: 500
+ *     # 活動詳細報到資料結構
+ *     # -----------------------------------------------
+ *     getCheckedInResponse:
+ *       type: object
+ *       properties:
+ *         isOnline:
+ *           type: boolean
+ *           example: true
+ *         status:
+ *           type: string
+ *           example: published
+ *         startTime:
+ *           type: string
+ *           example: 2025-05-01T10:00:00Z
+ *           format: date
+ *         endTime:
+ *           type: string
+ *           example: 2025-05-01T18:00:00Z
+ *           format: date
+ *         checkedInCount:
+ *           type: number
+ *           example: 5
+ *         soldCount:
+ *           type: number
+ *           example: 10
+ *         totalTicketQuantity:
+ *           type: number
+ *           example: 15
  */

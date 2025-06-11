@@ -574,6 +574,66 @@ router.get("/:activityId/income", auth, activityController.getIncome); // 取得
 
 /**
  * @swagger
+ * /api/v1/activities/{activityId}/checkedIn:
+ *   get:
+ *     tags:
+ *       - Activities
+ *     summary: 獲取特定活動的報到狀況
+ *     description: 獲取特定活動的詳細報到狀況，包含報到人數、活動狀態，checkedInCount= 報到人數、soldCount= 售出票券數量、totalTicketQuantity= 總票券數
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 請求成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/getCheckedInResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get("/:activityId/checkedIn", auth, activityController.getCheckedInResult);
+
+/**
+ * @swagger
  * /api/v1/activities/{activityId}:
  *   get:
  *     tags:
