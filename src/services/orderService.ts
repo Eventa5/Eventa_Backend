@@ -89,6 +89,41 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
         },
         ...invoice,
       },
+      select: {
+        id: true,
+        paidExpiredAt: true,
+        createdAt: true,
+        invoiceAddress: true,
+        invoiceTitle: true,
+        invoiceTaxId: true,
+        invoiceReceiverName: true,
+        invoiceReceiverPhoneNumber: true,
+        invoiceReceiverEmail: true,
+        invoiceCarrier: true,
+        invoiceType: true,
+        activity: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        orderItems: {
+          select: {
+            ticketType: {
+              select: {
+                name: true,
+                price: true,
+              },
+            },
+            quantity: true,
+          },
+        },
+        payment: {
+          select: {
+            paidAmount: true,
+          },
+        },
+      },
     });
 
     await Promise.all(
