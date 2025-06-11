@@ -148,8 +148,10 @@ export const getOrders = async (userId: number, queries: OrderQuerySchema) => {
           select: {
             id: true,
             title: true,
-            cover: true,
+            location: true,
             isOnline: true,
+            startTime: true,
+            endTime: true,
           },
         },
         payment: {
@@ -158,9 +160,16 @@ export const getOrders = async (userId: number, queries: OrderQuerySchema) => {
           },
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: [
+        {
+          activity: {
+            startTime: "desc",
+          },
+        },
+        {
+          createdAt: "desc",
+        },
+      ],
       skip: offset,
       take: limit,
     }),
