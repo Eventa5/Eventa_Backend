@@ -12,11 +12,12 @@ import type {
   PatchActivityBasicInfoBody,
   PatchActivityCategoriesBody,
   PatchActivityContentBody,
+  RecentQuery,
   StatisticsPeriodQuery,
 } from "../schemas/zod/activity.schema";
+import { sendActivityCancelEmail } from "../utils/emailClient";
 import * as paginator from "../utils/paginator";
 
-//
 export const getActivityById = async (activityId: number) => {
   return prisma.activity.findUnique({
     where: {
@@ -252,21 +253,73 @@ export const patchActivityPublish = async (activityId: ActivityId) => {
 
 // 取消活動
 export const cancelActivity = async (activityId: ActivityId) => {
-  // 更新活動狀態
-  return prisma.activity.update({
-    where: {
-      id: activityId,
-    },
-    data: {
-      status: ActivityStatus.canceled,
-    },
-    select: {
-      id: true,
-      status: true,
-    },
+  return prisma.$transaction(async (tx) => {
+    // 改變活動狀態
+    const activity = await tx.activity.update({
+      where: {
+        id: activityId,
+      },
+      data: { status: ActivityStatus.canceled },
+      select: {
+        id: true,
+        status: true,
+        title: true,
+      },
+    });
+
+    // 找訂單ID
+    const orders = await tx.order.findMany({
+      where: {
+        activityId,
+        status: { in: [OrderStatus.pending, OrderStatus.paid] },
+      },
+      select: {
+        id: true,
+        user: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    const orderIds = orders.map((order) => order.id);
+    if (orderIds.length === 0) return activity;
+
+    // 更新訂單狀態
+    await tx.order.updateMany({
+      where: { id: { in: orderIds } },
+      data: { status: OrderStatus.canceled },
+    });
+
+    // 更新票券狀態
+    await tx.ticket.updateMany({
+      where: {
+        orderId: { in: orderIds },
+        status: { in: [TicketStatus.unassigned, TicketStatus.assigned] },
+      },
+      data: { status: TicketStatus.canceled },
+    });
+
+    // 票種庫存恢復
+    await tx.$executeRaw`
+      UPDATE "ticket_types"
+      SET "remainingQuantity" = "totalQuantity"
+      WHERE "activityId" = ${activityId}
+    `;
+
+    // 發送活動取消通知信
+    for (const order of orders) {
+      sendActivityCancelEmail(
+        order.user.email,
+        order.user.name || "",
+        activity.title || `活動ID: ${activityId}`,
+      );
+    }
+
+    return activity;
   });
-  // 更新訂單狀態 => status: OrderStatus.canceled
-  // 更新票券狀態 => status: TicketStatus.canceled
 };
 
 // 編輯活動
@@ -361,10 +414,16 @@ export const unfavoriteActivity = async (activityId: ActivityId, userId: number)
 };
 
 // 取得熱門活動
-export const getHotActivities = async (limit: LimitQuery) => {
+export const getHotActivities = async (limit: LimitQuery, recent: RecentQuery) => {
+  const now = dayjs();
   const activities = await prisma.activity.findMany({
     where: {
       status: ActivityStatus.published,
+      ...(recent && {
+        startTime: {
+          gte: now.toDate(),
+        },
+      }),
     },
     orderBy: {
       viewCount: "desc",
@@ -397,10 +456,21 @@ export const getHotActivities = async (limit: LimitQuery) => {
 
   // 加權比重=> viewCount * 1 + activityLike * 3 + orders * 5
   const sortedActivities = activities
-    .map((activity) => ({
-      ...activity,
-      score: activity.viewCount * 1 + activity._count.activityLike * 3 + activity._count.orders * 5,
-    }))
+    .map((activity) => {
+      const baseScore = new Prisma.Decimal(
+        activity.viewCount * 1 + activity._count.activityLike * 3 + activity._count.orders * 5,
+      );
+
+      // 日期權重，距離當天越近權重越高，最多 2 倍
+      const D = (n: number | string) => new Prisma.Decimal(n);
+      const daysToNow = new Prisma.Decimal(dayjs(activity.startTime).diff(now, "day"));
+      const dateWeight = recent ? Prisma.Decimal.max(D(0.5), D(2).sub(daysToNow.mul(0.1))) : D(1);
+
+      return {
+        ...activity,
+        score: baseScore.mul(dateWeight).toNumber(),
+      };
+    })
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 
@@ -491,12 +561,20 @@ export const getIncome = async (activityId: ActivityId, data: StatisticsPeriodQu
     },
   });
 
-  const totalIncome = paidOrders.reduce((total, order) => {
-    return order.payment ? total.add(new Prisma.Decimal(order.payment.paidAmount)) : total;
-  }, new Prisma.Decimal(0));
-  const totalRegisteredQuantity = paidOrders.reduce(
-    (total, order) => total.add(new Prisma.Decimal(order.tickets.length)),
-    new Prisma.Decimal(0),
+  const { totalIncome, totalRegisteredQuantity } = paidOrders.reduce(
+    (total, order) => {
+      if (order.payment) {
+        total.totalIncome = total.totalIncome.add(new Prisma.Decimal(order.payment.paidAmount));
+      }
+      total.totalRegisteredQuantity = total.totalRegisteredQuantity.add(
+        new Prisma.Decimal(order.tickets.length),
+      );
+      return total;
+    },
+    {
+      totalIncome: new Prisma.Decimal(0),
+      totalRegisteredQuantity: new Prisma.Decimal(0),
+    },
   );
 
   // 計算票種小計
@@ -569,4 +647,62 @@ export const patchActivityType = async (activityId: number, data: CreateActivity
       currentStep: true,
     },
   });
+};
+
+// 取得報到人數
+export const getCheckedInResult = async (activityId: ActivityId) => {
+  const activity = await prisma.activity.findUnique({
+    where: {
+      id: activityId,
+    },
+    select: {
+      isOnline: true,
+      status: true,
+      startTime: true,
+      endTime: true,
+      ticketTypes: {
+        select: {
+          name: true,
+          totalQuantity: true,
+        },
+      },
+    },
+  });
+  if (!activity) return null;
+
+  // 計算票數
+  const groupedTickets = await prisma.ticket.groupBy({
+    by: ["status"],
+    where: {
+      activityId,
+      status: { notIn: [TicketStatus.canceled, TicketStatus.overdue] },
+    },
+    _count: {
+      status: true,
+    },
+  });
+  const statusMap = Object.fromEntries(
+    groupedTickets.map(({ status, _count }) => [status, _count.status]),
+  );
+  const checkedInCount = statusMap.used ?? 0;
+  const soldCount = groupedTickets.reduce(
+    (sum, groupedTicket) => sum.plus(groupedTicket._count.status),
+    new Prisma.Decimal(0),
+  );
+  const totalTicketQuantity = activity.ticketTypes.reduce(
+    (sum, type) => sum.plus(type.totalQuantity),
+    new Prisma.Decimal(0),
+  );
+
+  const data = {
+    isOnline: activity.isOnline,
+    status: activity.status,
+    startTime: activity.startTime,
+    endTime: activity.endTime,
+    checkedInCount: checkedInCount,
+    soldCount: soldCount.toNumber(),
+    totalTicketQuantity: totalTicketQuantity.toNumber(),
+  };
+
+  return data;
 };

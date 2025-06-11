@@ -26,9 +26,18 @@
  *           format: date
  *           description: 訂單支付過期時間，格式為 ISO 8601
  *           example: 2025-05-01T10:10:00Z
+ *         createdAt:
+ *           type: string
+ *           format: date
+ *           description: 訂單創建時間，格式為 ISO 8601
+ *           example: 2025-05-01T10:00:00Z
  *         activity:
  *           type: object
  *           properties:
+ *             id:
+ *               type: integer
+ *               description: 活動 ID
+ *               example: 1
  *             title:
  *               type: string
  *               description: 活動標題
@@ -36,7 +45,12 @@
  *             location:
  *               type: string
  *               description: 活動地點
+ *               nullable: true
  *               example: 台北市
+ *             isOnline:
+ *               type: boolean
+ *               description: 是否為線上活動
+ *               example: false
  *             startTime:
  *               type: string
  *               format: date

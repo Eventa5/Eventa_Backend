@@ -24,9 +24,16 @@ const router = express.Router();
  *         schema:
  *           type: integer
  *           example: 6
+ *       - name: recent
+ *         in: query
+ *         description: 0:顯示一般熱門活動，1:顯示最近強檔活動
+ *         required: false
+ *         schema:
+ *           type: string
+ *           example: 0
  *     responses:
  *       200:
- *         description: 成功獲取活動資料
+ *         description: 請求成功
  *         content:
  *           application/json:
  *             schema:
@@ -564,6 +571,66 @@ router.get("/:activityId/participants", auth, activityController.getParticipants
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/:activityId/income", auth, activityController.getIncome); // 取得活動收入
+
+/**
+ * @swagger
+ * /api/v1/activities/{activityId}/checkedIn:
+ *   get:
+ *     tags:
+ *       - Activities
+ *     summary: 獲取特定活動的報到狀況
+ *     description: 獲取特定活動的詳細報到狀況，包含報到人數、活動狀態，checkedInCount= 報到人數、soldCount= 售出票券數量、totalTicketQuantity= 總票券數
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 請求成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/getCheckedInResponse'
+ *       400:
+ *         description: 格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get("/:activityId/checkedIn", auth, activityController.getCheckedInResult);
 
 /**
  * @swagger
