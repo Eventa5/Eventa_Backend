@@ -26,9 +26,18 @@
  *           format: date
  *           description: 訂單支付過期時間，格式為 ISO 8601
  *           example: 2025-05-01T10:10:00Z
+ *         createdAt:
+ *           type: string
+ *           format: date
+ *           description: 訂單創建時間，格式為 ISO 8601
+ *           example: 2025-05-01T10:00:00Z
  *         activity:
  *           type: object
  *           properties:
+ *             id:
+ *               type: integer
+ *               description: 活動 ID
+ *               example: 1
  *             title:
  *               type: string
  *               description: 活動標題
@@ -36,7 +45,12 @@
  *             location:
  *               type: string
  *               description: 活動地點
+ *               nullable: true
  *               example: 台北市
+ *             isOnline:
+ *               type: boolean
+ *               description: 是否為線上活動
+ *               example: false
  *             startTime:
  *               type: string
  *               format: date
@@ -259,26 +273,53 @@
  *           type: string
  *           description: 訂單 ID
  *           example: 00000001745575851770
- *         activityId:
- *           type: integer
- *           description: 活動 ID
- *           example: 1
  *         paidExpiredAt:
  *           type: date
  *           description: 訂單支付過期時間，格式為 ISO 8601
  *           example: 2025-05-01T10:10:00Z
- *         paidAmount:
- *           type: integer
- *           description: 實際支付金額
- *           example: 3900
- *         status:
- *           type: string
- *           description: 訂單狀態
- *           example: paid | pending | expired | canceled
  *         createdAt:
  *           type: date
  *           description: 訂單創建時間，格式為 ISO 8601
  *           example: 2025-05-01T10:00:00Z
+ *         activity:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *               description: 活動 ID
+ *               example: 1
+ *             title:
+ *               type: string
+ *               description: 活動標題
+ *               example: 藝術市集：創意手作與在地文創展覽
+ *         orderItems:
+ *           type: array
+ *           description: 訂單中的票券列表
+ *           items:
+ *             type: object
+ *             properties:
+ *               ticketType:
+ *                 type: object
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *                     description: 票種名稱
+ *                     example: 一般票
+ *                   price:
+ *                     type: integer
+ *                     description: 票種價格
+ *                     example: 1950
+ *               quantity:
+ *                 type: integer
+ *                 description: 購買的票券數量
+ *                 example: 2
+ *         payment:
+ *           type: object
+ *           properties:
+ *             paidAmount:
+ *               type: integer
+ *               description: 實際支付金額
+ *               example: 3900
  *         invoice:
  *           type: object
  *           description: 發票資訊

@@ -284,8 +284,8 @@ router.patch("/:orderId/cancel", auth, orderController.cancelOrder);
  *         description: 未提供授權令牌
  *         content:
  *           application/json:
- *           schema:
- *             $ref: '#/components/schemas/ErrorResponse'
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: 訂單不存在
  *         content:
