@@ -84,9 +84,6 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     }
 
     const {
-      id,
-      paidExpiredAt,
-      createdAt,
       invoiceAddress,
       invoiceTitle,
       invoiceTaxId,
@@ -95,17 +92,14 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       invoiceReceiverEmail,
       invoiceCarrier,
       invoiceType,
+      ...restData
     } = await orderService.createOrder(req.user.id, validatedData);
 
     res.status(201).json({
       message: "訂單創建成功",
       status: true,
       data: {
-        id,
-        activityId,
-        paidExpiredAt,
-        paidAmount,
-        createdAt,
+        ...restData,
         invoice: {
           invoiceAddress,
           invoiceTitle,
