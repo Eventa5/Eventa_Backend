@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { sendMessage } from "../../controllers/chatController";
+import { chatRateLimiter } from "../../middlewares/rateLimiter";
 
 const router = Router();
 
@@ -38,6 +39,12 @@ const router = Router();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       429:
+ *         description: 請求過於頻繁
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: 系統錯誤
  *         content:
@@ -45,6 +52,6 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/", sendMessage); // 發送聊天訊息
+router.post("/", ...chatRateLimiter, sendMessage); // 發送聊天訊息
 
 export default router;
