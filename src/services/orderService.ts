@@ -164,9 +164,22 @@ export const getOrders = async (userId: number, queries: OrderQuerySchema) => {
   }
 
   if (from && to) {
-    where.createdAt = {
-      gte: dayjs(from).toDate(),
-      lte: dayjs(to).toDate(),
+    where.activity = {
+      ...where.activity,
+      OR: [
+        {
+          startTime: {
+            gte: dayjs(from).toDate(),
+            lte: dayjs(to).toDate(),
+          },
+        },
+        {
+          endTime: {
+            gte: dayjs(from).toDate(),
+            lte: dayjs(to).toDate(),
+          },
+        },
+      ],
     };
   }
 
@@ -250,6 +263,7 @@ export const getOrderDetail = async (userId: number, orderId: string) => {
       },
       activity: {
         select: {
+          id: true,
           title: true,
           tags: true,
           categories: {
