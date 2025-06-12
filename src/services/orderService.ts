@@ -168,7 +168,7 @@ export const getOrders = async (userId: number, queries: OrderQuerySchema) => {
     const toDate = dayjs(to).toDate();
 
     where.activity = {
-      ...where.activity,
+      ...(where.activity || {}),
       OR: [
         {
           startTime: {
