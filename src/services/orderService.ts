@@ -406,15 +406,55 @@ export const generateCheckoutHtml = (order: OrderForGenerateCheckoutHtml) => {
 
 export const cancelExpiredOrders = async () => {
   const now = new Date();
-  await prisma.order.updateMany({
-    where: {
-      paidExpiredAt: {
-        lte: now,
+  await prisma.$transaction(async (tx) => {
+    const expiredOrders = await tx.order.findMany({
+      where: {
+        paidExpiredAt: {
+          lte: now,
+        },
+        status: OrderStatus.pending,
       },
-      status: OrderStatus.pending,
-    },
-    data: {
-      status: OrderStatus.canceled,
-    },
+      select: {
+        id: true,
+      },
+    });
+
+    const expiredOrderIds = expiredOrders.map((order) => order.id);
+
+    if (expiredOrderIds.length === 0) {
+      return;
+    }
+
+    // 更新訂單狀態
+    await tx.order.updateMany({
+      where: { id: { in: expiredOrderIds } },
+      data: { status: OrderStatus.expired },
+    });
+
+    // 更新票券狀態
+    await tx.ticket.updateMany({
+      where: { orderId: { in: expiredOrderIds } },
+      data: { status: TicketStatus.canceled },
+    });
+
+    // 釋放票券
+    const affectedTickets = await tx.ticket.groupBy({
+      by: ["ticketTypeId"],
+      where: {
+        orderId: { in: expiredOrderIds },
+      },
+      _count: { _all: true },
+    });
+
+    for (const ticket of affectedTickets) {
+      await tx.ticketType.update({
+        where: { id: ticket.ticketTypeId },
+        data: {
+          remainingQuantity: {
+            increment: ticket._count._all,
+          },
+        },
+      });
+    }
   });
 };
