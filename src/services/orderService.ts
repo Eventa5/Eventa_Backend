@@ -116,6 +116,8 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
               select: {
                 name: true,
                 price: true,
+                startTime: true,
+                endTime: true,
               },
             },
             quantity: true,
@@ -167,9 +169,25 @@ export const getOrders = async (userId: number, queries: OrderQuerySchema) => {
   }
 
   if (from && to) {
-    where.createdAt = {
-      gte: dayjs(from).toDate(),
-      lte: dayjs(to).toDate(),
+    const fromDate = dayjs(from).toDate();
+    const toDate = dayjs(to).toDate();
+
+    where.activity = {
+      ...(where.activity || {}),
+      OR: [
+        {
+          startTime: {
+            gte: fromDate,
+            lte: toDate,
+          },
+        },
+        {
+          endTime: {
+            gte: fromDate,
+            lte: toDate,
+          },
+        },
+      ],
     };
   }
 
@@ -253,6 +271,7 @@ export const getOrderDetail = async (userId: number, orderId: string) => {
       },
       activity: {
         select: {
+          id: true,
           title: true,
           tags: true,
           categories: {
