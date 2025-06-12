@@ -51,6 +51,13 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     const seenTicketIds = new Set();
 
     for (const ticket of tickets) {
+      if (ticket.quantity <= 0) {
+        return next({
+          message: `票種 ID ${ticket.id} 的數量必須大於 0`,
+          statusCode: 400,
+        });
+      }
+
       if (seenTicketIds.has(ticket.id)) {
         return next({
           message: `票種 ID ${ticket.id} 重複`,

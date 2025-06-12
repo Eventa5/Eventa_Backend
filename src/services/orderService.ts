@@ -26,8 +26,19 @@ const ECPayPaymentOptions: Options = {
 const CorrectRtnCode = "1";
 
 export const createOrder = async (userId: number, data: CreateOrderSchema) => {
-  const { activityId, tickets, paidAmount, invoice } = data;
+  const { activityId, tickets: ticketTypesData, paidAmount, invoice } = data;
   const orderId = generateId("O");
+  const tickets: { id: number; refundDeadline: Date }[] = [];
+
+  for (const ticketTypeData of ticketTypesData) {
+    const { id, quantity, refundDeadline } = ticketTypeData;
+    for (let i = 1; i <= quantity; i++) {
+      tickets.push({
+        id,
+        refundDeadline: refundDeadline || dayjs().add(7, "day").toDate(),
+      });
+    }
+  }
 
   return prisma.$transaction(async (tx) => {
     const activity = await tx.activity.findUnique({
@@ -61,7 +72,7 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
               id: ticketId,
               qrCodeToken:
                 activity?.isOnline && activity?.livestreamUrl ? activity.livestreamUrl : "",
-              refundDeadline: refundDeadline || dayjs().add(7, "day").toDate(),
+              refundDeadline,
               ticketType: {
                 connect: {
                   id,
@@ -76,7 +87,7 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
           }),
         },
         orderItems: {
-          create: tickets.map(({ id, quantity }) => ({
+          create: ticketTypesData.map(({ id, quantity }) => ({
             ticketType: {
               connect: {
                 id,
@@ -132,7 +143,7 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
     });
 
     await Promise.all(
-      tickets.map(({ id, quantity }) =>
+      ticketTypesData.map(({ id, quantity }) =>
         tx.ticketType.update({
           where: { id },
           data: {
