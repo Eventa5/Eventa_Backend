@@ -2,6 +2,7 @@ import { Router } from "express";
 import { specs, swaggerUi } from "../config/swagger";
 import activityRoutes from "./v1/activities";
 import categoryRoutes from "./v1/categories";
+import chatRoutes from "./v1/chat";
 import currencyRouter from "./v1/currencies";
 import orderRoutes from "./v1/orders";
 import organizationRoutes from "./v1/organizations";
@@ -17,6 +18,7 @@ router.use("/v1/tickets", ticketRoutes);
 router.use("/v1/orders", orderRoutes);
 router.use("/v1/organizations", organizationRoutes);
 router.use("/v1/currencies", currencyRouter);
+router.use("/v1/chat", chatRoutes);
 
 router.get("/docs/swagger.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
