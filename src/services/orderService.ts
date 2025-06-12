@@ -113,6 +113,8 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
               select: {
                 name: true,
                 price: true,
+                startTime: true,
+                endTime: true,
               },
             },
             quantity: true,
