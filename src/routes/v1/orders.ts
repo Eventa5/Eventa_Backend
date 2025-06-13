@@ -145,6 +145,16 @@ router.get("/", auth, orderController.getOrders);
 
 /**
  * @swagger
+ * /api/v1/orders/return:
+ *   post:
+ *     tags:
+ *       - Orders
+ *     summary: 後端來接受 ECPay 回傳的訂單資訊
+ */
+router.post("/return", orderController.returnECPay);
+
+/**
+ * @swagger
  * /api/v1/orders/{orderId}:
  *   get:
  *     tags:
@@ -300,5 +310,74 @@ router.patch("/:orderId/cancel", auth, orderController.cancelOrder);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/:orderId/checkout", auth, orderController.checkoutOrder);
+
+/**
+ * @swagger
+ * /api/v1/orders/{orderId}/checkout/result:
+ *   get:
+ *     tags:
+ *       - Orders
+ *     summary: 獲取付款結果
+ *     description: 獲取訂單的付款結果
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "O25053115453487373"
+ *     responses:
+ *       200:
+ *         description: 成功獲取付款結果
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 請求成功
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     result:
+ *                       type: boolean
+ *                       example: true | false
+ *                       description: true 表示成功，false 表示失敗
+ *                     resultMessage:
+ *                       type: string
+ *                       example: "付款成功"
+ *                       description: 付款結果的訊息，失敗的訊息是由綠界回傳的，應可直接使用
+ *       400:
+ *         description: 付款資料格式錯誤，請聯繫管理員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未提供授權令牌
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 訂單不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: 此訂單尚未進行結帳
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get("/:orderId/checkout/result", auth, orderController.getCheckoutResult);
 
 export default router;
