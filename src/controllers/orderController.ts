@@ -292,7 +292,7 @@ export const checkoutOrder = async (req: Request, res: Response, next: NextFunct
       });
     }
 
-    const html = orderService.generateCheckoutHtml(order);
+    const html = await orderService.generateCheckoutHtml(order);
 
     res.status(200).send(html);
   } catch (error) {
