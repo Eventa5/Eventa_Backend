@@ -47,7 +47,9 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     }
 
     let totalAmount = new Prisma.Decimal(0);
-    const ticketTypeMap = new Map(ticketTypes.map((type) => [type.id, type]));
+    const ticketTypeMap = new Map(
+      ticketTypes.filter((type) => type.isActive).map((type) => [type.id, type]),
+    );
     const seenTicketIds = new Set();
 
     for (const ticket of tickets) {
@@ -69,7 +71,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       const ticketType = ticketTypeMap.get(ticket.id);
       if (!ticketType) {
         return next({
-          message: `票種 ID ${ticket.id} 不存在`,
+          message: `票種 ID ${ticket.id} 不存在或已下架`,
           statusCode: 404,
         });
       }
