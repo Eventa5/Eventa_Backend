@@ -1,0 +1,15 @@
+name: 部署正式機
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: 部署
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 觸發 Render 部署
+        if: success()
+        run: curl "${{ secrets.RENDER_DEPLOY_PROD_HOOK_URL }}"
