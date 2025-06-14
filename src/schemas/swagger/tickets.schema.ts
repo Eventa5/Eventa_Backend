@@ -136,7 +136,7 @@
  *               format: date
  *               description: 活動結束時間，格式為 ISO 8601
  *               example: 2025-05-01T18:00:00Z
- *         organizer:
+ *         organization:
  *           type: object
  *           properties:
  *             id:

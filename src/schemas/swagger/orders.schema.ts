@@ -309,6 +309,16 @@
  *                     type: integer
  *                     description: 票種價格
  *                     example: 1950
+ *                   startTime:
+ *                     type: string
+ *                     format: date
+ *                     description: 票種開始時間，格式為 ISO 8601
+ *                     example: 2025-05-01T10:00:00Z
+ *                   endTime:
+ *                     type: string
+ *                     format: date
+ *                     description: 票種結束時間，格式為 ISO 8601
+ *                     example: 2025-05-01T18:00:00Z
  *               quantity:
  *                 type: integer
  *                 description: 購買的票券數量

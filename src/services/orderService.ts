@@ -10,6 +10,7 @@ import type {
 } from "../schemas/zod/order.schema";
 import { generateId } from "../utils/idGenerator";
 import * as paginator from "../utils/paginator";
+import { PaymentTypes } from "../utils/paymentTypes";
 
 const ECPayPaymentOptions: Options = {
   OperationMode: "Test",
@@ -22,9 +23,22 @@ const ECPayPaymentOptions: Options = {
   IsProjectContractor: false,
 };
 
+const CorrectRtnCode = "1";
+
 export const createOrder = async (userId: number, data: CreateOrderSchema) => {
-  const { activityId, tickets, paidAmount, invoice } = data;
+  const { activityId, tickets: ticketTypesData, paidAmount, invoice } = data;
   const orderId = generateId("O");
+  const tickets: { id: number; refundDeadline: Date }[] = [];
+
+  for (const ticketTypeData of ticketTypesData) {
+    const { id, quantity, refundDeadline } = ticketTypeData;
+    for (let i = 1; i <= quantity; i++) {
+      tickets.push({
+        id,
+        refundDeadline: refundDeadline || dayjs().add(7, "day").toDate(),
+      });
+    }
+  }
 
   return prisma.$transaction(async (tx) => {
     const activity = await tx.activity.findUnique({
@@ -58,7 +72,7 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
               id: ticketId,
               qrCodeToken:
                 activity?.isOnline && activity?.livestreamUrl ? activity.livestreamUrl : "",
-              refundDeadline: refundDeadline || dayjs().add(7, "day").toDate(),
+              refundDeadline,
               ticketType: {
                 connect: {
                   id,
@@ -73,7 +87,7 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
           }),
         },
         orderItems: {
-          create: tickets.map(({ id, quantity }) => ({
+          create: ticketTypesData.map(({ id, quantity }) => ({
             ticketType: {
               connect: {
                 id,
@@ -113,6 +127,8 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
               select: {
                 name: true,
                 price: true,
+                startTime: true,
+                endTime: true,
               },
             },
             quantity: true,
@@ -127,7 +143,7 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
     });
 
     await Promise.all(
-      tickets.map(({ id, quantity }) =>
+      ticketTypesData.map(({ id, quantity }) =>
         tx.ticketType.update({
           where: { id },
           data: {
@@ -164,9 +180,25 @@ export const getOrders = async (userId: number, queries: OrderQuerySchema) => {
   }
 
   if (from && to) {
-    where.createdAt = {
-      gte: dayjs(from).toDate(),
-      lte: dayjs(to).toDate(),
+    const fromDate = dayjs(from).toDate();
+    const toDate = dayjs(to).toDate();
+
+    where.activity = {
+      ...(where.activity || {}),
+      OR: [
+        {
+          startTime: {
+            gte: fromDate,
+            lte: toDate,
+          },
+        },
+        {
+          endTime: {
+            gte: fromDate,
+            lte: toDate,
+          },
+        },
+      ],
     };
   }
 
@@ -250,6 +282,7 @@ export const getOrderDetail = async (userId: number, orderId: string) => {
       },
       activity: {
         select: {
+          id: true,
           title: true,
           tags: true,
           categories: {
@@ -338,6 +371,9 @@ export const getOrder = async (userId: number, orderId: string) => {
       user: {
         select: {
           id: true,
+          email: true,
+          name: true,
+          displayName: true,
         },
       },
     },
@@ -378,7 +414,7 @@ export const cancelOrder = async (orderId: string) =>
     });
   });
 
-export const generateCheckoutHtml = (order: OrderForGenerateCheckoutHtml) => {
+export const generateCheckoutHtml = async (order: OrderForGenerateCheckoutHtml) => {
   const MerchantTradeNo = order.id.padStart(20, "0");
   const MerchantTradeDate = dayjs().utc().format("YYYY/MM/DD HH:mm:ss");
   const TotalAmount = order.payment.paidAmount.toString();
@@ -396,12 +432,99 @@ export const generateCheckoutHtml = (order: OrderForGenerateCheckoutHtml) => {
     ItemName,
     ReturnURL: `${process.env.EVENTA_BACKEND_URL}/orders/return`,
     OrderResultURL: `${process.env.EVENTA_FRONTEND_URL}/events/${order.activity.id}/checkout/result?orderId=${order.id}`,
+    CustomField1: order.user.id.toString(),
+    CustomField2: order.user.displayName || order.user.name || "-",
+    CustomField3: order.user.email,
   };
+
+  await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      status: OrderStatus.processing,
+    },
+  });
 
   const create = new ecpay_payment(ECPayPaymentOptions);
   const html = create.payment_client.aio_check_out_all(base_param);
 
   return html;
+};
+
+export const checkIsMacValueValid = (checkMacValue: string, data: Record<string, any>) => {
+  const create = new ecpay_payment(ECPayPaymentOptions);
+  const checkValue = create.payment_client.helper.gen_chk_mac_value(data);
+
+  return checkMacValue === checkValue;
+};
+
+export const updateOrderPayment = async (rawData: Record<string, string>) => {
+  const {
+    MerchantTradeNo,
+    PaymentType,
+    TradeNo,
+    PaymentDate,
+    RtnCode,
+    CustomField1,
+    CustomField2,
+    CustomField3,
+  } = rawData;
+  const orderId = MerchantTradeNo.slice(MerchantTradeNo.indexOf("O"));
+  const paidAt = PaymentDate || dayjs().utc().format("YYYY-MM-DD HH:mm:ss");
+  const userId = Number.parseInt(CustomField1, 10);
+  const userName = CustomField2;
+  const userEmail = CustomField3;
+
+  await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: {
+        status: true,
+      },
+    });
+
+    if (!order || order.status !== OrderStatus.processing) {
+      throw new Error("訂單錯誤，或是訂單不是「付款中」，無法更新");
+    }
+
+    const data: Record<string, string | number | Date | object> = {
+      method: PaymentTypes[PaymentType],
+      rawData: JSON.stringify(rawData),
+      tradeId: TradeNo,
+      paidAt,
+    };
+
+    if (RtnCode === CorrectRtnCode) {
+      data.order = {
+        update: {
+          status: OrderStatus.paid,
+          paidAt,
+          tickets: {
+            updateMany: {
+              where: { orderId },
+              data: {
+                status: TicketStatus.assigned,
+                assignedUserId: userId,
+                assignedEmail: userEmail,
+                assignedName: userName,
+              },
+            },
+          },
+        },
+      };
+    } else {
+      data.order = {
+        update: {
+          status: OrderStatus.failed,
+          paidAt,
+        },
+      };
+    }
+
+    await tx.payment.update({
+      where: { orderId },
+      data,
+    });
+  });
 };
 
 export const cancelExpiredOrders = async () => {

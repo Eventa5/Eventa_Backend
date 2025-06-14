@@ -27,9 +27,11 @@ enum ActivityStep {
 
 enum OrderStatus {
   paid
+  processing
   pending
   expired
   canceled
+  failed
 }
 
 enum InvoiceType {
