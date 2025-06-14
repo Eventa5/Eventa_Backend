@@ -94,3 +94,24 @@ export const getTicketDetailsByTicketId = async (ticketId: string) => {
     },
   });
 };
+
+export const updateExpiredTicket = async () => {
+  try {
+    const now = new Date();
+    await prisma.ticket.updateMany({
+      where: {
+        status: {
+          notIn: [TicketStatus.canceled, TicketStatus.used, TicketStatus.overdue],
+        },
+        ticketType: {
+          is: {
+            endTime: { lte: now },
+          },
+        },
+      },
+      data: { status: TicketStatus.overdue },
+    });
+  } catch (err) {
+    throw new Error(`更新已過票券狀態失敗：${err instanceof Error ? err.message : err}`);
+  }
+};
