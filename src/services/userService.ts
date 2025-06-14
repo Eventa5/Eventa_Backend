@@ -280,25 +280,29 @@ export const deleteUser = async (id: number) => {
 
 // 清理過期的重設密碼令牌
 export const cleanExpiredResetTokens = async () => {
-  const now = new Date();
+  try {
+    const now = new Date();
 
-  // 更新所有過期的令牌為 null
-  await prisma.user.updateMany({
-    where: {
-      resetTokenExpiry: {
-        lt: now,
+    // 更新所有過期的令牌為 null
+    await prisma.user.updateMany({
+      where: {
+        resetTokenExpiry: {
+          lt: now,
+        },
+        resetToken: {
+          not: null,
+        },
       },
-      resetToken: {
-        not: null,
+      data: {
+        resetToken: null,
+        resetTokenExpiry: null,
       },
-    },
-    data: {
-      resetToken: null,
-      resetTokenExpiry: null,
-    },
-  });
+    });
 
-  return true;
+    return true;
+  } catch (err) {
+    throw new Error(`清理過期的令牌失敗：${err instanceof Error ? err.message : err}`);
+  }
 };
 
 // Google 使用者認證和處理

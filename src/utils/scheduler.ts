@@ -2,6 +2,7 @@ import cron from "node-cron";
 import { updateExpiredActivities } from "../services/activityService";
 import { cancelExpiredOrders } from "../services/orderService";
 import { updateExpiredTicket } from "../services/ticketService";
+import { updateTicketTypeStatus } from "../services/ticketTypeService";
 import { cleanExpiredResetTokens } from "../services/userService";
 
 export const updateOrderTask = (): void => {
@@ -33,7 +34,13 @@ const runHourlyTasks = async (prefix: string) => {
 
 export const hourlyTask = (): void => {
   // 啟動時立即執行一次
-  runHourlyTasks("Init");
+  (async () => {
+    try {
+      await runHourlyTasks("Init");
+    } catch (err) {
+      console.error(`[Init] hourlyTask 失敗: ${err instanceof Error ? err.message : err}`);
+    }
+  })();
 
   // 設定每小時排程
   cron.schedule("0 * * * *", async () => {
@@ -41,8 +48,19 @@ export const hourlyTask = (): void => {
   });
 };
 
+export const updateTicketTypeStatusTask = (): void => {
+  cron.schedule("0 0 * * *", async () => {
+    try {
+      await updateTicketTypeStatus();
+    } catch (err) {
+      console.error(`更新已過票種啟用狀態失敗：${err instanceof Error ? err.message : err}`);
+    }
+  });
+};
+
 export const setupSchedulers = (): void => {
   updateOrderTask();
   hourlyTask();
+  updateTicketTypeStatusTask();
   console.log("Schedulers set up successfully.");
 };

@@ -45,3 +45,21 @@ export const deleteTicketType = async (ticketTypeId: number) => {
     },
   });
 };
+
+export const updateTicketTypeStatus = async () => {
+  try {
+    const now = new Date();
+    await prisma.ticketType.updateMany({
+      where: {
+        saleEndAt: {
+          lte: now,
+        },
+      },
+      data: {
+        isActive: false,
+      },
+    });
+  } catch (err) {
+    throw new Error(`更新已過票種啟用狀態失敗：${err instanceof Error ? err.message : err}`);
+  }
+};
