@@ -380,4 +380,65 @@ router.post("/:orderId/checkout", auth, orderController.checkoutOrder);
  */
 router.get("/:orderId/checkout/result", auth, orderController.getCheckoutResult);
 
+/**
+ * @swagger
+ * /api/v1/orders/{orderId}/refund:
+ *   post:
+ *     tags:
+ *       - Orders
+ *     summary: 訂單退款
+ *     description: 用來退款訂單
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "O25053115453487373"
+ *     responses:
+ *       201:
+ *         description: 退款成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 退款成功
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *               data:
+ *                 type: object
+ *                 properties:
+ *                   orderId:
+ *                     type: string
+ *                     example: "O25053115453487373"
+ *                   status:
+ *                     type: string
+ *                     example: refunded
+ *       401:
+ *         description: 未提供授權令牌
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 訂單不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: 只能退款已付款的訂單
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post("/:orderId/refund", auth, orderController.refundOrder);
+
 export default router;

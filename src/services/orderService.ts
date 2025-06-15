@@ -586,3 +586,56 @@ export const cancelExpiredOrders = async () => {
     throw new Error(`更新已過期訂單狀態失敗：${err instanceof Error ? err.message : err}`);
   }
 };
+
+export const refundOrder = async (orderId: string) => {
+  return prisma.$transaction(async (tx) => {
+    const refundedOrder = await tx.order.update({
+      where: { id: orderId },
+      data: {
+        status: OrderStatus.refunded,
+        tickets: {
+          updateMany: {
+            where: { orderId },
+            data: {
+              status: TicketStatus.canceled,
+              assignedUserId: null,
+              assignedEmail: null,
+              assignedName: null,
+            },
+          },
+        },
+        payment: {
+          update: {
+            data: {
+              rawData: OrderStatus.refunded,
+            },
+          },
+        },
+      },
+      select: {
+        status: true,
+        orderItems: {
+          select: {
+            ticketTypeId: true,
+            quantity: true,
+          },
+        },
+      },
+    });
+
+    await Promise.all(
+      refundedOrder.orderItems.map(({ ticketTypeId, quantity }) =>
+        tx.ticketType.update({
+          where: { id: ticketTypeId },
+          data: {
+            remainingQuantity: {
+              increment: quantity,
+            },
+          },
+        }),
+      ),
+    );
+
+    return refundedOrder.status;
+  });
+};
