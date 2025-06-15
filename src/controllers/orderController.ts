@@ -302,6 +302,7 @@ export const checkoutOrder = async (req: Request, res: Response, next: NextFunct
 
 export const returnECPay = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log("🚀 ~ returnECPay ~ req.body:", req.body);
     const { CheckMacValue, ...restData } = req.body;
     const isValid = orderService.checkIsMacValueValid(CheckMacValue, restData);
 
