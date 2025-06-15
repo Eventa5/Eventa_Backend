@@ -622,17 +622,18 @@ export const refundOrder = async (orderId: string) => {
       },
     });
 
-    const { orderItems } = refundedOrder;
-    for (const { ticketTypeId, quantity } of orderItems) {
-      await tx.ticketType.update({
-        where: { id: ticketTypeId },
-        data: {
-          remainingQuantity: {
-            increment: quantity,
+    await Promise.all(
+      refundedOrder.orderItems.map(({ ticketTypeId, quantity }) =>
+        tx.ticketType.update({
+          where: { id: ticketTypeId },
+          data: {
+            remainingQuantity: {
+              increment: quantity,
+            },
           },
-        },
-      });
-    }
+        }),
+      ),
+    );
 
     return refundedOrder.status;
   });
