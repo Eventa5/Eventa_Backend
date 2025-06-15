@@ -53,6 +53,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     );
     const seenTicketIds = new Set();
     const now = dayjs().utc();
+    let isAllFreeTickets = false;
 
     for (const ticket of tickets) {
       if (ticket.quantity <= 0) {
@@ -111,6 +112,10 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       });
     }
 
+    if (totalAmount.isZero()) {
+      isAllFreeTickets = true;
+    }
+
     const {
       invoiceAddress,
       invoiceTitle,
@@ -121,7 +126,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       invoiceCarrier,
       invoiceType,
       ...restData
-    } = await orderService.createOrder(req.user.id, validatedData);
+    } = await orderService.createOrder(req.user.id, validatedData, isAllFreeTickets);
 
     res.status(201).json({
       message: "訂單創建成功",
