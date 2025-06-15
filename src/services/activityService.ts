@@ -274,7 +274,7 @@ export const cancelActivity = async (activityId: ActivityId) => {
     const orders = await tx.order.findMany({
       where: {
         activityId,
-        status: { in: [OrderStatus.pending, OrderStatus.paid] },
+        status: { in: [OrderStatus.pending, OrderStatus.paid, OrderStatus.processing] },
       },
       select: {
         id: true,

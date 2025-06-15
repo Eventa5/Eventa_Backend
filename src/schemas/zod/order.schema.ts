@@ -10,7 +10,7 @@ import {
 } from "@prisma/client";
 
 const { b2b, b2c } = InvoiceType;
-const { paid, pending, expired, canceled } = OrderStatus;
+const { paid, processing, pending, expired, canceled, failed, refunded } = OrderStatus;
 
 export const createOrderSchema = z.object({
   activityId: z.coerce
@@ -119,7 +119,7 @@ export const getOrdersSchema = z
       .min(1, "每頁顯示數量 必須大於 0")
       .max(100, "每頁顯示數量 不能超過 100")
       .default(8),
-    status: z.enum([paid, pending, expired, canceled]).nullish(),
+    status: z.enum([paid, processing, pending, expired, canceled, failed, refunded]).nullish(),
     title: z.coerce.string().trim().nullish(),
     from: z.coerce.date().nullish(),
     to: z.coerce.date().nullish(),
