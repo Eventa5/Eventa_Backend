@@ -52,6 +52,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       ticketTypes.filter((type) => type.isActive).map((type) => [type.id, type]),
     );
     const seenTicketIds = new Set();
+    const now = dayjs().utc();
 
     for (const ticket of tickets) {
       if (ticket.quantity <= 0) {
@@ -91,7 +92,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
         ? dayjs(ticketType.saleEndAt).utc()
         : dayjs(ticketType.endTime).utc();
 
-      if (!dayjs().utc().isBetween(ticketTypeStartTime, ticketTypeEndTime, null, "[]")) {
+      if (!now.isBetween(ticketTypeStartTime, ticketTypeEndTime, null, "[]")) {
         return next({
           message: `票種 ID ${ticket.id} 的購買時間不在有效期間內`,
           statusCode: 400,
