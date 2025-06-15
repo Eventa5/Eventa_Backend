@@ -526,3 +526,62 @@ export const updateOrderPayment = async (rawData: Record<string, string>) => {
     });
   });
 };
+
+export const cancelExpiredOrders = async () => {
+  try {
+    const now = new Date();
+    await prisma.$transaction(async (tx) => {
+      const expiredOrders = await tx.order.findMany({
+        where: {
+          paidExpiredAt: {
+            lte: now,
+          },
+          status: OrderStatus.pending,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const expiredOrderIds = expiredOrders.map((order) => order.id);
+
+      if (expiredOrderIds.length === 0) {
+        return;
+      }
+
+      // 更新訂單狀態
+      await tx.order.updateMany({
+        where: { id: { in: expiredOrderIds } },
+        data: { status: OrderStatus.expired },
+      });
+
+      // 更新票券狀態
+      await tx.ticket.updateMany({
+        where: { orderId: { in: expiredOrderIds } },
+        data: { status: TicketStatus.canceled },
+      });
+
+      // 釋放票券
+      const affectedTickets = await tx.ticket.groupBy({
+        by: ["ticketTypeId"],
+        where: {
+          orderId: { in: expiredOrderIds },
+        },
+        _count: { _all: true },
+      });
+
+      for (const ticket of affectedTickets) {
+        await tx.ticketType.update({
+          where: { id: ticket.ticketTypeId },
+          data: {
+            remainingQuantity: {
+              increment: ticket._count._all,
+            },
+          },
+        });
+      }
+    });
+  } catch (err) {
+    throw new Error(`更新已過期訂單狀態失敗：${err instanceof Error ? err.message : err}`);
+  }
+};

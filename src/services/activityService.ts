@@ -709,3 +709,38 @@ export const getCheckedInResult = async (activityId: ActivityId) => {
 
   return data;
 };
+
+// 更新已過期活動狀態
+export const updateExpiredActivities = async () => {
+  try {
+    const now = new Date();
+    await prisma.$transaction(async (tx) => {
+      const activities = await tx.activity.findMany({
+        where: {
+          endTime: {
+            lte: now,
+          },
+          status: ActivityStatus.published, // 只更新已發布的活動
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const activityIds = activities.map((activity) => activity.id);
+      if (activityIds.length === 0) return;
+
+      await tx.activity.updateMany({
+        where: { id: { in: activityIds } },
+        data: { status: ActivityStatus.ended },
+      });
+
+      await tx.ticketType.updateMany({
+        where: { activityId: { in: activityIds } },
+        data: { isActive: false },
+      });
+    });
+  } catch (err) {
+    throw new Error(`更新已過期活狀態失敗：${err instanceof Error ? err.message : err}`);
+  }
+};
