@@ -1,4 +1,5 @@
 import { ActivityStatus, OrderStatus, Prisma } from "@prisma/client";
+import dayjs from "dayjs";
 import type { NextFunction, Request, Response } from "express";
 
 import { InputValidationError } from "../errors/InputValidationError";
@@ -79,6 +80,20 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       if (ticket.quantity > ticketType.remainingQuantity) {
         return next({
           message: `票種 ID ${ticket.id} 的數量超過庫存，不可購買`,
+          statusCode: 400,
+        });
+      }
+
+      const ticketTypeStartTime = ticketType.saleStartAt
+        ? dayjs(ticketType.saleStartAt).utc()
+        : dayjs(ticketType.startTime).utc();
+      const ticketTypeEndTime = ticketType.saleEndAt
+        ? dayjs(ticketType.saleEndAt).utc()
+        : dayjs(ticketType.endTime).utc();
+
+      if (!dayjs().utc().isBetween(ticketTypeStartTime, ticketTypeEndTime, null, "[]")) {
+        return next({
+          message: `票種 ID ${ticket.id} 的購買時間不在有效期間內`,
           statusCode: 400,
         });
       }

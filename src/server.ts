@@ -1,5 +1,6 @@
 import cors from "cors";
 import dayjs from "dayjs";
+import IsBetween from "dayjs/plugin/isBetween";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import dotenv from "dotenv";
@@ -10,6 +11,7 @@ import { setupTokenCleanupTask } from "./utils/scheduler";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
+dayjs.extend(IsBetween);
 
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
