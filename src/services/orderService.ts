@@ -25,22 +25,28 @@ const ECPayPaymentOptions: Options = {
 
 const CorrectRtnCode = "1";
 
-export const createOrder = async (userId: number, data: CreateOrderSchema) => {
+export const createOrder = async (
+  userId: number,
+  data: CreateOrderSchema,
+  isAllFreeTickets = false,
+) => {
   const { activityId, tickets: ticketTypesData, paidAmount, invoice } = data;
   const orderId = generateId("O");
   const tickets: { id: number; refundDeadline: Date }[] = [];
+  const now = dayjs();
 
   for (const ticketTypeData of ticketTypesData) {
     const { id, quantity, refundDeadline } = ticketTypeData;
     for (let i = 1; i <= quantity; i++) {
       tickets.push({
         id,
-        refundDeadline: refundDeadline || dayjs().add(7, "day").toDate(),
+        refundDeadline: refundDeadline || now.add(7, "day").toDate(),
       });
     }
   }
 
   return prisma.$transaction(async (tx) => {
+    let user = null;
     const activity = await tx.activity.findUnique({
       where: { id: activityId },
       select: {
@@ -49,11 +55,25 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
       },
     });
 
+    if (isAllFreeTickets) {
+      user = await tx.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          displayName: true,
+          name: true,
+        },
+      });
+    }
+
     const order = await tx.order.create({
       data: {
         id: orderId,
-        createdAt: dayjs().toDate(),
-        paidExpiredAt: dayjs().add(10, "minutes").toDate(),
+        createdAt: now.toDate(),
+        paidExpiredAt: now.add(10, "minutes").toDate(),
+        status: isAllFreeTickets ? OrderStatus.paid : OrderStatus.pending,
+        paidAt: isAllFreeTickets ? now.toDate() : null,
         user: {
           connect: {
             id: userId,
@@ -73,6 +93,10 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
               qrCodeToken:
                 activity?.isOnline && activity?.livestreamUrl ? activity.livestreamUrl : "",
               refundDeadline,
+              status: isAllFreeTickets ? TicketStatus.assigned : TicketStatus.unassigned,
+              assignedUser: isAllFreeTickets ? { connect: { id: user?.id } } : {},
+              assignedEmail: isAllFreeTickets ? user?.email : null,
+              assignedName: isAllFreeTickets ? user?.displayName || user?.name : null,
               ticketType: {
                 connect: {
                   id,
@@ -99,6 +123,10 @@ export const createOrder = async (userId: number, data: CreateOrderSchema) => {
         payment: {
           create: {
             paidAmount,
+            paidAt: isAllFreeTickets ? now.toDate() : null,
+            method: isAllFreeTickets ? PaymentTypes.FREE : null,
+            rawData: isAllFreeTickets ? JSON.stringify(data) : "",
+            tradeId: isAllFreeTickets ? "-" : null,
           },
         },
         ...invoice,
@@ -469,8 +497,8 @@ export const updateOrderPayment = async (rawData: Record<string, string>) => {
     CustomField3,
   } = rawData;
   const orderId = MerchantTradeNo.slice(MerchantTradeNo.indexOf("O"));
-  const defaultPaidAt = dayjs().utc().toISOString();
-  const paidAt = PaymentDate ? dayjs(PaymentDate).utc().toISOString() : defaultPaidAt;
+  const defaultPaidAt = dayjs().toISOString();
+  const paidAt = PaymentDate ? dayjs(PaymentDate).toISOString() : defaultPaidAt;
   const userId = Number.parseInt(CustomField1, 10);
   const userName = CustomField2;
   const userEmail = CustomField3;

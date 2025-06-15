@@ -29,4 +29,5 @@ export const PaymentTypes: { [key: string]: string } = {
   Flexible_Installment: "圓夢彈性分期",
   TWQR_OPAY: "歐付寶TWQR 行動支付",
   BNPL_URICH: "裕富數位無卡分期",
+  FREE: "免費",
 };
