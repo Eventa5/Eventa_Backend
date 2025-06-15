@@ -430,7 +430,7 @@ export const generateCheckoutHtml = async (order: OrderForGenerateCheckoutHtml) 
     TotalAmount,
     TradeDesc: `${order.id} 訂單付款資訊`,
     ItemName,
-    ReturnURL: `${process.env.EVENTA_BACKEND_URL}/orders/return`,
+    ReturnURL: `${process.env.EVENTA_BACKEND_URL}/api/v1/orders/return`,
     ClientBackURL: `${process.env.EVENTA_FRONTEND_URL}/events/${order.activity.id}/checkout/result?orderId=${order.id}`,
     CustomField1: order.user.id.toString(),
     CustomField2: order.user.displayName || order.user.name || "-",
