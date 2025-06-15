@@ -23,6 +23,9 @@ export const getActivityById = async (activityId: number) => {
     where: {
       id: activityId,
     },
+    include: {
+      ticketTypes: true,
+    },
   });
 };
 

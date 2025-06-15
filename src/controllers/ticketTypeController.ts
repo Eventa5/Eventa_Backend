@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import type { NextFunction, Request, Response } from "express";
 
 import { InputValidationError } from "../errors/InputValidationError";
@@ -37,6 +38,51 @@ export const createTicketTypes = async (req: Request, res: Response, next: NextF
         message: "非主辦單位，無法新增票種",
         statusCode: 403,
       });
+    }
+
+    const retrievedActivityTicketTypeNameSet = new Set(
+      retrievedActivity.ticketTypes.map((type) => type.name),
+    );
+    const creatingTicketTypesNameSet = new Set(validatedData.map((type) => type.name));
+
+    if (creatingTicketTypesNameSet.size !== validatedData.length) {
+      return next({
+        message: "新增票種的名稱不能重複",
+        statusCode: 400,
+      });
+    }
+
+    for (let i = 1; i <= validatedData.length; i++) {
+      const creatingTicketType = validatedData[i - 1];
+
+      if (retrievedActivityTicketTypeNameSet.has(creatingTicketType.name)) {
+        return next({
+          message: `第 ${i} 個新增票種的名稱已存在，請使用其他名稱`,
+          statusCode: 400,
+        });
+      }
+
+      const creatingTicketTypeStartTime = creatingTicketType.saleStartAt
+        ? dayjs(creatingTicketType.saleStartAt).utc()
+        : dayjs(creatingTicketType.startTime).utc();
+      const creatingTicketTypeEndTime = creatingTicketType.saleEndAt
+        ? dayjs(creatingTicketType.saleEndAt).utc()
+        : dayjs(creatingTicketType.endTime).utc();
+      const activityEndTime = dayjs(retrievedActivity.endTime).utc();
+
+      if (creatingTicketTypeStartTime.isAfter(activityEndTime)) {
+        return next({
+          message: `第 ${i} 個新增票種的銷售開始時間不可晚於活動結束時間`,
+          statusCode: 400,
+        });
+      }
+
+      if (creatingTicketTypeEndTime.isAfter(activityEndTime)) {
+        return next({
+          message: `第 ${i} 個新增票種的銷售結束時間不可晚於活動結束時間`,
+          statusCode: 400,
+        });
+      }
     }
 
     const { count } = await ticketTypeService.createTicketTypes(activityId, validatedData);
@@ -98,6 +144,41 @@ export const updateTicketType = async (req: Request, res: Response, next: NextFu
       return next({
         message: "該票種不屬於此活動",
         statusCode: 404,
+      });
+    }
+
+    const retrievedActivityTicketTypeNameSet = new Set(
+      retrievedActivity.ticketTypes
+        .filter((type) => type.id !== ticketTypeId)
+        .map((type) => type.name),
+    );
+
+    if (retrievedActivityTicketTypeNameSet.has(validatedData.name)) {
+      return next({
+        message: "票種名稱已存在，請使用其他名稱",
+        statusCode: 400,
+      });
+    }
+
+    const updatingTicketTypeStartTime = validatedData.saleStartAt
+      ? dayjs(validatedData.saleStartAt).utc()
+      : dayjs(validatedData.startTime).utc();
+    const updatingTicketTypeEndTime = validatedData.saleEndAt
+      ? dayjs(validatedData.saleEndAt).utc()
+      : dayjs(validatedData.endTime).utc();
+    const activityEndTime = dayjs(retrievedActivity.endTime).utc();
+
+    if (updatingTicketTypeStartTime.isAfter(activityEndTime)) {
+      return next({
+        message: "票種的銷售開始時間不可晚於活動結束時間",
+        statusCode: 400,
+      });
+    }
+
+    if (updatingTicketTypeEndTime.isAfter(activityEndTime)) {
+      return next({
+        message: "票種的銷售結束時間不可晚於活動結束時間",
+        statusCode: 400,
       });
     }
 
