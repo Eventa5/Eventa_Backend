@@ -32,6 +32,7 @@ enum OrderStatus {
   expired
   canceled
   failed
+  refunded
 }
 
 enum InvoiceType {

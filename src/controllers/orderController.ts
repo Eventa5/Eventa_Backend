@@ -15,7 +15,7 @@ import * as paymentService from "../services/paymentService";
 import * as ticketTypeService from "../services/ticketTypeService";
 
 const { published } = ActivityStatus;
-const { pending } = OrderStatus;
+const { paid, pending } = OrderStatus;
 
 const CorrectRtnCode = "1";
 
@@ -356,6 +356,47 @@ export const getCheckoutResult = async (req: Request, res: Response, next: NextF
       data: {
         result: RtnCode === CorrectRtnCode,
         resultMessage: RtnMsg,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const refundOrder = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return next({
+      message: "未提供授權令牌",
+      statusCode: 401,
+    });
+  }
+
+  const userId = req.user.id;
+
+  try {
+    const order = await orderService.getOrder(userId, req.params.orderId);
+    if (!order) {
+      return next({
+        message: "訂單不存在",
+        statusCode: 404,
+      });
+    }
+
+    if (order.status !== paid) {
+      return next({
+        message: "只能退款已付款的訂單",
+        statusCode: 409,
+      });
+    }
+
+    const status = await orderService.refundOrder(order.id);
+
+    res.status(201).json({
+      message: "退款成功",
+      status: true,
+      data: {
+        orderId: order.id,
+        status,
       },
     });
   } catch (error) {
