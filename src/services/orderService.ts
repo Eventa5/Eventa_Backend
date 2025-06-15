@@ -606,7 +606,7 @@ export const refundOrder = async (orderId: string) => {
         payment: {
           update: {
             data: {
-              rawData: "退款",
+              rawData: OrderStatus.refunded,
             },
           },
         },
