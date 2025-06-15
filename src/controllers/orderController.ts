@@ -1,4 +1,5 @@
 import { ActivityStatus, OrderStatus, Prisma } from "@prisma/client";
+import dayjs from "dayjs";
 import type { NextFunction, Request, Response } from "express";
 
 import { InputValidationError } from "../errors/InputValidationError";
@@ -47,8 +48,11 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     }
 
     let totalAmount = new Prisma.Decimal(0);
-    const ticketTypeMap = new Map(ticketTypes.map((type) => [type.id, type]));
+    const ticketTypeMap = new Map(
+      ticketTypes.filter((type) => type.isActive).map((type) => [type.id, type]),
+    );
     const seenTicketIds = new Set();
+    const now = dayjs().utc();
     let isAllFreeTickets = false;
 
     for (const ticket of tickets) {
@@ -70,7 +74,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       const ticketType = ticketTypeMap.get(ticket.id);
       if (!ticketType) {
         return next({
-          message: `票種 ID ${ticket.id} 不存在`,
+          message: `票種 ID ${ticket.id} 不存在或已下架`,
           statusCode: 404,
         });
       }
@@ -78,6 +82,20 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       if (ticket.quantity > ticketType.remainingQuantity) {
         return next({
           message: `票種 ID ${ticket.id} 的數量超過庫存，不可購買`,
+          statusCode: 400,
+        });
+      }
+
+      const ticketTypeStartTime = ticketType.saleStartAt
+        ? dayjs(ticketType.saleStartAt).utc()
+        : dayjs(ticketType.startTime).utc();
+      const ticketTypeEndTime = ticketType.saleEndAt
+        ? dayjs(ticketType.saleEndAt).utc()
+        : dayjs(ticketType.endTime).utc();
+
+      if (!now.isBetween(ticketTypeStartTime, ticketTypeEndTime, null, "[]")) {
+        return next({
+          message: `票種 ID ${ticket.id} 的購買時間不在有效期間內`,
           statusCode: 400,
         });
       }

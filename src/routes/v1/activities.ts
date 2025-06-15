@@ -262,7 +262,7 @@ router.get("/:activityId/ticketTypes", activityController.getActivityTicketTypes
  *                   description: 成功新增票種的數量
  *                   example: 成功新增 2 筆資料
  *       400:
- *         description: 格式錯誤
+ *         description: 格式錯誤、新增票種的名稱不能重複、第 x 個新增票種的名稱已存在，請使用其他名稱、第 x 個新增票種的銷售開始時間不可晚於活動結束時間、第 x 個新增票種的銷售結束時間不可晚於活動結束時間
  *         content:
  *           application/json:
  *             schema:
@@ -333,7 +333,7 @@ router.post("/:activityId/ticketTypes", auth, ticketTypeController.createTicketT
  *                   type: boolean
  *                   example: true
  *       400:
- *         description: 格式錯誤
+ *         description: 格式錯誤、票種名稱已存在，請使用其他名稱、票種的銷售開始時間不可晚於活動結束時間、票種的銷售結束時間不可晚於活動結束時間
  *         content:
  *           application/json:
  *             schema:
