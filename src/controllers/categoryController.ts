@@ -37,7 +37,7 @@ export const uploadCategoryImage = async (req: Request, res: Response, next: Nex
     }
 
     const imageUrl = await uploadToCloudinary(image.buffer, image.originalname, "categories");
-    await updateCategoryImg(Number(req.params.categoryId), imageUrl);
+    await updateCategoryImg(categoryId, imageUrl);
 
     // 清除buffer
     if (req.file) {
