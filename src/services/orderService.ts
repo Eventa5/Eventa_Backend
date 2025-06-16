@@ -565,7 +565,9 @@ export const cancelExpiredOrders = async () => {
           paidExpiredAt: {
             lte: now,
           },
-          status: OrderStatus.pending,
+          status: {
+            in: [OrderStatus.pending, OrderStatus.failed],
+          },
         },
         select: {
           id: true,
