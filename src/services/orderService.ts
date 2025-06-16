@@ -547,6 +547,32 @@ export const updateOrderPayment = async (rawData: Record<string, string>) => {
           paidAt,
         },
       };
+
+      await tx.ticket.updateMany({
+        where: { orderId },
+        data: { status: TicketStatus.canceled },
+      });
+
+      const affectedOrderItems = await tx.orderItem.findMany({
+        where: { orderId },
+        select: {
+          ticketTypeId: true,
+          quantity: true,
+        },
+      });
+
+      await Promise.all(
+        affectedOrderItems.map(({ ticketTypeId, quantity }) =>
+          tx.ticketType.update({
+            where: { id: ticketTypeId },
+            data: {
+              remainingQuantity: {
+                increment: quantity,
+              },
+            },
+          }),
+        ),
+      );
     }
 
     await tx.payment.update({
@@ -566,7 +592,7 @@ export const cancelExpiredOrders = async () => {
             lte: now,
           },
           status: {
-            in: [OrderStatus.pending, OrderStatus.failed],
+            in: [OrderStatus.pending, OrderStatus.processing],
           },
         },
         select: {
