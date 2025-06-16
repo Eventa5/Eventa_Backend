@@ -82,6 +82,12 @@ router.get("/", categoryController.getCategories); // 取得所有類別
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 非管理者權限，無法編輯主題圖片
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: 主題不存在
  *         content:
