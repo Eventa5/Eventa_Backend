@@ -51,7 +51,7 @@ export const updateTicketTypeStatus = async () => {
     const now = new Date();
     await prisma.ticketType.updateMany({
       where: {
-        saleEndAt: {
+        endTime: {
           lte: now,
         },
       },
