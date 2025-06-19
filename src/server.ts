@@ -26,13 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin) {
-        // 開發環境允許非瀏覽器
-        if (process.env.NODE_ENV !== "production") {
-          return cb(null, true);
-        }
-        return cb(new Error("Not allowed: Missing Origin"));
-      }
+      if (!origin) return cb(null, true); // 開發環境允許非瀏覽器
       if (allowedOrigins.includes(origin)) {
         return cb(null, true);
       }
