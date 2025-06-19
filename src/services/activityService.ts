@@ -15,7 +15,6 @@ import type {
   RecentQuery,
   StatisticsPeriodQuery,
 } from "../schemas/zod/activity.schema";
-import { ActivityStepOrder } from "../utils/activityStep";
 import { sendActivityCancelEmail } from "../utils/emailClient";
 import * as paginator from "../utils/paginator";
 

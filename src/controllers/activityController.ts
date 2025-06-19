@@ -238,6 +238,13 @@ export const patchActivityPublish = async (req: Request, res: Response, next: Ne
       sendResponse(res, 403, "無權限，非主辦單位成員", false);
       return;
     }
+    // 檢查必填欄位
+    validateInput(editActivitySchema, activity);
+
+    if (!activity.ticketTypes.length) {
+      sendResponse(res, 400, "至少需設定一種票券才可發布活動", false);
+      return;
+    }
     // 檢查步驟
     const currentIndex = ActivityStepOrder.indexOf(activity.currentStep);
     const targetIndex = ActivityStepOrder.indexOf(ActivityStep.published);
