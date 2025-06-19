@@ -19,12 +19,26 @@ if (process.env.NODE_ENV !== "production") {
 
 const app: Express = express();
 const PORT: number | string = process.env.PORT || 3000;
+const allowedOrigins = [process.env.EVENTA_FRONTEND_URL, "http://localhost:3000"];
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: process.env.EVENTA_FRONTEND_URL,
+    origin: (origin, cb) => {
+      if (!origin) {
+        // 開發環境允許非瀏覽器
+        if (process.env.NODE_ENV !== "production") {
+          return cb(null, true);
+        }
+        return cb(new Error("Not allowed: Missing Origin"));
+      }
+      if (allowedOrigins.includes(origin)) {
+        return cb(null, true);
+      }
+
+      return cb(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
   }),
