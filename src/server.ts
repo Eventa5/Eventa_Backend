@@ -24,7 +24,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: "*",
+    origin: process.env.EVENTA_FRONTEND_URL,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
   }),
@@ -45,5 +45,5 @@ app.use(errorHandler);
 setupSchedulers();
 
 app.listen(PORT, () => {
-  console.log(`Server is running at http://127.0.0.1:${PORT}`);
+  console.log(`Server is running at ${process.env.EVENTA_BACKEND_URL}`);
 });
