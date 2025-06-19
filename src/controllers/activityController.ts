@@ -1,3 +1,4 @@
+import { ActivityStep } from "@prisma/client";
 import type { NextFunction, Request, Response } from "express";
 import { InputValidationError } from "../errors/InputValidationError";
 import {
@@ -15,6 +16,7 @@ import {
 } from "../schemas/zod/activity.schema";
 import * as activityService from "../services/activityService";
 import { getTicketTypesByActivityId } from "../services/ticketTypeService";
+import { ActivityStepOrder } from "../utils/activityStep";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import { sendResponse } from "../utils/sendResponse";
 import { validateInput } from "../utils/validateInput";
@@ -127,10 +129,19 @@ export const patchActivityCategories = async (req: Request, res: Response, next:
       return;
     }
 
+    // 檢查步驟
+    const currentIndex = ActivityStepOrder.indexOf(activity.currentStep);
+    const targetIndex = ActivityStepOrder.indexOf(ActivityStep.categories);
+    const shouldUpdateStep = targetIndex > currentIndex;
+
     const data = validateInput(patchActivityCategoriesSchema, {
       ...req.body,
     });
-    const result = await activityService.patchActivityCategories(activityId, data);
+    const result = await activityService.patchActivityCategories(
+      activityId,
+      shouldUpdateStep,
+      data,
+    );
     sendResponse(res, 200, "活動主題設定成功", true, result);
   } catch (error) {
     if (error instanceof InputValidationError) {
@@ -157,11 +168,16 @@ export const patchActivityBasicInfo = async (req: Request, res: Response, next: 
       return;
     }
 
+    // 檢查步驟
+    const currentIndex = ActivityStepOrder.indexOf(activity.currentStep);
+    const targetIndex = ActivityStepOrder.indexOf(ActivityStep.basic);
+    const shouldUpdateStep = targetIndex > currentIndex;
+
     const data = validateInput(patchActivityBasicInfoSchema, {
       ...req.body,
       isOnline: activity.isOnline,
     });
-    const result = await activityService.patchActivityBasicInfo(activityId, data);
+    const result = await activityService.patchActivityBasicInfo(activityId, shouldUpdateStep, data);
     sendResponse(res, 200, "活動基本資訊設定成功", true, result);
   } catch (error) {
     if (error instanceof InputValidationError) {
@@ -188,10 +204,15 @@ export const patchActivityContent = async (req: Request, res: Response, next: Ne
       return;
     }
 
+    // 檢查步驟
+    const currentIndex = ActivityStepOrder.indexOf(activity.currentStep);
+    const targetIndex = ActivityStepOrder.indexOf(ActivityStep.content);
+    const shouldUpdateStep = targetIndex > currentIndex;
+
     const data = validateInput(patchActivityContentSchema, {
       ...req.body,
     });
-    const result = await activityService.patchActivityContent(activityId, data);
+    const result = await activityService.patchActivityContent(activityId, shouldUpdateStep, data);
     sendResponse(res, 200, "活動詳細內容設定成功", true, result);
   } catch (error) {
     if (error instanceof InputValidationError) {
@@ -217,8 +238,12 @@ export const patchActivityPublish = async (req: Request, res: Response, next: Ne
       sendResponse(res, 403, "無權限，非主辦單位成員", false);
       return;
     }
+    // 檢查步驟
+    const currentIndex = ActivityStepOrder.indexOf(activity.currentStep);
+    const targetIndex = ActivityStepOrder.indexOf(ActivityStep.published);
+    const shouldUpdateStep = targetIndex > currentIndex;
 
-    const result = await activityService.patchActivityPublish(activityId);
+    const result = await activityService.patchActivityPublish(activityId, shouldUpdateStep);
     sendResponse(res, 200, "活動發布成功", true, result);
   } catch (error) {
     if (error instanceof InputValidationError) {
