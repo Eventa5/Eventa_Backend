@@ -19,7 +19,11 @@ if (process.env.NODE_ENV !== "production") {
 
 const app: Express = express();
 const PORT: number | string = process.env.PORT || 3000;
-const allowedOrigins = [process.env.EVENTA_FRONTEND_URL, "http://localhost:3000"];
+const allowedOrigins = [
+  process.env.EVENTA_FRONTEND_URL,
+  "http://localhost:3000",
+  process.env.ECPAY_URL,
+];
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
