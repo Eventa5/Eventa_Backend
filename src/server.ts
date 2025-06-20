@@ -54,7 +54,7 @@ app.use(multerErrorHandler);
 app.use(errorHandler);
 
 // 設置定時任務
-setupSchedulers();
+// setupSchedulers();
 
 app.listen(PORT, () => {
   console.log(`Server is running at ${process.env.EVENTA_BACKEND_URL}`);

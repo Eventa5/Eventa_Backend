@@ -16,7 +16,7 @@ import {
 } from "../schemas/zod/activity.schema";
 import * as activityService from "../services/activityService";
 import { getTicketTypesByActivityId } from "../services/ticketTypeService";
-import { ActivityStepOrder } from "../utils/activityStep";
+import { shouldUpdateStep } from "../utils/activityStep";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import { sendResponse } from "../utils/sendResponse";
 import { validateInput } from "../utils/validateInput";
@@ -129,17 +129,12 @@ export const patchActivityCategories = async (req: Request, res: Response, next:
       return;
     }
 
-    // 檢查步驟
-    const currentIndex = ActivityStepOrder.indexOf(activity.currentStep);
-    const targetIndex = ActivityStepOrder.indexOf(ActivityStep.categories);
-    const shouldUpdateStep = targetIndex > currentIndex;
-
     const data = validateInput(patchActivityCategoriesSchema, {
       ...req.body,
     });
     const result = await activityService.patchActivityCategories(
       activityId,
-      shouldUpdateStep,
+      shouldUpdateStep(activity.currentStep, ActivityStep.categories),
       data,
     );
     sendResponse(res, 200, "活動主題設定成功", true, result);
@@ -168,16 +163,15 @@ export const patchActivityBasicInfo = async (req: Request, res: Response, next: 
       return;
     }
 
-    // 檢查步驟
-    const currentIndex = ActivityStepOrder.indexOf(activity.currentStep);
-    const targetIndex = ActivityStepOrder.indexOf(ActivityStep.basic);
-    const shouldUpdateStep = targetIndex > currentIndex;
-
     const data = validateInput(patchActivityBasicInfoSchema, {
       ...req.body,
       isOnline: activity.isOnline,
     });
-    const result = await activityService.patchActivityBasicInfo(activityId, shouldUpdateStep, data);
+    const result = await activityService.patchActivityBasicInfo(
+      activityId,
+      shouldUpdateStep(activity.currentStep, ActivityStep.basic),
+      data,
+    );
     sendResponse(res, 200, "活動基本資訊設定成功", true, result);
   } catch (error) {
     if (error instanceof InputValidationError) {
@@ -204,15 +198,14 @@ export const patchActivityContent = async (req: Request, res: Response, next: Ne
       return;
     }
 
-    // 檢查步驟
-    const currentIndex = ActivityStepOrder.indexOf(activity.currentStep);
-    const targetIndex = ActivityStepOrder.indexOf(ActivityStep.content);
-    const shouldUpdateStep = targetIndex > currentIndex;
-
     const data = validateInput(patchActivityContentSchema, {
       ...req.body,
     });
-    const result = await activityService.patchActivityContent(activityId, shouldUpdateStep, data);
+    const result = await activityService.patchActivityContent(
+      activityId,
+      shouldUpdateStep(activity.currentStep, ActivityStep.content),
+      data,
+    );
     sendResponse(res, 200, "活動詳細內容設定成功", true, result);
   } catch (error) {
     if (error instanceof InputValidationError) {
@@ -232,25 +225,29 @@ export const patchActivityPublish = async (req: Request, res: Response, next: Ne
       sendResponse(res, 404, "活動不存在", false);
       return;
     }
-
     const isOrganization = req.user?.organizationIds.includes(activity.organizationId);
     if (!isOrganization) {
       sendResponse(res, 403, "無權限，非主辦單位成員", false);
       return;
     }
     // 檢查必填欄位
-    validateInput(editActivitySchema, activity);
+    const { ticketTypes, categories, tags, ...restActivity } = activity;
+    const categoryIds = categories.map((category) => category.id);
+    validateInput(editActivitySchema, {
+      ...restActivity,
+      categoryIds,
+      tags: tags?.split(",") || [],
+    });
 
-    if (!activity.ticketTypes.length) {
+    if (!ticketTypes.length) {
       sendResponse(res, 400, "至少需設定一種票券才可發布活動", false);
       return;
     }
-    // 檢查步驟
-    const currentIndex = ActivityStepOrder.indexOf(activity.currentStep);
-    const targetIndex = ActivityStepOrder.indexOf(ActivityStep.published);
-    const shouldUpdateStep = targetIndex > currentIndex;
 
-    const result = await activityService.patchActivityPublish(activityId, shouldUpdateStep);
+    const result = await activityService.patchActivityPublish(
+      activityId,
+      shouldUpdateStep(activity.currentStep, ActivityStep.published),
+    );
     sendResponse(res, 200, "活動發布成功", true, result);
   } catch (error) {
     if (error instanceof InputValidationError) {

@@ -25,6 +25,7 @@ export const getActivityById = async (activityId: number) => {
     },
     include: {
       ticketTypes: true,
+      categories: true,
     },
   });
 };

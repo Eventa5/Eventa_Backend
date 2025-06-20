@@ -9,11 +9,17 @@ export const ActivityStepOrder: ActivityStep[] = [
   ActivityStep.published,
 ];
 
-export function getNextStep(current: ActivityStep): ActivityStep | null {
-  const index = ActivityStepOrder.indexOf(current);
-  return ActivityStepOrder[index + 1] ?? null;
-}
+export const ActivityStepMap = {
+  activityType: 1,
+  categories: 2,
+  basic: 3,
+  content: 4,
+  ticketTypes: 5,
+  published: 6,
+};
 
-export function isFinalStep(step: ActivityStep): boolean {
-  return step === ActivityStepOrder[ActivityStepOrder.length - 1];
+export function shouldUpdateStep(curr: ActivityStep, target: ActivityStep): boolean {
+  const currentStep = ActivityStepMap[curr];
+  const targetStep = ActivityStepMap[target];
+  return targetStep > currentStep;
 }
