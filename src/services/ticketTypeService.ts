@@ -1,5 +1,5 @@
+import { ActivityStep } from "@prisma/client";
 import prisma from "../prisma/client";
-
 import type { TicketTypeParams } from "../schemas/zod/ticketType.schema";
 
 export const getTicketTypesByActivityId = async (activityId: number) => {
@@ -18,15 +18,30 @@ export const getTicketTypeById = async (ticketTypeId: number) => {
   });
 };
 
-export const createTicketTypes = async (activityId: number, ticketTypes: TicketTypeParams[]) => {
+export const createTicketTypes = async (
+  activityId: number,
+  ticketTypes: TicketTypeParams[],
+  shouldUpdateStep: boolean,
+) => {
   const data = ticketTypes.map((ticketType) => ({
     ...ticketType,
     activityId,
   }));
 
-  return prisma.ticketType.createMany({
-    data,
-  });
+  const result = await prisma.ticketType.createMany({ data });
+
+  if (shouldUpdateStep) {
+    await prisma.activity.update({
+      where: {
+        id: activityId,
+      },
+      data: {
+        currentStep: ActivityStep.ticketTypes,
+      },
+    });
+  }
+
+  return result;
 };
 
 export const updateTicketType = async (ticketTypeId: number, data: TicketTypeParams) => {

@@ -180,6 +180,75 @@ export const editActivitySchema = z
     }
   });
 
+export const publishActivitySchema = z
+  .object({
+    categories: z.array(z.any()).min(1, "活動主題尚未設定"),
+    cover: z.string().trim().url("請提供有效的圖片網址").nullish(),
+    title: z.string().trim().min(1, "活動名稱為必填"),
+    location: z.string().trim().nullish(),
+    startTime: z.coerce.date({ invalid_type_error: "開始時間格式錯誤" }),
+    endTime: z.coerce.date({ invalid_type_error: "結束時間格式錯誤" }),
+    isOnline: z.boolean(),
+    livestreamUrl: z.string().trim().url("請提供有效的網址").nullish(),
+    tags: z.string().trim().nullish(),
+    summary: z
+      .string({
+        required_error: "請輸入50到250字",
+      })
+      .min(50, "最少輸入50字")
+      .max(250, "最多輸入250字"),
+    descriptionMd: z.string({
+      required_error: "活動簡介為必填",
+    }),
+    notes: z.string().nullish(),
+    ticketTypes: z.array(z.any()).min(1, "至少設定一種活動票種才可發布"),
+  })
+  .superRefine((data, ctx) => {
+    const now = dayjs().tz("Asia/Taipei");
+    const start = dayjs.tz(data.startTime, "Asia/Taipei");
+    const end = dayjs.tz(data.endTime, "Asia/Taipei");
+
+    if (start.isBefore(now)) {
+      ctx.addIssue({
+        path: ["startTime"],
+        code: z.ZodIssueCode.custom,
+        message: "開始時間不得早於當前時間",
+      });
+    }
+
+    if (end.isBefore(start)) {
+      ctx.addIssue({
+        path: ["endTime"],
+        code: z.ZodIssueCode.custom,
+        message: "結束時間不得早於開始時間",
+      });
+    }
+
+    if (data.isOnline && !data.livestreamUrl) {
+      ctx.addIssue({
+        path: ["livestreamUrl"],
+        code: z.ZodIssueCode.custom,
+        message: "活動形式為線上活動時, livestreamUrl為必填欄位",
+      });
+    }
+    if (!data.isOnline && !data.location) {
+      ctx.addIssue({
+        path: ["location"],
+        code: z.ZodIssueCode.custom,
+        message: "活動形式為線下活動時, location為必填欄位",
+      });
+    }
+    // 檢查tags數量
+    const tags = data.tags?.split(",");
+    if (tags && tags.length > 5) {
+      ctx.addIssue({
+        path: ["tags"],
+        code: z.ZodIssueCode.custom,
+        message: "活動標籤數量不得超過5個",
+      });
+    }
+  });
+
 // Limit Query
 export const limitSchema = z.coerce.number().default(6);
 

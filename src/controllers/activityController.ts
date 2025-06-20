@@ -11,12 +11,13 @@ import {
   patchActivityBasicInfoSchema,
   patchActivityCategoriesSchema,
   patchActivityContentSchema,
+  publishActivitySchema,
   recentQuerySchema,
   statisticsPeriodSchema,
 } from "../schemas/zod/activity.schema";
 import * as activityService from "../services/activityService";
 import { getTicketTypesByActivityId } from "../services/ticketTypeService";
-import { shouldUpdateStep } from "../utils/activityStep";
+import { isSkipStep, shouldUpdateStep } from "../utils/activityStep";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import { sendResponse } from "../utils/sendResponse";
 import { validateInput } from "../utils/validateInput";
@@ -128,6 +129,10 @@ export const patchActivityCategories = async (req: Request, res: Response, next:
       sendResponse(res, 403, "無權限，非主辦單位成員", false);
       return;
     }
+    if (isSkipStep(activity.currentStep, ActivityStep.categories)) {
+      sendResponse(res, 400, "請依序完成活動步驟，不能跳過未完成的步驟", false);
+      return;
+    }
 
     const data = validateInput(patchActivityCategoriesSchema, {
       ...req.body,
@@ -160,6 +165,10 @@ export const patchActivityBasicInfo = async (req: Request, res: Response, next: 
     const isOrganization = req.user?.organizationIds.includes(activity.organizationId);
     if (!isOrganization) {
       sendResponse(res, 403, "無權限，非主辦單位成員", false);
+      return;
+    }
+    if (isSkipStep(activity.currentStep, ActivityStep.basic)) {
+      sendResponse(res, 400, "請依序完成活動步驟，不能跳過未完成的步驟", false);
       return;
     }
 
@@ -198,6 +207,11 @@ export const patchActivityContent = async (req: Request, res: Response, next: Ne
       return;
     }
 
+    if (isSkipStep(activity.currentStep, ActivityStep.content)) {
+      sendResponse(res, 400, "請依序完成活動步驟，不能跳過未完成的步驟", false);
+      return;
+    }
+
     const data = validateInput(patchActivityContentSchema, {
       ...req.body,
     });
@@ -230,19 +244,14 @@ export const patchActivityPublish = async (req: Request, res: Response, next: Ne
       sendResponse(res, 403, "無權限，非主辦單位成員", false);
       return;
     }
-    // 檢查必填欄位
-    const { ticketTypes, categories, tags, ...restActivity } = activity;
-    const categoryIds = categories.map((category) => category.id);
-    validateInput(editActivitySchema, {
-      ...restActivity,
-      categoryIds,
-      tags: tags?.split(",") || [],
-    });
 
-    if (!ticketTypes.length) {
-      sendResponse(res, 400, "至少需設定一種票券才可發布活動", false);
+    if (isSkipStep(activity.currentStep, ActivityStep.published)) {
+      sendResponse(res, 400, "請依序完成活動步驟，不能跳過未完成的步驟", false);
       return;
     }
+
+    // 檢查必填欄位
+    validateInput(publishActivitySchema, activity);
 
     const result = await activityService.patchActivityPublish(
       activityId,
