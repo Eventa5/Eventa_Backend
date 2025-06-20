@@ -1,6 +1,6 @@
+import { ActivityStep } from "@prisma/client";
 import dayjs from "dayjs";
 import type { NextFunction, Request, Response } from "express";
-
 import { InputValidationError } from "../errors/InputValidationError";
 import { activityIdSchema } from "../schemas/zod/activity.schema";
 import {
@@ -8,10 +8,10 @@ import {
   ticketTypeIdSchema,
   ticketTypeSchema,
 } from "../schemas/zod/ticketType.schema";
-import { validateInput } from "../utils/validateInput";
-
 import * as activityService from "../services/activityService";
 import * as ticketTypeService from "../services/ticketTypeService";
+import { isSkipStep, shouldUpdateStep } from "../utils/activityStep";
+import { validateInput } from "../utils/validateInput";
 
 export const createTicketTypes = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
@@ -37,6 +37,13 @@ export const createTicketTypes = async (req: Request, res: Response, next: NextF
       return next({
         message: "非主辦單位，無法新增票種",
         statusCode: 403,
+      });
+    }
+
+    if (isSkipStep(retrievedActivity.currentStep, ActivityStep.ticketTypes)) {
+      return next({
+        message: "請依序完成活動步驟，不能跳過未完成的步驟",
+        statusCode: 400,
       });
     }
 
@@ -85,7 +92,11 @@ export const createTicketTypes = async (req: Request, res: Response, next: NextF
       }
     }
 
-    const { count } = await ticketTypeService.createTicketTypes(activityId, validatedData);
+    const { count } = await ticketTypeService.createTicketTypes(
+      activityId,
+      validatedData,
+      shouldUpdateStep(retrievedActivity.currentStep, ActivityStep.ticketTypes),
+    );
 
     res.status(201).json({
       message: "票種新增成功",

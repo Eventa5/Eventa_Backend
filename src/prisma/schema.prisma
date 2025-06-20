@@ -23,6 +23,7 @@ enum ActivityStep {
   basic
   content
   ticketTypes
+  published
 }
 
 enum OrderStatus {

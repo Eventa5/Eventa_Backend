@@ -25,6 +25,7 @@ export const getActivityById = async (activityId: number) => {
     },
     include: {
       ticketTypes: true,
+      categories: true,
     },
   });
 };
@@ -161,6 +162,7 @@ export const createActivity = async (data: CreateActivityBody) => {
 // 設定活動主題
 export const patchActivityCategories = async (
   activityId: ActivityId,
+  shouldUpdateStep: boolean,
   data: PatchActivityCategoriesBody,
 ) => {
   // 檢查categoryId存在
@@ -188,7 +190,9 @@ export const patchActivityCategories = async (
         set: [],
         connect: data.categoryIds.map((id) => ({ id })),
       },
-      currentStep: ActivityStep.categories,
+      ...(shouldUpdateStep && {
+        currentStep: ActivityStep.categories,
+      }),
     },
     select: {
       id: true,
@@ -200,6 +204,7 @@ export const patchActivityCategories = async (
 // 設定活動基本資料
 export const patchActivityBasicInfo = async (
   activityId: ActivityId,
+  shouldUpdateStep: boolean,
   data: PatchActivityBasicInfoBody,
 ) => {
   return prisma.activity.update({
@@ -209,7 +214,9 @@ export const patchActivityBasicInfo = async (
     data: {
       ...data,
       tags: data.tags?.join(",") || "",
-      currentStep: ActivityStep.basic,
+      ...(shouldUpdateStep && {
+        currentStep: ActivityStep.basic,
+      }),
     },
     select: {
       id: true,
@@ -221,6 +228,7 @@ export const patchActivityBasicInfo = async (
 // 設定活動詳細內容
 export const patchActivityContent = async (
   activityId: ActivityId,
+  shouldUpdateStep: boolean,
   data: PatchActivityContentBody,
 ) => {
   return prisma.activity.update({
@@ -229,7 +237,9 @@ export const patchActivityContent = async (
     },
     data: {
       ...data,
-      currentStep: ActivityStep.content,
+      ...(shouldUpdateStep && {
+        currentStep: ActivityStep.content,
+      }),
     },
     select: {
       id: true,
@@ -239,13 +249,16 @@ export const patchActivityContent = async (
 };
 
 // 發布活動
-export const patchActivityPublish = async (activityId: ActivityId) => {
+export const patchActivityPublish = async (activityId: ActivityId, shouldUpdateStep: boolean) => {
   return prisma.activity.update({
     where: {
       id: activityId,
     },
     data: {
       status: ActivityStatus.published,
+      ...(shouldUpdateStep && {
+        currentStep: ActivityStep.published,
+      }),
     },
     select: {
       id: true,
