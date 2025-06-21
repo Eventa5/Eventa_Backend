@@ -44,8 +44,6 @@ export const ticketTypeSchema = z
       required_error: "開賣結束時間 為必填欄位",
       invalid_type_error: "開賣結束時間 格式錯誤",
     }),
-    saleStartAt: z.coerce.date().nullish(),
-    saleEndAt: z.coerce.date().nullish(),
     isActive: z
       .boolean({
         required_error: "是否為啟動中 為必填欄位",
