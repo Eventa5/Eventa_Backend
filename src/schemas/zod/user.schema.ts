@@ -68,7 +68,10 @@ export const updateProfileSchema = z.object({
   displayName: z.string().max(255, "顯示名稱不能超過255個字符").nullable(),
   birthday: birthdaySchema,
   gender: z.string().nullable(),
-  phoneNumber: z.string().nullable(),
+  phoneNumber: z
+    .string()
+    .regex(/^09\d{8}$/, "手機號碼格式不正確")
+    .nullable(),
   countryCode: z.string().nullable(),
   region: z.string().max(255, "地區不能超過255個字符").nullable(),
   address: z.string().max(255, "地址不能超過255個字符").nullable(),
