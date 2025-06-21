@@ -18,12 +18,12 @@ export const patchTicketUsed = async (req: Request, res: Response, next: NextFun
       return;
     }
 
-    if (now.isBefore(ticket.activity.startTime)) {
+    if (now.isBefore(dayjs(ticket.activity.startTime).utc())) {
       sendResponse(res, 400, "活動尚未開始，無法報到", false);
       return;
     }
 
-    if (now.isAfter(ticket.activity.endTime)) {
+    if (now.isAfter(dayjs(ticket.activity.endTime).utc())) {
       sendResponse(res, 400, "活動已結束，無法報到", false);
       return;
     }

@@ -16,7 +16,11 @@ export const getTicketTypeById = async (ticketTypeId: number) => {
       id: ticketTypeId,
     },
     include: {
-      tickets: true,
+      tickets: {
+        select: {
+          status: true,
+        },
+      },
     },
   });
 };
