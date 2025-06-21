@@ -49,7 +49,7 @@ export const hourlyTask = (): void => {
 };
 
 export const updateTicketTypeStatusTask = (): void => {
-  cron.schedule("0 0 * * *", async () => {
+  cron.schedule("* * * * *", async () => {
     try {
       await updateTicketTypeStatus();
     } catch (err) {

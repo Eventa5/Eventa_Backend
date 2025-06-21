@@ -245,7 +245,7 @@ model TicketType {
   endTime           DateTime
   saleStartAt       DateTime?
   saleEndAt         DateTime?
-  isActive          Boolean     @default(true)
+  isActive          Boolean     @default(false)
   createdAt         DateTime    @default(now())
   updateAt          DateTime?   @updatedAt
   tickets           Ticket[]
