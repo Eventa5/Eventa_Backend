@@ -13,8 +13,6 @@ import * as ticketTypeService from "../services/ticketTypeService";
 import { isSkipStep, shouldUpdateStep } from "../utils/activityStep";
 import { validateInput } from "../utils/validateInput";
 
-const { used, assigned } = TicketStatus;
-
 export const createTicketTypes = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
     return next({
@@ -154,11 +152,7 @@ export const updateTicketType = async (req: Request, res: Response, next: NextFu
       });
     }
 
-    if (
-      retrievedTicketType.tickets.some(
-        (ticket) => ticket.status === used || ticket.status === assigned,
-      )
-    ) {
+    if (retrievedTicketType.tickets.some((ticket) => ticket.status !== TicketStatus.canceled)) {
       return next({
         message: "該票種已經有票券被使用或分配，無法編輯",
         statusCode: 400,
@@ -254,11 +248,7 @@ export const deleteTicketType = async (req: Request, res: Response, next: NextFu
       });
     }
 
-    if (
-      retrievedTicketType.tickets.some(
-        (ticket) => ticket.status === used || ticket.status === assigned,
-      )
-    ) {
+    if (retrievedTicketType.tickets.some((ticket) => ticket.status !== TicketStatus.canceled)) {
       return next({
         message: "該票種已經有票券被使用或分配，無法刪除",
         statusCode: 400,
