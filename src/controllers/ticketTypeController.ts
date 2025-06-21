@@ -1,4 +1,4 @@
-import { ActivityStep } from "@prisma/client";
+import { ActivityStep, TicketStatus } from "@prisma/client";
 import dayjs from "dayjs";
 import type { NextFunction, Request, Response } from "express";
 import { InputValidationError } from "../errors/InputValidationError";
@@ -12,6 +12,8 @@ import * as activityService from "../services/activityService";
 import * as ticketTypeService from "../services/ticketTypeService";
 import { isSkipStep, shouldUpdateStep } from "../utils/activityStep";
 import { validateInput } from "../utils/validateInput";
+
+const { used, assigned } = TicketStatus;
 
 export const createTicketTypes = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
@@ -152,6 +154,17 @@ export const updateTicketType = async (req: Request, res: Response, next: NextFu
       });
     }
 
+    if (
+      retrievedTicketType.tickets.some(
+        (ticket) => ticket.status === used || ticket.status === assigned,
+      )
+    ) {
+      return next({
+        message: "該票種已經有票券被使用或分配，無法編輯",
+        statusCode: 400,
+      });
+    }
+
     const retrievedActivityTicketTypeNameSet = new Set(
       retrievedActivity.ticketTypes
         .filter((type) => type.id !== ticketTypeId)
@@ -238,6 +251,17 @@ export const deleteTicketType = async (req: Request, res: Response, next: NextFu
       return next({
         message: "該票種不屬於此活動",
         statusCode: 404,
+      });
+    }
+
+    if (
+      retrievedTicketType.tickets.some(
+        (ticket) => ticket.status === used || ticket.status === assigned,
+      )
+    ) {
+      return next({
+        message: "該票種已經有票券被使用或分配，無法刪除",
+        statusCode: 400,
       });
     }
 
