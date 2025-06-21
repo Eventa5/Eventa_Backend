@@ -6,7 +6,10 @@ export const createOrganizationSchema = z.object({
   introduction: z.string().min(1, "介紹不能為空"),
   avatar: z.union([z.string().url("頭像連結格式不正確"), z.literal(""), z.null()]).optional(),
   cover: z.union([z.string().url("封面圖連結格式不正確"), z.literal(""), z.null()]).optional(),
-  phoneNumber: z.string().min(1, "電話號碼不能為空"),
+  phoneNumber: z
+    .string()
+    .regex(/^09\d{8}$/, "手機號碼格式不正確")
+    .min(1, "電話號碼不能為空"),
   countryCode: z.string().min(1, "國碼不能為空"),
   ext: z.union([z.string(), z.literal(""), z.null()]).optional(),
   email: z.string().email("電子郵件格式不正確"),
@@ -22,7 +25,10 @@ export const updateOrganizationSchema = z.object({
   introduction: z.string().min(1, "介紹不能為空"),
   avatar: z.union([z.string().url("頭像連結格式不正確"), z.literal(""), z.null()]).optional(),
   cover: z.union([z.string().url("封面圖連結格式不正確"), z.literal(""), z.null()]).optional(),
-  phoneNumber: z.string().min(1, "電話號碼不能為空"),
+  phoneNumber: z
+    .string()
+    .regex(/^09\d{8}$/, "手機號碼格式不正確")
+    .min(1, "電話號碼不能為空"),
   countryCode: z.string().min(1, "國碼不能為空"),
   ext: z.union([z.string(), z.literal(""), z.null()]).optional(),
   email: z.string().email("電子郵件格式不正確"),
