@@ -98,7 +98,7 @@ router.get("/:ticketId", auth, ticketController.getTicketDetails);
  *                       type: string
  *                       example: used
  *       400:
- *         description: 格式錯誤
+ *         description: 格式錯誤、活動尚未開始，無法報到、活動已結束，無法報到
  *         content:
  *           application/json:
  *             schema:

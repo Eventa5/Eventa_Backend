@@ -11,6 +11,8 @@ export const getTicketById = async (ticketId: TicketId) => {
       activity: {
         select: {
           organizationId: true,
+          startTime: true,
+          endTime: true,
         },
       },
     },
