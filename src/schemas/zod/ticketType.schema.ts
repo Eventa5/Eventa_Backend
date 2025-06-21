@@ -49,7 +49,7 @@ export const ticketTypeSchema = z
         required_error: "是否為啟動中 為必填欄位",
         invalid_type_error: "是否為活動中 格式錯誤",
       })
-      .default(true),
+      .default(false),
   })
   .superRefine((val, ctx) => {
     const now = dayjs().tz("Asia/Taipei");
