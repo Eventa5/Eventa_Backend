@@ -15,6 +15,13 @@ export const getTicketTypeById = async (ticketTypeId: number) => {
     where: {
       id: ticketTypeId,
     },
+    include: {
+      tickets: {
+        select: {
+          status: true,
+        },
+      },
+    },
   });
 };
 
@@ -64,11 +71,28 @@ export const deleteTicketType = async (ticketTypeId: number) => {
 export const updateTicketTypeStatus = async () => {
   try {
     const now = new Date();
+
+    await prisma.ticketType.updateMany({
+      where: {
+        startTime: {
+          lte: now,
+        },
+        endTime: {
+          gt: now,
+        },
+        isActive: false,
+      },
+      data: {
+        isActive: true,
+      },
+    });
+
     await prisma.ticketType.updateMany({
       where: {
         endTime: {
           lte: now,
         },
+        isActive: true,
       },
       data: {
         isActive: false,

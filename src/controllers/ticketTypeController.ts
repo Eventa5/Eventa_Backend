@@ -1,4 +1,4 @@
-import { ActivityStep } from "@prisma/client";
+import { ActivityStep, TicketStatus } from "@prisma/client";
 import dayjs from "dayjs";
 import type { NextFunction, Request, Response } from "express";
 import { InputValidationError } from "../errors/InputValidationError";
@@ -69,22 +69,16 @@ export const createTicketTypes = async (req: Request, res: Response, next: NextF
         });
       }
 
-      const creatingTicketTypeStartTime = creatingTicketType.saleStartAt
-        ? dayjs(creatingTicketType.saleStartAt).utc()
-        : dayjs(creatingTicketType.startTime).utc();
-      const creatingTicketTypeEndTime = creatingTicketType.saleEndAt
-        ? dayjs(creatingTicketType.saleEndAt).utc()
-        : dayjs(creatingTicketType.endTime).utc();
       const activityEndTime = dayjs(retrievedActivity.endTime).utc();
 
-      if (creatingTicketTypeStartTime.isAfter(activityEndTime)) {
+      if (dayjs(creatingTicketType.startTime).utc().isAfter(activityEndTime)) {
         return next({
           message: `第 ${i} 個新增票種的銷售開始時間不可晚於活動結束時間`,
           statusCode: 400,
         });
       }
 
-      if (creatingTicketTypeEndTime.isAfter(activityEndTime)) {
+      if (dayjs(creatingTicketType.endTime).utc().isAfter(activityEndTime)) {
         return next({
           message: `第 ${i} 個新增票種的銷售結束時間不可晚於活動結束時間`,
           statusCode: 400,
@@ -158,6 +152,13 @@ export const updateTicketType = async (req: Request, res: Response, next: NextFu
       });
     }
 
+    if (retrievedTicketType.tickets.some((ticket) => ticket.status !== TicketStatus.canceled)) {
+      return next({
+        message: "該票種已經有票券被使用或分配，無法編輯",
+        statusCode: 400,
+      });
+    }
+
     const retrievedActivityTicketTypeNameSet = new Set(
       retrievedActivity.ticketTypes
         .filter((type) => type.id !== ticketTypeId)
@@ -171,22 +172,16 @@ export const updateTicketType = async (req: Request, res: Response, next: NextFu
       });
     }
 
-    const updatingTicketTypeStartTime = validatedData.saleStartAt
-      ? dayjs(validatedData.saleStartAt).utc()
-      : dayjs(validatedData.startTime).utc();
-    const updatingTicketTypeEndTime = validatedData.saleEndAt
-      ? dayjs(validatedData.saleEndAt).utc()
-      : dayjs(validatedData.endTime).utc();
     const activityEndTime = dayjs(retrievedActivity.endTime).utc();
 
-    if (updatingTicketTypeStartTime.isAfter(activityEndTime)) {
+    if (dayjs(validatedData.startTime).utc().isAfter(activityEndTime)) {
       return next({
         message: "票種的銷售開始時間不可晚於活動結束時間",
         statusCode: 400,
       });
     }
 
-    if (updatingTicketTypeEndTime.isAfter(activityEndTime)) {
+    if (dayjs(validatedData.endTime).utc().isAfter(activityEndTime)) {
       return next({
         message: "票種的銷售結束時間不可晚於活動結束時間",
         statusCode: 400,
@@ -250,6 +245,13 @@ export const deleteTicketType = async (req: Request, res: Response, next: NextFu
       return next({
         message: "該票種不屬於此活動",
         statusCode: 404,
+      });
+    }
+
+    if (retrievedTicketType.tickets.some((ticket) => ticket.status !== TicketStatus.canceled)) {
+      return next({
+        message: "該票種已經有票券被使用或分配，無法刪除",
+        statusCode: 400,
       });
     }
 

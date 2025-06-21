@@ -333,7 +333,7 @@ router.post("/:activityId/ticketTypes", auth, ticketTypeController.createTicketT
  *                   type: boolean
  *                   example: true
  *       400:
- *         description: 格式錯誤、票種名稱已存在，請使用其他名稱、票種的銷售開始時間不可晚於活動結束時間、票種的銷售結束時間不可晚於活動結束時間
+ *         description: 格式錯誤、票種名稱已存在，請使用其他名稱、票種的銷售開始時間不可晚於活動結束時間、票種的銷售結束時間不可晚於活動結束時間、該票種已經有票券被使用或分配，無法編輯、該票種已經有票券被使用或分配，無法刪除
  *         content:
  *           application/json:
  *             schema:

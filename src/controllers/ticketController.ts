@@ -1,4 +1,5 @@
 import { TicketStatus } from "@prisma/client";
+import dayjs from "dayjs";
 import type { NextFunction, Request, Response } from "express";
 import { InputValidationError } from "../errors/InputValidationError";
 import { ticketIdSchema } from "../schemas/zod/ticket.schema";
@@ -10,8 +11,20 @@ export const patchTicketUsed = async (req: Request, res: Response, next: NextFun
   try {
     const data = validateInput(ticketIdSchema, req.params.ticketId);
     const ticket = await ticketService.getTicketById(data);
+    const now = dayjs().utc();
+
     if (!ticket) {
       sendResponse(res, 404, "票券不存在", false);
+      return;
+    }
+
+    if (now.isBefore(dayjs(ticket.activity.startTime).utc())) {
+      sendResponse(res, 400, "活動尚未開始，無法報到", false);
+      return;
+    }
+
+    if (now.isAfter(dayjs(ticket.activity.endTime).utc())) {
+      sendResponse(res, 400, "活動已結束，無法報到", false);
       return;
     }
 
