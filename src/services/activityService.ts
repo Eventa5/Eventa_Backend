@@ -44,7 +44,11 @@ export const getActivities = async (params: ActivityQueryParams) => {
   if (endTime) where.endTime = { lte: endTime };
   if (organizationId) where.organizationId = organizationId;
   if (keyword) {
-    where.OR = [{ title: { contains: keyword } }, { descriptionMd: { contains: keyword } }];
+    where.OR = [
+      { title: { contains: keyword } },
+      { descriptionMd: { contains: keyword } },
+      { tags: { contains: keyword } },
+    ];
   }
 
   const offset = paginator.getOffset(page, limit);
