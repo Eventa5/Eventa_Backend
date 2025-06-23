@@ -52,7 +52,7 @@ export const hourlyTask = (): void => {
 };
 
 export const updateTicketTypeStatusTask = (): void => {
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("*/5 * * * *", async () => {
     try {
       await activateTicketTypeStatusToTrue();
     } catch (err) {
