@@ -68,7 +68,27 @@ export const deleteTicketType = async (ticketTypeId: number) => {
   });
 };
 
-export const updateTicketTypeStatus = async () => {
+export const deactivateTicketTypeStatus = async () => {
+  try {
+    const now = new Date();
+
+    await prisma.ticketType.updateMany({
+      where: {
+        endTime: {
+          lte: now,
+        },
+        isActive: true,
+      },
+      data: {
+        isActive: false,
+      },
+    });
+  } catch (err) {
+    throw new Error(`更新票種關閉狀態失敗：${err instanceof Error ? err.message : err}`);
+  }
+};
+
+export const activateTicketTypeStatusToTrue = async () => {
   try {
     const now = new Date();
 
@@ -86,19 +106,7 @@ export const updateTicketTypeStatus = async () => {
         isActive: true,
       },
     });
-
-    await prisma.ticketType.updateMany({
-      where: {
-        endTime: {
-          lte: now,
-        },
-        isActive: true,
-      },
-      data: {
-        isActive: false,
-      },
-    });
   } catch (err) {
-    throw new Error(`更新已過票種啟用狀態失敗：${err instanceof Error ? err.message : err}`);
+    throw new Error(`更新票種啟用狀態失敗：${err instanceof Error ? err.message : err}`);
   }
 };
