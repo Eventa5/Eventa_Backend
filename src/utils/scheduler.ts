@@ -20,19 +20,20 @@ export const updateOrderTask = (): void => {
 
 const taskNames = ["清理重設密碼令牌", "檢查已結束活動", "檢查過期票券"];
 const runHourlyTasks = async (prefix: string) => {
-  const results = await Promise.allSettled([
-    cleanExpiredResetTokens(),
-    updateExpiredActivities(),
-    updateExpiredTicket(),
-  ]);
+  const tasks = [
+    { name: "清理重設密碼令牌", fn: cleanExpiredResetTokens },
+    { name: "檢查已結束活動", fn: updateExpiredActivities },
+    { name: "檢查過期票券", fn: updateExpiredTicket },
+  ];
 
-  results.forEach((result, index) => {
-    if (result.status === "fulfilled") {
-      console.log(`[${prefix}] ${taskNames[index]} 成功`);
-    } else {
-      console.error(`[${prefix}] ${taskNames[index]} 失敗:`, result.reason);
+  for (const task of tasks) {
+    try {
+      await task.fn();
+      console.log(`[${prefix}] ${task.name} 成功`);
+    } catch (err) {
+      console.error(`[${prefix}] ${task.name} 失敗: ${err instanceof Error ? err.message : err}`);
     }
-  });
+  }
 };
 
 export const hourlyTask = (): void => {
