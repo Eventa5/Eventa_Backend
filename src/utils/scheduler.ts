@@ -2,7 +2,10 @@ import cron from "node-cron";
 import { updateExpiredActivities } from "../services/activityService";
 import { cancelExpiredOrders } from "../services/orderService";
 import { updateExpiredTicket } from "../services/ticketService";
-import { updateTicketTypeStatus } from "../services/ticketTypeService";
+import {
+  activateTicketTypeStatusToTrue,
+  deactivateTicketTypeStatus,
+} from "../services/ticketTypeService";
 import { cleanExpiredResetTokens } from "../services/userService";
 
 export const updateOrderTask = (): void => {
@@ -51,9 +54,17 @@ export const hourlyTask = (): void => {
 export const updateTicketTypeStatusTask = (): void => {
   cron.schedule("* * * * *", async () => {
     try {
-      await updateTicketTypeStatus();
+      await activateTicketTypeStatusToTrue();
     } catch (err) {
-      console.error(`更新已過票種啟用狀態失敗：${err instanceof Error ? err.message : err}`);
+      console.error(`更新票種啟用狀態失敗：${err instanceof Error ? err.message : err}`);
+    }
+  });
+
+  cron.schedule("0 0 * * *", async () => {
+    try {
+      await deactivateTicketTypeStatus();
+    } catch (err) {
+      console.error(`更新票種關閉狀態失敗：${err instanceof Error ? err.message : err}`);
     }
   });
 };
