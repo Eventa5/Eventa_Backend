@@ -75,15 +75,15 @@ export const patchActivityBasicInfoSchema = z
     isOnline: z.boolean(),
   })
   .superRefine((data, ctx) => {
-    const now = dayjs().tz("Asia/Taipei");
-    const start = dayjs.tz(data.startTime, "Asia/Taipei");
-    const end = dayjs.tz(data.endTime, "Asia/Taipei");
+    const now = dayjs().utc();
+    const start = dayjs(data.startTime).utc();
+    const end = dayjs(data.endTime).utc();
 
-    if (start.isBefore(now)) {
+    if (start.isBefore(now, "day")) {
       ctx.addIssue({
         path: ["startTime"],
         code: z.ZodIssueCode.custom,
-        message: "開始時間不得早於當前時間",
+        message: "開始時間不得早於當日",
       });
     }
 
@@ -144,15 +144,15 @@ export const editActivitySchema = z
     notes: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    const now = dayjs().tz("Asia/Taipei");
-    const start = dayjs.tz(data.startTime, "Asia/Taipei");
-    const end = dayjs.tz(data.endTime, "Asia/Taipei");
+    const now = dayjs().utc();
+    const start = dayjs(data.startTime).utc();
+    const end = dayjs(data.endTime).utc();
 
-    if (start.isBefore(now)) {
+    if (start.isBefore(now, "day")) {
       ctx.addIssue({
         path: ["startTime"],
         code: z.ZodIssueCode.custom,
-        message: "開始時間不得早於當前時間",
+        message: "開始時間不得早於當日",
       });
     }
 
@@ -204,15 +204,15 @@ export const publishActivitySchema = z
     ticketTypes: z.array(z.any()).min(1, "至少設定一種活動票種才可發布"),
   })
   .superRefine((data, ctx) => {
-    const now = dayjs().tz("Asia/Taipei");
-    const start = dayjs.tz(data.startTime, "Asia/Taipei");
-    const end = dayjs.tz(data.endTime, "Asia/Taipei");
+    const now = dayjs().utc();
+    const start = dayjs(data.startTime).utc();
+    const end = dayjs(data.endTime).utc();
 
-    if (start.isBefore(now)) {
+    if (start.isBefore(now, "day")) {
       ctx.addIssue({
         path: ["startTime"],
         code: z.ZodIssueCode.custom,
-        message: "開始時間不得早於當前時間",
+        message: "開始時間不得早於當日",
       });
     }
 

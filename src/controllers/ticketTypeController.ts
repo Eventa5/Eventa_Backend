@@ -84,6 +84,10 @@ export const createTicketTypes = async (req: Request, res: Response, next: NextF
           statusCode: 400,
         });
       }
+
+      if (dayjs(creatingTicketType.startTime).utc().isBefore(dayjs().utc())) {
+        creatingTicketType.isActive = true;
+      }
     }
 
     const { count } = await ticketTypeService.createTicketTypes(
@@ -186,6 +190,10 @@ export const updateTicketType = async (req: Request, res: Response, next: NextFu
         message: "票種的銷售結束時間不可晚於活動結束時間",
         statusCode: 400,
       });
+    }
+
+    if (dayjs(validatedData.startTime).utc().isBefore(dayjs().utc())) {
+      validatedData.isActive = true;
     }
 
     await ticketTypeService.updateTicketType(ticketTypeId, validatedData);
