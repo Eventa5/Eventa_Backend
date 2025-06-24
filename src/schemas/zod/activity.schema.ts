@@ -75,9 +75,9 @@ export const patchActivityBasicInfoSchema = z
     isOnline: z.boolean(),
   })
   .superRefine((data, ctx) => {
-    const now = dayjs().utc();
-    const start = dayjs(data.startTime).utc();
-    const end = dayjs(data.endTime).utc();
+    const now = dayjs().tz("Asia/Taipei");
+    const start = dayjs.tz(data.startTime, "Asia/Taipei");
+    const end = dayjs.tz(data.endTime, "Asia/Taipei");
 
     if (start.isBefore(now, "day")) {
       ctx.addIssue({
@@ -144,9 +144,9 @@ export const editActivitySchema = z
     notes: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    const now = dayjs().utc();
-    const start = dayjs(data.startTime).utc();
-    const end = dayjs(data.endTime).utc();
+    const now = dayjs().tz("Asia/Taipei");
+    const start = dayjs.tz(data.startTime, "Asia/Taipei");
+    const end = dayjs.tz(data.endTime, "Asia/Taipei");
 
     if (start.isBefore(now, "day")) {
       ctx.addIssue({
@@ -204,9 +204,9 @@ export const publishActivitySchema = z
     ticketTypes: z.array(z.any()).min(1, "至少設定一種活動票種才可發布"),
   })
   .superRefine((data, ctx) => {
-    const now = dayjs().utc();
-    const start = dayjs(data.startTime).utc();
-    const end = dayjs(data.endTime).utc();
+    const now = dayjs().tz("Asia/Taipei");
+    const start = dayjs.tz(data.startTime, "Asia/Taipei");
+    const end = dayjs.tz(data.endTime, "Asia/Taipei");
 
     if (start.isBefore(now, "day")) {
       ctx.addIssue({
