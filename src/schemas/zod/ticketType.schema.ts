@@ -52,9 +52,9 @@ export const ticketTypeSchema = z
       .default(false),
   })
   .superRefine((val, ctx) => {
-    const now = dayjs().utc();
-    const start = dayjs(val.startTime).utc();
-    const end = dayjs(val.endTime).utc();
+    const now = dayjs().tz("Asia/Taipei");
+    const start = dayjs.tz(val.startTime, "Asia/Taipei");
+    const end = dayjs.tz(val.endTime, "Asia/Taipei");
 
     if (val.remainingQuantity > val.totalQuantity) {
       ctx.addIssue({
