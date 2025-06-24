@@ -122,6 +122,24 @@
  *             isRegistered:
  *               type: boolean
  *               example: true
+ *         organization:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: number
+ *               example: 1
+ *             name:
+ *               type: string
+ *               example: 活動主辦單位
+ *             avatar:
+ *               type: string
+ *               example: http://example.com/avatar.jpg
+ *             email:
+ *               type: string
+ *               example: 1w0Q2@example.com
+ *             officialSiteUrl:
+ *               type: string
+ *               example: https://example.com
  *     # 新增一筆活動資料結構
  *     # -----------------------------------------------
  *     CreateActivityRequest:

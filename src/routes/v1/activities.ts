@@ -659,7 +659,7 @@ router.get("/:activityId/checkedIn", auth, activityController.getCheckedInResult
  *               properties:
  *                 message:
  *                   type: string
- *                   example: 編輯成功
+ *                   example: 請求成功
  *                 status:
  *                   type: boolean
  *                   example: true
