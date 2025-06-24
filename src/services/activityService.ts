@@ -93,7 +93,14 @@ export const getActivityDetails = async (activityId: number, userId: number) => 
     },
     include: {
       organization: {
-        select: { userId: true },
+        select: {
+          id: true,
+          userId: true,
+          avatar: true,
+          email: true,
+          name: true,
+          officialSiteUrl: true,
+        },
       },
       _count: {
         select: {
@@ -140,7 +147,6 @@ export const getActivityDetails = async (activityId: number, userId: number) => 
   }
 
   const { _count, activityLike, orders, organization, ...activity } = activityRaw;
-
   return {
     ...activity,
     tags: activity.tags?.split(",") || [],
@@ -148,6 +154,13 @@ export const getActivityDetails = async (activityId: number, userId: number) => 
     userStatus: {
       isFavorite: activityLike.length > 0,
       isRegistered: orders.length > 0,
+    },
+    organization: {
+      id: organization.id,
+      name: organization.name,
+      avatar: organization.avatar,
+      email: organization.email,
+      officialSiteUrl: organization.officialSiteUrl,
     },
   };
 };
