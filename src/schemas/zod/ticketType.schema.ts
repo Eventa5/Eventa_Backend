@@ -55,6 +55,7 @@ export const ticketTypeSchema = z
     const now = dayjs().tz("Asia/Taipei");
     const start = dayjs.tz(val.startTime, "Asia/Taipei");
     const end = dayjs.tz(val.endTime, "Asia/Taipei");
+
     if (val.remainingQuantity > val.totalQuantity) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -63,11 +64,11 @@ export const ticketTypeSchema = z
       });
     }
 
-    if (start.isBefore(now)) {
+    if (start.isBefore(now, "day")) {
       ctx.addIssue({
         path: ["startTime"],
         code: z.ZodIssueCode.custom,
-        message: "開賣時間不得早於當前時間",
+        message: "開賣時間不得早於當日",
       });
     }
 

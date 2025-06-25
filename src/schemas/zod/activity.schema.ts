@@ -79,11 +79,11 @@ export const patchActivityBasicInfoSchema = z
     const start = dayjs.tz(data.startTime, "Asia/Taipei");
     const end = dayjs.tz(data.endTime, "Asia/Taipei");
 
-    if (start.isBefore(now)) {
+    if (start.isBefore(now, "day")) {
       ctx.addIssue({
         path: ["startTime"],
         code: z.ZodIssueCode.custom,
-        message: "開始時間不得早於當前時間",
+        message: "開始時間不得早於當日",
       });
     }
 
@@ -148,11 +148,11 @@ export const editActivitySchema = z
     const start = dayjs.tz(data.startTime, "Asia/Taipei");
     const end = dayjs.tz(data.endTime, "Asia/Taipei");
 
-    if (start.isBefore(now)) {
+    if (start.isBefore(now, "day")) {
       ctx.addIssue({
         path: ["startTime"],
         code: z.ZodIssueCode.custom,
-        message: "開始時間不得早於當前時間",
+        message: "開始時間不得早於當日",
       });
     }
 
@@ -208,11 +208,11 @@ export const publishActivitySchema = z
     const start = dayjs.tz(data.startTime, "Asia/Taipei");
     const end = dayjs.tz(data.endTime, "Asia/Taipei");
 
-    if (start.isBefore(now)) {
+    if (start.isBefore(now, "day")) {
       ctx.addIssue({
         path: ["startTime"],
         code: z.ZodIssueCode.custom,
-        message: "開始時間不得早於當前時間",
+        message: "開始時間不得早於當日",
       });
     }
 

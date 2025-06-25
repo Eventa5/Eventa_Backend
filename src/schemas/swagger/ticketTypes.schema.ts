@@ -99,16 +99,6 @@
  *           format: date
  *           description: 開賣結束時間，格式為 ISO 8601
  *           example: "2023-10-31T23:59:59Z"
- *         saleStartAt:
- *           type: string
- *           format: date
- *           description: 特殊開賣時間，格式為 ISO 8601
- *           nullable: true
- *         saleEndAt:
- *           type: string
- *           format: date
- *           description: 特殊開賣結束時間，格式為 ISO 8601
- *           nullable: true
  *         isActive:
  *           type: boolean
  *           description: 是否為活動中

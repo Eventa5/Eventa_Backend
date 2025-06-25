@@ -86,12 +86,8 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
         });
       }
 
-      const ticketTypeStartTime = ticketType.saleStartAt
-        ? dayjs(ticketType.saleStartAt).utc()
-        : dayjs(ticketType.startTime).utc();
-      const ticketTypeEndTime = ticketType.saleEndAt
-        ? dayjs(ticketType.saleEndAt).utc()
-        : dayjs(ticketType.endTime).utc();
+      const ticketTypeStartTime = dayjs(ticketType.startTime).utc();
+      const ticketTypeEndTime = dayjs(ticketType.endTime).utc();
 
       if (!now.isBetween(ticketTypeStartTime, ticketTypeEndTime, null, "[]")) {
         return next({
@@ -100,7 +96,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
         });
       }
 
-      ticket.refundDeadline = ticketType.saleEndAt || ticketType.endTime;
+      ticket.refundDeadline = ticketType.endTime;
       const ticketPrice = new Prisma.Decimal(ticketType.price).times(ticket.quantity);
       totalAmount = totalAmount.plus(ticketPrice);
     }
