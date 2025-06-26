@@ -1,6 +1,5 @@
 import { ActivityStatus, ActivityStep, OrderStatus, Prisma, TicketStatus } from "@prisma/client";
 import dayjs from "dayjs";
-import { promise } from "zod";
 import { InputValidationError } from "../errors/InputValidationError";
 import prisma from "../prisma/client";
 import type {
@@ -550,7 +549,6 @@ export const getParticipants = async (activityId: ActivityId, params: Pagination
     }),
   ]);
 
-  console.log(data.length, totalItems);
   const pagination = paginator.getPagination(totalItems, page, limit);
   return { data, pagination };
 };
