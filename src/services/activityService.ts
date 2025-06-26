@@ -515,33 +515,41 @@ export const getParticipants = async (activityId: ActivityId, params: Pagination
   const { page, limit } = params;
   const offset = paginator.getOffset(page, limit);
 
-  const data = await prisma.ticket.findMany({
-    where: {
-      activityId: activityId,
-    },
-    skip: offset,
-    take: limit,
-    select: {
-      id: true,
-      orderId: true,
-      status: true,
-      assignedName: true,
-      assignedEmail: true,
-      createdAt: true,
-      ticketType: {
-        select: {
-          id: true,
-          name: true,
-          price: true,
+  const [data, totalItems] = await Promise.all([
+    prisma.ticket.findMany({
+      where: {
+        activityId: activityId,
+      },
+      skip: offset,
+      take: limit,
+      select: {
+        id: true,
+        orderId: true,
+        status: true,
+        assignedName: true,
+        assignedEmail: true,
+        createdAt: true,
+        ticketType: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+          },
         },
       },
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
+      orderBy: {
+        createdAt: "asc",
+      },
+    }),
+    prisma.ticket.count({
+      where: {
+        activityId: activityId,
+        status: { not: TicketStatus.canceled },
+      },
+    }),
+  ]);
 
-  const pagination = paginator.getPagination(data.length, page, limit);
+  const pagination = paginator.getPagination(totalItems, page, limit);
   return { data, pagination };
 };
 
