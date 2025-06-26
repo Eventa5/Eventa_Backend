@@ -545,6 +545,7 @@ export const getParticipants = async (activityId: ActivityId, params: Pagination
     prisma.ticket.count({
       where: {
         activityId: activityId,
+        status: { not: TicketStatus.canceled },
       },
     }),
   ]);
