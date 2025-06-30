@@ -1129,6 +1129,86 @@ router.patch("/:activityId/content", auth, activityController.patchActivityConte
 
 /**
  * @swagger
+ * /api/v1/activities/{activityId}/content/image:
+ *   post:
+ *     tags:
+ *       - Activities
+ *     summary: 上傳活動內容圖片
+ *     description: 上傳活動內容圖片，照片大小限制4MB內，回傳圖片 url
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: activityId
+ *         in: path
+ *         description: 活動 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: 使用者上傳的圖片檔案，僅接受 image/*
+ *     responses:
+ *       200:
+ *         description: 上傳成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 上傳成功
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     url:
+ *                       type: string
+ *                       example: https://res.cloudinary.com/djcf5ifah/image/upload/v1751301414/activity/3/content/icon-menu-icon-message-on%403x.png
+ *       400:
+ *         description: 錯誤的請求，例如沒有圖片、圖片上傳失敗等
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未授權
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 無權限，非主辦單位成員
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 活動不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post(
+  "/:activityId/content/image",
+  auth,
+  upload.single("image"),
+  activityController.uploadContentImage,
+);
+
+/**
+ * @swagger
  * /api/v1/activities/{activityId}/publish:
  *   patch:
  *     tags:
