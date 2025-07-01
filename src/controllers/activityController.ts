@@ -477,6 +477,58 @@ export const uploadCover = async (
   }
 };
 
+export const uploadContentImage = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  const image = req.file;
+  const activityId = validateInput(activityIdSchema, req.params.activityId);
+  const activity = await activityService.getActivityById(activityId);
+  if (!activity) {
+    sendResponse(res, 404, "活動不存在", false);
+    return;
+  }
+
+  const isOrganization = req.user?.organizationIds.includes(activity.organizationId);
+  if (!isOrganization) {
+    sendResponse(res, 403, "無權限，非主辦單位成員", false);
+    return;
+  }
+
+  if (!image) {
+    sendResponse(res, 400, "未上傳檔案", false);
+    return;
+  }
+
+  try {
+    const imageUrl = await uploadToCloudinary(
+      image.buffer,
+      image.originalname,
+      `activities/${activityId}/content`,
+    );
+
+    if (req.file) {
+      (req.file.buffer as unknown as Buffer | null) = null;
+    }
+
+    res.status(201).json({
+      message: "上傳成功",
+      status: true,
+      data: { url: imageUrl },
+    });
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      next({
+        message: error.message,
+        statusCode: 400,
+      });
+    } else {
+      next(error);
+    }
+  }
+};
+
 // 取得收入狀況
 export const getIncome = async (req: Request, res: Response, next: NextFunction) => {
   try {
