@@ -355,7 +355,7 @@
  *       type: object
  *       properties:
  *         id:
- *           type: number
+ *           type: string
  *           example: T25052814531482592
  *         orderId:
  *           type: string
